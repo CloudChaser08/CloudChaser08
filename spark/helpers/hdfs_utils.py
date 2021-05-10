@@ -1,4 +1,5 @@
 import subprocess
+from spark.common.utility import logger
 
 
 def list_parquet_files(src, pattern='(part\-|c000)'):
@@ -70,3 +71,30 @@ def get_hdfs_file_path_size(path):
 
     return int(file_count[0])
 
+
+def clean_up_output_hdfs(output_path):
+    try:
+        subprocess.check_call(['hadoop', 'fs', '-rm', '-f', '-R', output_path])
+    except Exception as e:
+        logger.log(
+            "Unable to remove directory: {}\nError encountered: {}".format(output_path, str(e))
+        )
+
+
+def list_dir_hdfs(path):
+    return [
+        f.split(' ')[-1].strip().split('/')[-1]
+        for f in subprocess.check_output(['hdfs', 'dfs', '-ls', path]).decode().split('\n')
+        if f.split(' ')[-1].startswith('hdfs')
+    ]
+
+
+def rename_file_hdfs(old, new):
+    subprocess.check_call(['hdfs', 'dfs', '-mv', old, new])
+
+
+HDFS_STANDARD_FUNCTIONS = [
+    clean_up_output_hdfs,
+    list_dir_hdfs,
+    rename_file_hdfs
+]

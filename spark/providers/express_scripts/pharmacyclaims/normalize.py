@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from spark.common.utility import logger
 import spark.helpers.file_utils as file_utils
+import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.records_loader as records_loader
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
@@ -123,7 +124,7 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
             #     interested 2 columns: pharmacy_claim_id, pharmacy_claim_ref_id
             has_data = False
             # collect incoming data(3 columns) and save into local
-            file_utils.clean_up_output_hdfs(STAGE_REVERSE_TRANS_PATH)
+            hdfs_utils.clean_up_output_hdfs(STAGE_REVERSE_TRANS_PATH)
             for i in range(delta.days + 1):
                 s3_esi_path_in = "s3://salusv/incoming/{}/{}/".format(driver.data_type, provider_name) + \
                                  (start_date + timedelta(days=i)).strftime('%Y/%m/%d')
@@ -189,7 +190,7 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
                 )
         driver.copy_to_output_path()
         if not first_run:
-            file_utils.clean_up_output_hdfs(STAGE_REVERSE_TRANS_PATH)
+            hdfs_utils.clean_up_output_hdfs(STAGE_REVERSE_TRANS_PATH)
     logger.log("Done")
 
 

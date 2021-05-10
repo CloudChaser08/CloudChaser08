@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-import spark.helpers.file_utils as file_utils
+import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.external_table_loader as external_table_loader
 import spark.providers.pointclickcare.emr.transactional_schemas as historic_source_table_schemas
 import spark.providers.pointclickcare.emr.transactional_schemas_v1 as transactions_v1
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     )
 
     logger.log('Building ref_ndc_ddid reference data')
-    file_utils.clean_up_output_hdfs(v_ref_hdfs_output_path)
+    hdfs_utils.clean_up_output_hdfs(v_ref_hdfs_output_path)
     table_name = 'ref_ndc_ddid'
     driver.spark.table(table_name).repartition(1).write.parquet(
         v_ref_hdfs_output_path + table_name, compression='gzip', mode='append')
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     driver.log_run()
     driver.stop_spark()
     driver.copy_to_output_path()
-    file_utils.clean_up_output_hdfs(v_ref_hdfs_output_path)
+    hdfs_utils.clean_up_output_hdfs(v_ref_hdfs_output_path)
     logger.log('Done')
 
 

@@ -20,3 +20,8 @@ states = [
 ]
 
 genders = ['M', 'F', 'U']
+
+# optimal parquet file size is 500mb - 1gb
+# smaller means faster writing (to a point)
+# larger means faster reading (to a point)
+PARQUET_FILE_SIZE = 1024 * 1024 * 500

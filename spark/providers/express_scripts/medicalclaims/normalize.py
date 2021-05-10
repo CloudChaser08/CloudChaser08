@@ -5,7 +5,7 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.providers.express_scripts.medicalclaims.transactional_schemas as source_table_schemas
 import spark.helpers.postprocessor as postprocessor
-import spark.helpers.file_utils as file_utils
+import spark.helpers.hdfs_utils as hdfs_utils
 from spark.helpers import normalized_records_unloader
 
 S3A_REF_PHI = 's3a://salusv/reference/express_scripts_phi/'
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     logger.log(' -Setting up input/output paths')
     date_path = date_input.replace('-', '/')
-    file_utils.clean_up_output_hdfs(LOCAL_UNMATCHED)
+    hdfs_utils.clean_up_output_hdfs(LOCAL_UNMATCHED)
     subprocess.check_call(['hadoop', 'fs', '-mkdir', LOCAL_UNMATCHED])
 
     driver.init_spark_context(conf_parameters=conf_parameters)

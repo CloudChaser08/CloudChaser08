@@ -1,5 +1,5 @@
 import spark.common.utility.logger as logger
-import spark.helpers.file_utils as file_utils
+import spark.helpers.hdfs_utils as hdfs_utils
 import spark.datamart.covid19.context as context
 import spark.datamart.datamart_util as dmutil
 from spark.runner import PACKAGE_PATH
@@ -97,7 +97,7 @@ class Covid19LabBuilder:
                 Later this will be transferred to S3 for Reporting
         """
         logger.log('    -build_all_tests: started')
-        file_utils.clean_up_output_hdfs(self._lab_fact_all_tests)
+        hdfs_utils.clean_up_output_hdfs(self._lab_fact_all_tests)
 
         """
         (Sometimes we lost MSCK repair applied on source tables. So better
@@ -185,7 +185,7 @@ class Covid19LabBuilder:
         """
 
         logger.log('    -build_covid_tests: started')
-        file_utils.clean_up_output_hdfs(self._lab_fact_covid_tests)
+        hdfs_utils.clean_up_output_hdfs(self._lab_fact_covid_tests)
 
         """
         For Optimization and fast data shuffle, 
@@ -270,7 +270,7 @@ class Covid19LabBuilder:
         lab_build_covid_tests_view = 'lab_build_covid_tests'
         lab_cleanse_covid_tests_all_view = 'lab_cleanse_covid_tests_all'
 
-        file_utils.clean_up_output_hdfs(self._lab_fact_covid_cleansed)
+        hdfs_utils.clean_up_output_hdfs(self._lab_fact_covid_cleansed)
 
         logger.log('        -loading: lab covid tests cleansed - reading DELTA')
         self.spark.read.parquet(self._lab_fact_covid_tests).createOrReplaceTempView(lab_build_covid_tests_view)
@@ -330,7 +330,7 @@ class Covid19LabBuilder:
         lab_build_covid_ref_view = 'lab_build_covid_ref'
         lab_cleanse_covid_tests_all_view = 'lab_cleanse_covid_tests_all'
 
-        file_utils.clean_up_output_hdfs(self._lab_ref_covid)
+        hdfs_utils.clean_up_output_hdfs(self._lab_ref_covid)
 
         logger.log('        -loading: lab covid ref -reading cleansed (DELTA + HISTORY) data')
         lab_cleanse_covid_tests_all_df = self.spark.read.parquet(self._lab_fact_covid_cleansed)
@@ -368,7 +368,7 @@ class Covid19LabBuilder:
         """
         logger.log('    -build_covid_snapshot: started')
 
-        file_utils.clean_up_output_hdfs(self._lab_covid_snapshot)
+        hdfs_utils.clean_up_output_hdfs(self._lab_covid_snapshot)
 
         lab_cleanse_covid_tests_all_view = 'lab_cleanse_covid_tests_all'
         lab_build_covid_ref_view = 'lab_build_covid_ref'
@@ -438,7 +438,7 @@ class Covid19LabBuilder:
                 Later this will be transferred to S3 for Reporting (full refresh)
         """
         logger.log('    -build_covid_sum: started')
-        file_utils.clean_up_output_hdfs(self._lab_covid_sum)
+        hdfs_utils.clean_up_output_hdfs(self._lab_covid_sum)
 
         lab_build_covid_sum_view = 'lab_build_covid_sum'
         lab_build_covid_snapshot_view = 'lab_build_covid_snapshot'
