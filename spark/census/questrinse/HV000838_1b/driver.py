@@ -178,7 +178,7 @@ class QuestRinseCensusDriver(CensusDriver):
                          if not f.startswith('.') and f != "_SUCCESS"]:
             part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1)
             new_name = output_file_name_template.format(int(part_number))
-            file_utils.rename_file_hdfs(local_output_path + filename, local_output_path + new_name)
+            hdfs_utils.rename_file_hdfs(local_output_path + filename, local_output_path + new_name)
 
         logger.log('Creating manifest file with counts')
         if not POC_1B:
