@@ -10,7 +10,7 @@ import shutil
 import sys
 
 import boto3
-from pyspark.sql import SparkSession
+from spark.spark_setup import init
 
 s3 = boto3.resource('s3')
 
@@ -19,19 +19,25 @@ S3_CONF = {
     'Key': 'marketplace/search/procedure/proc.psv.gz'
 }
 
-
-spark = SparkSession.builder.master("yarn").appName(
-    "marketplace-pull-hcpcs").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
+# init
+conf_parameters = {
+    'spark.sql.catalogImplementation': 'hive',
+    'spark.default.parallelism': 4000,
+    'spark.sql.shuffle.partitions': 4000,
+    'spark.executor.memoryOverhead': 1024,
+    'spark.driver.memoryOverhead': 1024
+}
+spark, sql_context = init("marketplace-pull-hcpcs", conf_parameters=conf_parameters)
 
 
 def pull_hcpcs():
     with open('marketplace_proc.psv', 'w') as ndc_out:
         csv_writer = csv.writer(ndc_out, delimiter='|')
-        ndc_table = spark.sql("select distinct trim(hcpc), trim(long_description) from ref_hcpcs").collect()
+        ndc_table = spark.sql("SELECT DISTINCT trim(hcpc), trim(long_description) FROM ref_hcpcs").collect()
         for row in ndc_table:
             csv_writer.writerow(row)
 
-        ndc_table = spark.sql("select distinct trim(code), trim(long_description) from ref_cpt").collect()
+        ndc_table = spark.sql("SELECT DISTINCT trim(code), trim(long_description) FROM ref_cpt").collect()
         for row in ndc_table:
             csv_writer.writerow(row)
 

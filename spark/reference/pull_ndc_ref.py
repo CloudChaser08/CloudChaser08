@@ -11,7 +11,7 @@ import shutil
 import sys
 
 import boto3
-from pyspark.sql import SparkSession
+from spark.spark_setup import init
 
 s3 = boto3.resource('s3')
 
@@ -21,8 +21,15 @@ S3_CONF = {
 }
 
 
-spark = SparkSession.builder.master("yarn").appName(
-    "marketplace-ndc-pull").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
+# init
+conf_parameters = {
+    'spark.sql.catalogImplementation': 'hive',
+    'spark.default.parallelism': 4000,
+    'spark.sql.shuffle.partitions': 4000,
+    'spark.executor.memoryOverhead': 1024,
+    'spark.driver.memoryOverhead': 1024
+}
+spark, sql_context = init("marketplace-ndc-pull", conf_parameters=conf_parameters)
 
 
 def pull_ndc():

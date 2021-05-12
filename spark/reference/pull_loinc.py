@@ -10,9 +10,10 @@ import shutil
 import sys
 
 import boto3
-from pyspark.sql import SparkSession
+from spark.spark_setup import init
 
 s3 = boto3.resource('s3')
+basestring = None
 
 S3_CONF = {
     'Bucket': 'salusv',
@@ -20,28 +21,45 @@ S3_CONF = {
 }
 
 sql1 = """
-select loinc_code, count(distinct claim_id) as claims
-    from labtests
-    where part_provider = 'quest' and loinc_code<>' ' and loinc_code<>'' and loinc_code is not null
-    group by loinc_code
+SELECT 
+    loinc_code
+    , count(distinct claim_id) AS claims
+FROM 
+    dw._labtests_nb
+WHERE part_provider = 'quest' 
+    --AND loinc_code<>' ' 
+    --AND loinc_code<>'' 
+    --AND loinc_code is not null
+    AND 0 <> LENGTH(TRIM(COALESCE(loinc_code, '')))
+GROUP BY loinc_code
 """
 
 sql2 = """
-select distinct trim(loinc_num) as loinc_code, trim(component) as loinc_component
-    , trim(long_common_name), loinc_system as body_system, trim(loinc_class)
-    , trim(method_type) as loinc_method, trim(relatednames2) as related
-    , row_number() OVER(ORDER BY b.claims desc, b.loinc_code) as ordernum
-from ref_loinc a
-    left join loinc_popularity b on a.loinc_num=b.loinc_code
-order by 1
+SELECT DISTINCT 
+    trim(loinc_num) AS loinc_code
+    , trim(component) AS loinc_component
+    , trim(long_common_name) AS long_common_name
+    , loinc_system AS body_system
+    , trim(loinc_class) AS loinc_class 
+    , trim(method_type) AS loinc_method
+    , trim(relatednames2) AS related
+    , row_number() OVER(ORDER BY b.claims desc, b.loinc_code) AS ordernum
+FROM ref_loinc a
+    LEFT OUTER JOIN loinc_popularity b ON a.loinc_num=b.loinc_code
+ORDER BY 1
 """
 
+# init
+conf_parameters = {
+    'spark.sql.catalogImplementation': 'hive',
+    'spark.default.parallelism': 2000,
+    'spark.sql.shuffle.partitions': 2000,
+    'spark.executor.memoryOverhead': 1024,
+    'spark.driver.memoryOverhead': 1024
+}
+spark, sql_context = init("marketplace-pull-loinc", conf_parameters=conf_parameters)
 
-spark = SparkSession.builder.master("yarn").appName(
-    "marketplace-pull-loinc").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
-try:
-    basestring
-except:
+if not basestring:
     basestring = str
 
 
