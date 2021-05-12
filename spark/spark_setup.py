@@ -27,36 +27,8 @@ DEFAULT_SPARK_PARAMETERS = {
 }
 
 
-def init(provider, local=False, conf_parameters=None):
-    if conf_parameters:
-        # This is a bad way to combine the dicts as it makes DEFAULT_SPARK_PARAMETERS
-        # mutable. We should be using the ** syntax instead, but that's not
-        # supported by the Python version the cluster uses.
-        DEFAULT_SPARK_PARAMETERS.update(conf_parameters)
-
-    parameters = DEFAULT_SPARK_PARAMETERS
-
-    formatted_parameters = [(k, v) for k, v in parameters.items()]
-
-    spark_conf = \
-            SparkConf() \
-            .setMaster("local[*]" if local else "yarn") \
-            .setAppName(provider + " Normalization") \
-            .setAll(formatted_parameters)
-
-    spark = SparkSession.builder.config(conf=spark_conf).getOrCreate()
-
-    sqlContext = SQLContext(spark.sparkContext)
-
-    if local:
-        spark.sparkContext \
-             .addPyFile(file_utils.get_abs_path(__file__, 'target/dewey.zip'))
-
-    spark.sparkContext.setCheckpointDir('/tmp/checkpoint/')
-
-    logger.log_spark_state()
-
-    # ---- privacy related functions ----
+def init_udfs(spark):
+      # ---- privacy related functions ----
     spark.udf.register('filter_due_to_place_of_service', filter_due_to_place_of_service)
     spark.udf.register('obscure_place_of_service', obscure_place_of_service)
     
@@ -134,5 +106,36 @@ def init(provider, local=False, conf_parameters=None):
     # normalizing medical claims
     spark.udf.register('get_diagnosis_with_priority', get_diagnosis_with_priority)
 
+
+def init(provider, local=False, conf_parameters=None):
+    if conf_parameters:
+        # This is a bad way to combine the dicts as it makes DEFAULT_SPARK_PARAMETERS
+        # mutable. We should be using the ** syntax instead, but that's not
+        # supported by the Python version the cluster uses.
+        DEFAULT_SPARK_PARAMETERS.update(conf_parameters)
+
+    parameters = DEFAULT_SPARK_PARAMETERS
+
+    formatted_parameters = [(k, v) for k, v in parameters.items()]
+
+    spark_conf = \
+            SparkConf() \
+            .setMaster("local[*]" if local else "yarn") \
+            .setAppName(provider + " Normalization") \
+            .setAll(formatted_parameters)
+
+    spark = SparkSession.builder.config(conf=spark_conf).getOrCreate()
+
+    sqlContext = SQLContext(spark.sparkContext)
+
+    if local:
+        spark.sparkContext \
+             .addPyFile(file_utils.get_abs_path(__file__, 'target/dewey.zip'))
+
+    spark.sparkContext.setCheckpointDir('/tmp/checkpoint/')
+
+    logger.log_spark_state()
+
+    init_udfs(spark)
 
     return spark, sqlContext

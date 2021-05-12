@@ -23,7 +23,7 @@ poc_output_path = 's3a://salusv/deliverable/questrinse_1b/HV000838/'
 
 class QuestRinseCensusDriver(CensusDriver):
     def load(self, batch_date, batch_id, chunk_records_files=None):
-        file_utils.clean_up_output_hdfs('/staging/')
+        hdfs_utils.clean_up_output_hdfs('/staging/')
         super().load(batch_date, batch_id, chunk_records_files)
 
         matching_payload_df = self._spark.table('matching_payload')
@@ -98,7 +98,7 @@ class QuestRinseCensusDriver(CensusDriver):
         df.count()
 
         logger.log('Building LOINC delta reference data')
-        file_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
+        hdfs_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
         for table_conf in refbuild_loinc_delta.TABLE_CONF:
             table_name = str(table_conf['table_name'])
             logger.log("        -loading: writing {}".format(table_name))
@@ -178,7 +178,7 @@ class QuestRinseCensusDriver(CensusDriver):
                          if not f.startswith('.') and f != "_SUCCESS"]:
             part_number = re.match('''part-([0-9]+)[.-].*''', filename).group(1)
             new_name = output_file_name_template.format(int(part_number))
-            file_utils.rename_file_hdfs(local_output_path + filename, local_output_path + new_name)
+            hdfs_utils.rename_file_hdfs(local_output_path + filename, local_output_path + new_name)
 
         logger.log('Creating manifest file with counts')
         if not POC_1B:
@@ -206,7 +206,7 @@ class QuestRinseCensusDriver(CensusDriver):
             normalized_records_unloader.distcp(
                 REFERENCE_OUTPUT_PATH, REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)
         logger.log('Deleting ' + REFERENCE_HDFS_OUTPUT_PATH)
-        file_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
+        hdfs_utils.clean_up_output_hdfs(REFERENCE_HDFS_OUTPUT_PATH)
 
         # Quest doesn't want to see the _SUCCESS file that spark prints out
         logger.log('Deleting _SUCCESS file')
