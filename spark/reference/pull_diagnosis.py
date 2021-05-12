@@ -10,7 +10,7 @@ import shutil
 import sys
 
 import boto3
-from pyspark.sql import SparkSession
+from spark.spark_setup import init
 
 s3 = boto3.resource('s3')
 
@@ -20,37 +20,56 @@ S3_CONF = {
 }
 
 sql = """
-select distinct trim(a.code) as icd10code, trim(upper(a.long_description)) as icd10desc,
-        CASE WHEN c.icd9='NoDx' then NULL else c.icd9 end as icd9code,
-        upper(d.long_description) as icd9desc,
-        concat(f.start_num, '-', f.stop_num) as level1, f.description as level1_desc,
-        concat(g.start_num, '-', g.stop_num) as level2, g.description as level2_desc,
-        b.code as level3, upper(b.long_description) as level3_desc
-from ref_icd10_diagnosis a
-    left join
-    (select distinct code, long_description
-    from ref_icd10_diagnosis
-    where length(trim(code))=3
-    ) b on substring(a.code, 1,  3)=b.code
-    left join ref_icd10_to_icd9_diagnosis c on a.code=c.icd10
-    left join ref_icd10_diagnosis d on c.icd9=d.code
-    left join (select * from ref_icd10_diagnosis_groups where level_num=1) f 
-        on b.code between f.start_num and f.stop_num
-    left join (select * from ref_icd10_diagnosis_groups where level_num=2) g on (
-        (b.code between g.start_num and g.stop_num) or
-        (b.code = 'M1A' and g.start_num = 'M05' and g.stop_num = 'M14') or
-        (b.code = 'Z3A' and g.start_num = 'Z30' and g.stop_num = 'Z39') or
-        (b.code = 'C4A' and g.start_num = 'C43' and g.stop_num = 'C44')
+SELECT DISTINCT 
+    trim(a.code) as icd10code
+    , trim(upper(a.long_description)) as icd10desc
+    , CASE WHEN c.icd9='NoDx' then NULL else c.icd9 end as icd9code
+    , upper(d.long_description) as icd9desc
+    , concat(f.start_num, '-', f.stop_num) as level1, f.description as level1_desc
+    , concat(g.start_num, '-', g.stop_num) as level2, g.description as level2_desc
+    , b.code as level3, upper(b.long_description) as level3_desc
+FROM 
+    ref_icd10_diagnosis a
+    LEFT OUTER JOIN
+    (
+        SELECT DISTINCT 
+            code, long_description
+        FROM 
+            ref_icd10_diagnosis
+        WHERE 
+            length(trim(code))=3
+    ) b 
+        ON substring(a.code, 1,  3)=b.code
+    LEFT OUTER JOIN 
+        ref_icd10_to_icd9_diagnosis c ON a.code=c.icd10
+    LEFT OUTER JOIN 
+        ref_icd10_diagnosis d ON c.icd9=d.code
+    LEFT OUTER JOIN 
+        (select * from ref_icd10_diagnosis_groups where level_num=1) f 
+            ON b.code between f.start_num and f.stop_num
+    LEFT OUTER JOIN 
+        (select * from ref_icd10_diagnosis_groups where level_num=2) g 
+            ON (
+                    (b.code between g.start_num and g.stop_num)
+                    OR (b.code = 'M1A' and g.start_num = 'M05' and g.stop_num = 'M14')
+                    OR (b.code = 'Z3A' and g.start_num = 'Z30' and g.stop_num = 'Z39')
+                    OR (b.code = 'C4A' and g.start_num = 'C43' and g.stop_num = 'C44')
     )
-where
+WHERE
     a.header = 1 -- indicates billable
-or
+OR
     trim(b.code) = 'U07' -- allow covid emergency codes, even if not billable
 """
+# init
+conf_parameters = {
+    'spark.sql.catalogImplementation': 'hive',
+    'spark.default.parallelism': 4000,
+    'spark.sql.shuffle.partitions': 4000,
+    'spark.executor.memoryOverhead': 1024,
+    'spark.driver.memoryOverhead': 1024
+}
 
-
-spark = SparkSession.builder.master("yarn").appName(
-    "marketplace-pull-diagnosis").config('spark.sql.catalogImplementation', 'hive').getOrCreate()
+spark, sql_context = init("marketplace-pull-diagnosis", conf_parameters=conf_parameters)
 
 
 def pull_diagnosis():
