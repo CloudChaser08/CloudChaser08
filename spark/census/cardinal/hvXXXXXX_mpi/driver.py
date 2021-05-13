@@ -47,6 +47,9 @@ class CardinalMPICensusDriver(CensusDriver):
         files = subprocess.check_output(['hadoop', 'fs', '-ls', '/tmp/cardinal_mpi/']).decode().split('\n')
         temp_output_file = [f.split(' ')[-1] for f in files if f.endswith('.gz')][0]
         subprocess.check_call([
+            'hadoop', 'fs', '-mkdir', '-p', SAVE_PATH + _batch_id_path
+        ])
+        subprocess.check_call([
             'hadoop', 'fs', '-mv', temp_output_file,
             SAVE_PATH + _batch_id_path + '/' + output_file_name
         ])
