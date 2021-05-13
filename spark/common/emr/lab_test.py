@@ -90,7 +90,6 @@ schema_v1 = StructType([
     StructField('prmy_src_tbl_nm', StringType(), True)
 ])
 
-
 schema_v3 = StructType([
     StructField('row_id', LongType(), True),
     StructField('hv_lab_test_id', StringType(), True),
@@ -181,24 +180,21 @@ schema_v3 = StructType([
 ])
 
 data_type = DataType.EMR
-provider_partition_column = 'part_hvm_vdr_feed_id'
-date_partition_column = 'part_mth'
-distribution_key = 'row_id'
 schemas = {
     'schema_v1': Schema(name='schema_v1',
                         schema_structure=schema_v1,
-                        distribution_key=distribution_key,
+                        distribution_key='row_id',
                         output_directory=DataType(data_type).value + '/2019-04-17/lab_test',
                         data_type=data_type,
-                        provider_partition_column=provider_partition_column,
-                        date_partition_column=date_partition_column
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth'
                         ),
     'schema_v3': Schema(name='schema_v3',
                         schema_structure=schema_v3,
-                        distribution_key=distribution_key,
+                        distribution_key='row_id',
                         output_directory=DataType(data_type).value + '/2017-08-23/lab_test',
                         data_type=data_type,
-                        provider_partition_column=provider_partition_column,
-                        date_partition_column=date_partition_column
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth'
                         )
 }

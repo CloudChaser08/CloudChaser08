@@ -830,13 +830,69 @@ schema_v12 = StructType([
 
 
 data_type = DataType.EMR
-output_directory = DataType(data_type).value + '/2017-08-23/procedure'
 schemas = {
+    'schema_v4': Schema(name='schema_v4',
+                        schema_structure=schema_v4,
+                        distribution_key='row_id',
+                        data_type=data_type,
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth',
+                        output_directory=DataType(data_type).value + '/2017-08-23/procedure'
+                        ),
+    'schema_v6': Schema(name='schema_v6',
+                        schema_structure=schema_v6,
+                        distribution_key='row_id',
+                        data_type=data_type,
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth',
+                        output_directory=DataType(data_type).value + '/2018-02-12/procedure'
+                        ),
+    'schema_v7': Schema(name='schema_v7',
+                        schema_structure=schema_v7,
+                        distribution_key='row_id',
+                        data_type=data_type,
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth',
+                        output_directory=DataType(data_type).value + '/2017-08-23/procedure'
+                        ),
+    'schema_v8': Schema(name='schema_v8',
+                        schema_structure=schema_v8,
+                        distribution_key='row_id',
+                        data_type=data_type,
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth',
+                        output_directory=DataType(data_type).value + '/2017-08-23/procedure'
+                        ),
+    'schema_v9': Schema(name='schema_v9',
+                        schema_structure=schema_v9,
+                        distribution_key='row_id',
+                        data_type=data_type,
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth',
+                        output_directory=DataType(data_type).value + '/2017-08-23/procedure'
+                        ),
+    'schema_v10': Schema(name='schema_v10',
+                         schema_structure=schema_v10,
+                         distribution_key='row_id',
+                         data_type=data_type,
+                         provider_partition_column='part_hvm_vdr_feed_id',
+                         date_partition_column='part_mth',
+                         output_directory=DataType(data_type).value + '/2019-04-17/procedure'
+                         ),
+    'schema_v11': Schema(name='schema_v11',
+                         schema_structure=schema_v11,
+                         distribution_key='row_id',
+                         data_type=data_type,
+                         provider_partition_column='part_hvm_vdr_feed_id',
+                         date_partition_column='part_mth',
+                         output_directory=DataType(data_type).value + '/2017-08-23/procedure'
+                         ),
     'schema_v12': Schema(name='schema_v12',
                          schema_structure=schema_v12,
                          distribution_key='row_id',
                          data_type=data_type,
                          provider_partition_column='part_hvm_vdr_feed_id',
                          date_partition_column='part_mth',
-                         output_directory=output_directory)
+                         output_directory=DataType(data_type).value + '/2017-08-23/procedure'
+                         )
 }

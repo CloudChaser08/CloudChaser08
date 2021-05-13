@@ -73,14 +73,14 @@ SELECT /*+ BROADCAST(ref1) */
     CAP_DATE
         (
             CAST(EXTRACT_DATE(trs.dos, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                    AS enc_dt,
     /* clin_obsn_dt */
     CAP_DATE
         (
             CAST(EXTRACT_DATE(trs.dos, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                    AS clin_obsn_dt,
     /* clin_obsn_prov_qual */
@@ -157,7 +157,7 @@ SELECT /*+ BROADCAST(ref1) */
     CAP_DATE
         (
             CAST(EXTRACT_DATE(trs.last_modified, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                    AS data_captr_dt,
     'encounter'                                                                                AS prmy_src_tbl_nm,
@@ -167,7 +167,7 @@ SELECT /*+ BROADCAST(ref1) */
         WHEN CAP_DATE
                 (
                     CAST(EXTRACT_DATE(trs.dos, '%Y-%m-%d') AS DATE),
-                    ahdt.gen_ref_1_dt,
+                    CAST('{AVAILABLE_START_DATE}' AS DATE),
                     CAST('{VDR_FILE_DT}' AS DATE)
                 ) IS NULL
             THEN '0_PREDATES_HVM_HISTORY'
@@ -190,23 +190,10 @@ SELECT /*+ BROADCAST(ref1) */
    ON COALESCE(prv.practice_id, 'NULL') = COALESCE(prc.practice_id, 'empty')
  LEFT OUTER JOIN specialty spc
    ON COALESCE(prv.primary_specialty_id, 'NULL') = COALESCE(spc.specialty_id, 'empty')
- LEFT OUTER JOIN payload pay
+ LEFT OUTER JOIN matching_payload pay
    ON LOWER(COALESCE(ptn.patient_id, 'NULL')) = COALESCE(pay.claimid, 'empty')
- LEFT OUTER JOIN ref_gen_ref ref1
-   ON ref1.gen_ref_domn_nm = 'practice_fusion_emr.vitals'
-  AND COALESCE(txn.enctype_id, 'NULL') = ref1.gen_ref_cd
- LEFT OUTER JOIN ref_gen_ref esdt
-   ON 1 = 1
-  AND esdt.hvm_vdr_feed_id = 136
-  AND esdt.gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
- LEFT OUTER JOIN ref_gen_ref eddt
-   ON 1 = 1
-  AND eddt.hvm_vdr_feed_id = 136
-  AND eddt.gen_ref_domn_nm = 'EARLIEST_VALID_DIAGNOSIS_DATE'
- LEFT OUTER JOIN ref_gen_ref ahdt
-   ON 1 = 1
-  AND ahdt.hvm_vdr_feed_id = 136
-  AND ahdt.gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
+ LEFT OUTER JOIN ref_gen_ref_domn_nm_pf_emr_vitals ref1
+   ON COALESCE(txn.enctype_id, 'NULL') = ref1.gen_ref_cd
 WHERE TRIM(UPPER(COALESCE(txn.encounter_id, 'empty'))) <> 'ENCOUNTER_ID'
   AND
     (

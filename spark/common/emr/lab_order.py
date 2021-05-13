@@ -1,4 +1,6 @@
 from pyspark.sql.types import *
+from spark.common.schema import Schema
+from spark.common.utility.output_type import DataType
 
 schema_v3 = StructType([
         StructField('row_id', LongType(), True),
@@ -128,3 +130,23 @@ schema_v6 = StructType([
     StructField('rec_stat_cd', StringType(), True),
     StructField('prmy_src_tbl_nm', StringType(), True)
 ])
+
+data_type = DataType.EMR
+schemas = {
+    'schema_v3': Schema(name='schema_v3',
+                        schema_structure=schema_v3,
+                        distribution_key='row_id',
+                        data_type=data_type,
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth',
+                        output_directory=DataType(data_type).value + '/2017-08-23/lab_order'
+                        ),
+    'schema_v6': Schema(name='schema_v6',
+                        schema_structure=schema_v6,
+                        distribution_key='row_id',
+                        data_type=data_type,
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth',
+                        output_directory=DataType(data_type).value + '/2017-08-23/lab_order'
+                        )
+}

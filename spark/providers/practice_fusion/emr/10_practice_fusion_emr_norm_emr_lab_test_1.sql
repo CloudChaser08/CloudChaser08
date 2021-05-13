@@ -63,35 +63,60 @@ SELECT
     CAP_DATE
         (
             CAST(EXTRACT_DATE(txn.observed_at, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                    AS lab_test_execd_dt,
     /* lab_result_dt */
     CAP_DATE
         (
             CAST(EXTRACT_DATE(txn.report_date, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                    AS lab_result_dt,
     /* lab_test_prov_qual */
     CASE 
-        WHEN txn.vendor_id IS NOT NULL
-            THEN 'EXECUTING_FACILITY' 
+        WHEN txn.provider_id IS NOT NULL
+            THEN 'ORDERING_PROVIDER' 
         ELSE NULL 
     END                                                                                        AS lab_test_prov_qual,
-    txn.vendor_id                                                                            AS lab_test_prov_vdr_id,
+    txn.provider_id                                                                            AS lab_test_prov_vdr_id,
     /* lab_test_prov_vdr_id_qual */
     CASE 
-        WHEN txn.vendor_id IS NOT NULL
-            THEN 'LABORDER.VENDOR_ID' 
+        WHEN txn.provider_id IS NOT NULL
+            THEN 'LABORDER.PROVIDER_ID' 
         ELSE NULL 
     END                                                                                        AS lab_test_prov_vdr_id_qual,
-    NULL                                                                                    AS lab_test_prov_nucc_taxnmy_cd,
-    NULL                                                                                    AS lab_test_prov_alt_speclty_id,
-    NULL                                                                                    AS lab_test_prov_alt_speclty_id_qual,
-    UPPER(vdr.name)                                                                         AS lab_test_prov_fclty_nm,
-    NULL                                                                                    AS lab_test_prov_state_cd,
-    NULL                                                                                    AS lab_test_prov_zip_cd,
+    /* lab_test_prov_nucc_taxnmy_cd */
+    CASE 
+        WHEN UPPER(COALESCE(prv.derived_ama_taxonomy, 'X')) <> 'X'
+            THEN prv.derived_ama_taxonomy 
+        WHEN UPPER(COALESCE(spc.npi_classification, 'X')) <> 'X' 
+            THEN spc.npi_classification 
+        ELSE NULL 
+    END                                                                                        AS lab_test_prov_nucc_taxnmy_cd,
+    UPPER(COALESCE(prv.derived_specialty, spc.name))                                        AS lab_test_prov_alt_speclty_id,
+    /* lab_test_prov_alt_speclty_id_qual */
+    CASE
+        WHEN COALESCE(prv.derived_specialty, spc.name) IS NOT NULL 
+            THEN 'DERIVED_SPECIALTY'
+        ELSE NULL
+    END                                                                                        AS lab_test_prov_alt_speclty_id_qual,
+    NULL                                                                                    AS lab_test_prov_fclty_nm,
+    /* lab_test_prov_state_cd */
+    VALIDATE_STATE_CODE
+        (
+            CASE
+                WHEN LOCATE(' OR ', UPPER(prc.state)) <> 0 
+                    THEN NULL
+                ELSE SUBSTR(UPPER(COALESCE(prc.state, '')), 1, 2) 
+            END
+        )                                                                                    AS lab_test_prov_state_cd,
+    /* lab_test_prov_zip_cd */
+    CASE 
+        WHEN LOCATE(' OR ', UPPER(prc.zip)) <> 0 
+            THEN '000' 
+        ELSE SUBSTR(prc.zip, 1, 3) 
+    END                                                                                        AS lab_test_prov_zip_cd,
     CLEAN_UP_LOINC_CODE(txn.loinc_num)                                                      AS lab_test_loinc_cd,
     COALESCE(txn.obs_quan, txn.obs_qual)                                                    AS lab_result_msrmt,
     txn.unit                                                                                AS lab_result_uom,
@@ -114,7 +139,7 @@ SELECT
     CAP_DATE
         (
             CAST(EXTRACT_DATE(txn.last_modified, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                    AS data_captr_dt,
     'laborder'                                                                                AS prmy_src_tbl_nm,
@@ -124,7 +149,7 @@ SELECT
         WHEN CAP_DATE
                 (
                     CAST(EXTRACT_DATE(txn.report_date, '%Y-%m-%d') AS DATE),
-                    ahdt.gen_ref_1_dt,
+                    CAST('{AVAILABLE_START_DATE}' AS DATE),
                     CAST('{VDR_FILE_DT}' AS DATE)
                 ) IS NULL
             THEN '0_PREDATES_HVM_HISTORY'
@@ -133,20 +158,21 @@ SELECT
  FROM laborder txn
  LEFT OUTER JOIN patient ptn
    ON COALESCE(txn.patient_id, 'NULL') = COALESCE(ptn.patient_id, 'empty')
- LEFT OUTER JOIN payload pay
+ LEFT OUTER JOIN provider prv
+   ON COALESCE(txn.provider_id, 'NULL') = COALESCE(prv.provider_id, 'empty')
+ LEFT OUTER JOIN practice prc
+   ON COALESCE(prv.practice_id, 'NULL') = COALESCE(prc.practice_id, 'empty')
+ LEFT OUTER JOIN specialty spc
+   ON COALESCE(prv.primary_specialty_id, 'NULL') = COALESCE(spc.specialty_id, 'empty')
+ LEFT OUTER JOIN matching_payload pay
    ON LOWER(COALESCE(ptn.patient_id, 'NULL')) = COALESCE(pay.claimid, 'empty')
- LEFT OUTER JOIN vendor vdr
-   ON LOWER(COALESCE(txn.vendor_id, 'NULL')) = COALESCE(vdr.vendor_id, 'empty')
- LEFT OUTER JOIN ref_gen_ref esdt
-   ON 1 = 1
-  AND esdt.hvm_vdr_feed_id = 136
-  AND esdt.gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
- LEFT OUTER JOIN ref_gen_ref ahdt
-   ON 1 = 1
-  AND ahdt.hvm_vdr_feed_id = 136
-  AND ahdt.gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
 WHERE TRIM(UPPER(COALESCE(txn.laborder_id, 'empty'))) <> 'LABORDER_ID'
   /* Per Veradigm, ignore rows without a LOINC code. */
   AND 0 <> LENGTH(TRIM(COALESCE(txn.loinc_num, '')))
-  /* Only load rows that will add vendor info. */
-  AND 0 <> LENGTH(TRIM(COALESCE(txn.vendor_id, '')))
+  /* Load rows where provider_id is populated, or where vendor_id is NOT
+     populated -- so we have at least one target row per source row. */
+  AND
+    (
+        0 <> LENGTH(TRIM(COALESCE(txn.provider_id, '')))
+     OR 0 = LENGTH(TRIM(COALESCE(txn.vendor_id, '')))
+    )
