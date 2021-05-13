@@ -107,6 +107,7 @@ class MarketplaceDriver(object):
         self.additional_output_schemas = additional_output_schemas
         self.available_start_date = None
         self.earliest_service_date = None
+        self.earliest_diagnosis_date = None
         self.input_path = None
         self.matching_path = None
         self.output_path = None
@@ -206,7 +207,10 @@ class MarketplaceDriver(object):
                                                         self.vdr_feed_id,
                                                         'HVM_AVAILABLE_HISTORY_START_DATE',
                                                         get_as_string=True)
-
+        self.earliest_diagnosis_date = pp.get_gen_ref_date(self.spark,
+                                                           self.vdr_feed_id,
+                                                           'EARLIEST_VALID_DIAGNOSIS_DATE',
+                                                           get_as_string=True)
     def transform(self):
         """
         Transform the loaded data
@@ -215,7 +219,9 @@ class MarketplaceDriver(object):
 
         variables = [['VDR_FILE_DT', str(self.date_input), False],
                      ['AVAILABLE_START_DATE', self.available_start_date, False],
-                     ['EARLIEST_SERVICE_DATE', self.earliest_service_date, False]]
+                     ['EARLIEST_SERVICE_DATE', self.earliest_service_date, False],
+                     ['EARLIEST_DIAGNOSIS_DATE', self.earliest_diagnosis_date, False]]
+
         self.runner.run_all_spark_scripts(variables, directory_path=self.provider_directory_path,
                                           count_transform_sql=self.count_transform_sql)
 

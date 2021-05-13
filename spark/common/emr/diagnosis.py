@@ -438,13 +438,37 @@ schema_v10 = StructType([
 ])
 
 data_type = DataType.EMR
-output_directory = DataType(data_type).value + '/2017-08-23/diagnosis'
 schemas = {
+    'schema_v5': Schema(name='schema_v5',
+                        schema_structure=schema_v5,
+                        distribution_key='row_id',
+                        data_type=data_type,
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth',
+                        output_directory=DataType(data_type).value + '/2017-08-23/diagnosis'
+                        ),
+    'schema_v7': Schema(name='schema_v7',
+                        schema_structure=schema_v7,
+                        distribution_key='row_id',
+                        data_type=data_type,
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth',
+                        output_directory=DataType(data_type).value + '/2017-08-23/diagnosis'
+                        ),
+    'schema_v8': Schema(name='schema_v8',
+                        schema_structure=schema_v8,
+                        distribution_key='row_id',
+                        data_type=data_type,
+                        provider_partition_column='part_hvm_vdr_feed_id',
+                        date_partition_column='part_mth',
+                        output_directory=DataType(data_type).value + '/2019-04-17/diagnosis'
+                        ),
     'schema_v10': Schema(name='schema_v10',
                          schema_structure=schema_v10,
                          distribution_key='row_id',
                          data_type=data_type,
                          provider_partition_column='part_hvm_vdr_feed_id',
                          date_partition_column='part_mth',
-                         output_directory=output_directory)
+                         output_directory=DataType(data_type).value + '/2017-08-23/diagnosis'
+                         )
 }

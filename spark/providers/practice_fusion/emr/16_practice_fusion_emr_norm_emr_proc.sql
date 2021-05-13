@@ -64,7 +64,7 @@ SELECT
     CAP_DATE
         (
             CAST(EXTRACT_DATE(txn.date_administered, '%Y-%m-%d') AS DATE),
-            eddt.gen_ref_1_dt,
+            CAST('{EARLIEST_DIAGNOSIS_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                    AS proc_dt,
     /* proc_prov_qual */
@@ -178,7 +178,7 @@ SELECT
     CAP_DATE
         (
             CAST(EXTRACT_DATE(txn.created_at, '%Y-%m-%d') AS DATE),
-            esdt.gen_ref_1_dt,
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
         )                                                                                    AS data_captr_dt,
     'vaccination'                                                                            AS prmy_src_tbl_nm,
@@ -188,7 +188,7 @@ SELECT
         WHEN CAP_DATE
                 (
                     CAST(EXTRACT_DATE(txn.date_administered, '%Y-%m-%d') AS DATE),
-                    ahdt.gen_ref_1_dt,
+                    CAST('{AVAILABLE_START_DATE}' AS DATE),
                     CAST('{VDR_FILE_DT}' AS DATE)
                 ) IS NULL
             THEN '0_PREDATES_HVM_HISTORY'
@@ -205,18 +205,6 @@ SELECT
    ON COALESCE(prv.practice_id, 'NULL') = COALESCE(prc.practice_id, 'empty')
  LEFT OUTER JOIN specialty spc
    ON COALESCE(prv.primary_specialty_id, 'NULL') = COALESCE(spc.specialty_id, 'empty')
- LEFT OUTER JOIN payload pay
+ LEFT OUTER JOIN matching_payload pay
    ON LOWER(COALESCE(ptn.patient_id, 'NULL')) = COALESCE(pay.claimid, 'empty')
- LEFT OUTER JOIN ref_gen_ref esdt
-   ON 1 = 1
-  AND esdt.hvm_vdr_feed_id = 136
-  AND esdt.gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
- LEFT OUTER JOIN ref_gen_ref eddt
-   ON 1 = 1
-  AND eddt.hvm_vdr_feed_id = 136
-  AND eddt.gen_ref_domn_nm = 'EARLIEST_VALID_DIAGNOSIS_DATE'
- LEFT OUTER JOIN ref_gen_ref ahdt
-   ON 1 = 1
-  AND ahdt.hvm_vdr_feed_id = 136
-  AND ahdt.gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
 WHERE TRIM(UPPER(COALESCE(txn.vaccination_id, 'empty'))) <> 'VACCINATION_ID'
