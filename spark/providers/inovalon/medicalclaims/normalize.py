@@ -182,8 +182,8 @@ if __name__ == "__main__":
         driver.spark.sql(query).repartition(100).write \
             .parquet(tmp_location, partitionBy=partition, compression='gzip', mode="append")
 
-        driver.log_run()
         driver.stop_spark()
+        driver.log_run()
         driver.copy_to_output_path()
 
         # Copy claims to reference location

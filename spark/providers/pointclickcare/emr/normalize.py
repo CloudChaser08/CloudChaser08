@@ -91,8 +91,8 @@ if __name__ == "__main__":
 
     driver.transform()
     driver.save_to_disk()
-    driver.log_run()
     driver.stop_spark()
+    driver.log_run()
     driver.copy_to_output_path()
     hdfs_utils.clean_up_output_hdfs(v_ref_hdfs_output_path)
     logger.log('Done')

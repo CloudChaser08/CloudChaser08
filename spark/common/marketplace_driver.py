@@ -162,8 +162,8 @@ class MarketplaceDriver(object):
         self.load()
         self.transform()
         self.save_to_disk()
-        self.log_run()
         self.stop_spark()
+        self.log_run()
         self.copy_to_output_path()
 
     def load(self, extra_payload_cols=None, cache_tables=True, payloads=True):

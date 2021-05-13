@@ -75,8 +75,8 @@ if __name__ == "__main__":
     logger.log('Save unmatched reference records to: ' + LOCAL_UNMATCHED)
     driver.spark.table('esi_norm_final_unmatched').repartition(2).write.parquet(
         LOCAL_UNMATCHED, partitionBy='part_best_date', compression='gzip', mode='overwrite')
-    driver.log_run()
     driver.stop_spark()
+    driver.log_run()
     driver.copy_to_output_path()
     if not end_to_end_test:
         logger.log('Write the unmatched reference data to s3: ' + S3_UNMATCHED_REFERENCE)

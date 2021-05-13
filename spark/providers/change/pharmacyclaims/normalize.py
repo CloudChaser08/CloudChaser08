@@ -63,6 +63,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     driver.load()
     driver.transform()
     driver.save_to_disk()
+    driver.stop_spark()
     driver.log_run()
 
     logger.log('Backup historical data')
@@ -75,8 +76,6 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     current_year_month = args.date[:7] + '-01'
     one_month_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m-01')
     two_months_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m-01')
-
-    driver.stop_spark()
 
     for month in [current_year_month, one_month_prior, two_months_prior]:
         subprocess.check_call(
