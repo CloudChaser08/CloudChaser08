@@ -130,8 +130,8 @@ if __name__ == "__main__":
         new_name = output_file_name_template.format(str(part_number).zfill(5)) + '.gz.parquet'
         hdfs_utils.rename_file_hdfs(local_output_path + filename, local_output_path + new_name)
 
-    driver.log_run()
     driver.stop_spark()
+    driver.log_run()
     driver.copy_to_output_path(output_location=delivery_path)
     if hdfs_utils.list_parquet_files(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)[0].strip():
         logger.log("Copying reference files to: " + REFERENCE_OUTPUT_PATH)

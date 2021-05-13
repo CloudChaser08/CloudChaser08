@@ -151,8 +151,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     driver.transform()
     if not test:
         driver.save_to_disk()
-        driver.log_run()
         driver.stop_spark()
+        driver.log_run()
         driver.copy_to_output_path()
         logger.log('- Saving PHI to s3: ' + S3_REF_PHI)
         # offload reference data

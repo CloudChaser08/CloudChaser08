@@ -82,6 +82,6 @@ if __name__ == "__main__":
     logger.log('Start transform')
     driver.transform()
     driver.save_to_disk()
-    driver.log_run()
     driver.stop_spark()
+    driver.log_run()
     driver.copy_to_output_path()

@@ -117,8 +117,8 @@ def run(date_input, end_to_end_test):
 
     driver.transform()
     driver.save_to_disk()
-    driver.log_run()
     driver.stop_spark()
+    driver.log_run()
 
     logger.log('Backup historical data')
     if end_to_end_test:

@@ -74,9 +74,9 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         )
     driver.transform()
     driver.save_to_disk()
-    driver.log_run()
     if not test:
         driver.stop_spark()
+        driver.log_run()
         driver.copy_to_output_path()
 
 
