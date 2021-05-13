@@ -60,8 +60,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
 
     # init
     conf_parameters = {
-        'spark.default.parallelism': 4000,
-        'spark.sql.shuffle.partitions': 4000,
+        'spark.default.parallelism': 3000,
+        'spark.sql.shuffle.partitions': 3000,
         'spark.executor.memoryOverhead': 1024,
         'spark.driver.memoryOverhead': 1024,
         'spark.sql.autoBroadcastJoinThreshold': 209715200
