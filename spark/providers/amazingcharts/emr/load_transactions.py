@@ -38,7 +38,10 @@ def load(spark, runner, table_locs, batch_date, test=False):
     for table, input_path in table_locs.items():
         try:
             tn = get_tablename_for_date(table, batch_date)
-            df = records_loader.load(runner, input_path, TABLE_COLS[tn], 'csv', '|')
+            if tn == 'd_multum_to_ndc':
+                continue
+            else:
+                df = records_loader.load(runner, input_path, TABLE_COLS[tn], 'csv', '|')
             if not validate_header(df, tn):
                 raise ValueError('Error in header validation')
             if tn == 'd_lab_directory' and 'provider_key' not in df.columns:
