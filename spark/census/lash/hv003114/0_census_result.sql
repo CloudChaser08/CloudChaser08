@@ -16,6 +16,8 @@ SELECT
     c.expiry_date as expiry_date,
     c.status as status,
     c.document_id as document_id,
+    '' as document_location,
+    '' as document_signature,
     c.source_system as system,
     c.hub_id as hub_id
 FROM matching_payload p
