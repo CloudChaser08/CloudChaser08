@@ -31,20 +31,13 @@ class LashCensusDriver(CensusDriver):
         formatted_save_path = SAVE_PATH + '{batch_id_path}/'.format(
             batch_id_path=_batch_id_path
         )
+        output_file_name_template = '{batch_id_value}_response_{{part_num}}.csv.gz'
         normalized_records_unloader.unload_delimited_file(
             self._spark, self._runner, formatted_save_path,
             'deliverable',
-            output_file_name_template=self._output_file_name_template.format(
+            output_file_name_template=output_file_name_template.format(
                 batch_id_value=_batch_id_value
             ),
             test=self._test, header=header,
             compression='none'
         )
-
-        # rename output files to .txt
-        output_files = check_output(['hadoop', 'fs', 'ls', formatted_save_path])
-
-        for filename in output_files.split('\n'):
-            filename_without_ext = os.path.splitext(os.path.basename(filename))[0]
-            new_filename = '{}.txt'.format(filename_without_ext)
-            check_output(['hadoop', 'fs', 'mv', formatted_save_path + filename, formatted_save_path + new_filename])
