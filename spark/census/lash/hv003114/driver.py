@@ -24,14 +24,14 @@ class LashCensusDriver(CensusDriver):
         )
     
     def save(self, dataframe, batch_date, batch_id, chunk_idx=None, header=True):
-        # same as normal census driver save, except not compressed
+        # same as normal census driver save, except not compressed and with .txt filenames
         log("Saving results to the local file system")
         dataframe.createOrReplaceTempView('deliverable')
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
         formatted_save_path = SAVE_PATH + '{batch_id_path}/'.format(
             batch_id_path=_batch_id_path
         )
-        output_file_name_template = '{batch_id_value}_response_{{part_num}}.csv.gz'
+        output_file_name_template = '{batch_id_value}_response_{{part_num}}.txt'
         normalized_records_unloader.unload_delimited_file(
             self._spark, self._runner, formatted_save_path,
             'deliverable',

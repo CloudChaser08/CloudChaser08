@@ -31,7 +31,7 @@ class AccredoCensusDriver(CensusDriver):
         formatted_save_path = SAVE_PATH + '{batch_id_path}/'.format(
             batch_id_path=_batch_id_path
         )
-        output_file_name_template = '{batch_id_value}_response_{{part_num}}.csv.gz'
+        output_file_name_template = '{batch_id_value}_response_{{part_num}}.txt'
         normalized_records_unloader.unload_delimited_file(
             self._spark, self._runner, formatted_save_path,
             'deliverable',
