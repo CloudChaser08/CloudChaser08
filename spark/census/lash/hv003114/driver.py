@@ -12,7 +12,7 @@ class LashCensusDriver(CensusDriver):
     """
     Lash driver
     """
-    CLIENT_NAME = "Lash"
+    CLIENT_NAME = "lash"
     OPPORTUNITY_ID = "hv003114"
 
     def __init__(

@@ -12,7 +12,7 @@ class AccredoCensusDriver(CensusDriver):
     """
     Accredo driver
     """
-    CLIENT_NAME = "Accredo"
+    CLIENT_NAME = "accredo"
     OPPORTUNITY_ID = "hv003114"
 
     def __init__(
