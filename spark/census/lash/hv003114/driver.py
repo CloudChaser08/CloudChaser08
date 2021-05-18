@@ -46,5 +46,5 @@ class LashCensusDriver(CensusDriver):
 
         for filename in output_files.split('\n'):
             filename_without_ext = os.path.splitext(os.path.basename(filename))[0]
-            new_filename = f'{filename_without_ext}.txt'
+            new_filename = '{}.txt'.format(filename_without_ext)
             check_output(['hadoop', 'fs', 'mv', formatted_save_path + filename, formatted_save_path + new_filename])
