@@ -3,6 +3,9 @@ HV003114 UBC HUB Lash census driver
 """
 from subprocess import check_output
 import os
+import importlib
+import inspect
+from datetime import datetime
 
 from spark.common.census_driver import CensusDriver, SAVE_PATH
 from spark.common.utility.logger import log
@@ -41,3 +44,16 @@ class LashCensusDriver(CensusDriver):
             test=self._test, header=header,
             compression='none'
         )
+
+    def transform(self, batch_date, batch_id):
+        log("Transforming records")
+        # 20210517080002
+        # %Y%m%D%H%M%S
+        log("Attempting to pull datetime from {}".format(batch_id))
+        batch_dt = datetime.strptime(batch_id, '%Y%m%D%H%M%S')
+        timestamp = batch_dt.strftime('%H:%M:%S')
+        scripts_directory = os.path.dirname(os.path.abspath(__file__))
+        content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt], ['timestamp', timestamp]],
+                                                     directory_path=scripts_directory)
+
+        return content

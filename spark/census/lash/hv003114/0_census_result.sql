@@ -13,8 +13,8 @@ SELECT
     c.channel as channel,
     c.consent_type as consent_type,
     -- Our input dates are in the format MM/DD/YYYY, but consent requires YYYY-MM-DD HH:mm:SS
-    regexp_replace(c.transaction_date, '(?<month>[0-9]{{2}})/(?<day>[0-9]{{2}})/(?<year>[0-9]{{4}})', '$3-$1-$2 00:00:00') as transaction_date,
-    regexp_replace(c.expiry_date, '(?<month>[0-9]{{2}})/(?<day>[0-9]{{2}})/(?<year>[0-9]{{4}})', '$3-$1-$2 00:00:00') as expiry_date,
+    regexp_replace(c.transaction_date, '(?<month>[0-9]{{2}})/(?<day>[0-9]{{2}})/(?<year>[0-9]{{4}})', '$3-$1-$2 {timestamp}') as transaction_date,
+    regexp_replace(c.expiry_date, '(?<month>[0-9]{{2}})/(?<day>[0-9]{{2}})/(?<year>[0-9]{{4}})', '$3-$1-$2 {timestamp}') as expiry_date,
     c.status as status,
     c.document_id as document_id,
     '' as document_location,
