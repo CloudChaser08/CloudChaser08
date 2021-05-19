@@ -5,6 +5,7 @@ SELECT
     obfuscate_hvid(p.hvid, {salt}) as consenter_id,
     c.caregiver_id as caregiver_id,
     c.consenter_region as region,
+    -- LASH sends us the invalid Patient Consent value, but consent expects patient instead
     regexp_replace(c.consenter_type, 'Patient Consent', 'patient') as consenter_type,
     c.franchise as franchise,
     c.brand as brand,
