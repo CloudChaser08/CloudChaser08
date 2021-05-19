@@ -47,11 +47,10 @@ class LashCensusDriver(CensusDriver):
 
     def transform(self, batch_date, batch_id):
         log("Transforming records")
-        # 20210517080002
-        # %Y%m%D%H%M%S
-        log("Attempting to pull datetime from {}".format(batch_id))
+        log("Attempting to pull datetime from batch ID: {}".format(batch_id))
         batch_dt = datetime.strptime(batch_id, '%Y%m%D%H%M%S')
         timestamp = batch_dt.strftime('%H:%M:%S')
+        log("Retrieved timestamp {} from batch ID".format(timestamp))
         scripts_directory = os.path.dirname(os.path.abspath(__file__))
         content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt], ['timestamp', timestamp]],
                                                      directory_path=scripts_directory)
