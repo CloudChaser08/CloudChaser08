@@ -2,14 +2,15 @@
 HV003114 UBC HUB Lash census driver
 """
 from subprocess import check_output
-import os
+from datetime import datetime
 import importlib
 import inspect
-from datetime import datetime
 
 from spark.common.census_driver import CensusDriver, SAVE_PATH
 from spark.common.utility.logger import log
+from spark.runner import PACKAGE_PATH
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+
 
 class LashCensusDriver(CensusDriver):
     """
@@ -55,7 +56,11 @@ class LashCensusDriver(CensusDriver):
         timestamp = batch_dt.strftime('%H:%M:%S')
 
         log("Retrieved timestamp {} from batch ID".format(timestamp))
-        scripts_directory = os.path.dirname(os.path.abspath(__file__))
+        # Since this module is in the package, its file path will contain the
+        # package path. Remove that in order to find the location of the
+        # transformation scripts
+        census_module = importlib.import_module(self._base_package)
+        scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
         content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt], ['timestamp', timestamp]],
                                                      directory_path=scripts_directory)
 
