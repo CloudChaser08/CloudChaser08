@@ -51,7 +51,7 @@ class LashCensusDriver(CensusDriver):
         # LASH provides dates but not times for consenter preferences,
         # so add the batch ID's time (from the filename) but maintain the date in the row
         log("Attempting to pull datetime from batch ID: {}".format(batch_id))
-        batch_dt = datetime.strptime(batch_id, '%Y%m%D%H%M%S')
+        batch_dt = datetime.strptime(batch_id, '%Y%m%d%H%M%S')
         timestamp = batch_dt.strftime('%H:%M:%S')
 
         log("Retrieved timestamp {} from batch ID".format(timestamp))
