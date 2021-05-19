@@ -1,12 +1,15 @@
 """
 HV003114 UBC HUB Lash census driver
 """
-from subprocess import check_output
-import os
+from datetime import datetime
+import importlib
+import inspect
 
 from spark.common.census_driver import CensusDriver, SAVE_PATH
 from spark.common.utility.logger import log
+from spark.runner import PACKAGE_PATH
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
+
 
 class LashCensusDriver(CensusDriver):
     """
@@ -41,3 +44,23 @@ class LashCensusDriver(CensusDriver):
             test=self._test, header=header,
             compression='none'
         )
+
+    def transform(self, batch_date, batch_id):
+        log("Transforming records")
+        
+        # LASH provides dates but not times for consenter preferences,
+        # so add the batch ID's time (from the filename) but maintain the date in the row
+        log("Attempting to pull datetime from batch ID: {}".format(batch_id))
+        batch_dt = datetime.strptime(batch_id, '%Y%m%d%H%M%S')
+        timestamp = batch_dt.strftime('%H:%M:%S')
+
+        log("Retrieved timestamp {} from batch ID".format(timestamp))
+        # Since this module is in the package, its file path will contain the
+        # package path. Remove that in order to find the location of the
+        # transformation scripts
+        census_module = importlib.import_module(self._base_package)
+        scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
+        content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt], ['timestamp', timestamp]],
+                                                     directory_path=scripts_directory)
+
+        return content
