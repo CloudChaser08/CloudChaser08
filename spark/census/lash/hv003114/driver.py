@@ -1,7 +1,6 @@
 """
 HV003114 UBC HUB Lash census driver
 """
-from subprocess import check_output
 from datetime import datetime
 import importlib
 import inspect
