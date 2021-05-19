@@ -60,7 +60,7 @@ class LashCensusDriver(CensusDriver):
         # transformation scripts
         census_module = importlib.import_module(self._base_package)
         scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
-        content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt], ['timestamp', timestamp]],
+        content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt], ['timestamp', timestamp, False]],
                                                      directory_path=scripts_directory)
 
         return content
