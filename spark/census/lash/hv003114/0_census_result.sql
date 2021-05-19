@@ -13,6 +13,7 @@ SELECT
     c.channel as channel,
     c.consent_type as consent_type,
     -- Our input dates are in the format MM/DD/YYYY, but consent requires YYYY-MM-DD HH:mm:SS
+    -- timestamp is a time of day in format HH:mm:SS which is pulled from batch ID
     regexp_replace(c.transaction_date, '(?<month>[0-9]{{2}})/(?<day>[0-9]{{2}})/(?<year>[0-9]{{4}})', '$3-$1-$2 {timestamp}') as transaction_date,
     regexp_replace(c.expiry_date, '(?<month>[0-9]{{2}})/(?<day>[0-9]{{2}})/(?<year>[0-9]{{4}})', '$3-$1-$2 {timestamp}') as expiry_date,
     c.status as status,

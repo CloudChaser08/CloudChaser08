@@ -47,9 +47,13 @@ class LashCensusDriver(CensusDriver):
 
     def transform(self, batch_date, batch_id):
         log("Transforming records")
+        
+        # LASH provides dates but not times for consenter preferences,
+        # so add the batch ID's time (from the filename) but maintain the date in the row
         log("Attempting to pull datetime from batch ID: {}".format(batch_id))
         batch_dt = datetime.strptime(batch_id, '%Y%m%D%H%M%S')
         timestamp = batch_dt.strftime('%H:%M:%S')
+
         log("Retrieved timestamp {} from batch ID".format(timestamp))
         scripts_directory = os.path.dirname(os.path.abspath(__file__))
         content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt], ['timestamp', timestamp]],
