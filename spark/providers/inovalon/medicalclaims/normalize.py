@@ -87,7 +87,7 @@ if __name__ == "__main__":
             unload_partition_count=200,
             vdr_feed_id=176,
             use_ref_gen_values=True,
-            output_to_transform_path=False
+            output_to_transform_path=True
         )
 
         conf_parameters = {
