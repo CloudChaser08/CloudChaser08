@@ -4,6 +4,7 @@ import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.external_table_loader as external_table_loader
 import spark.providers.pointclickcare.emr.transactional_schemas as historic_source_table_schemas
 import spark.providers.pointclickcare.emr.transactional_schemas_v1 as transactions_v1
+import spark.providers.pointclickcare.emr.transactional_schemas_v2 as transactions_v2
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.emr.clinical_observation import schemas as clinical_observation_schemas
 from spark.common.emr.diagnosis import schemas as diagnosis_schemas
@@ -15,6 +16,7 @@ import spark.common.utility.logger as logger
 import spark.helpers.postprocessor as postprocessor
 
 v_cutoff_date = '2021-02-01'
+v_cutoff_trans_schema_refactor_sql = '2021-05-01'
 v_ref_hdfs_output_path = '/reference/'
 
 if __name__ == "__main__":
@@ -41,12 +43,17 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
+    b_transactions_v1 = datetime.strptime(v_cutoff_date, '%Y-%m-%d').date() <= datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_trans_schema_refactor_sql, '%Y-%m-%d').date()
+
     if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
         logger.log('Historic Load schema with ddid column')
         source_table_schemas = historic_source_table_schemas
-    else:
-        logger.log('Future Load using new schema with drugid column, and new labtest schema')
+    elif b_transactions_v1:
+        logger.log('Load using new schema with drugid column, and new labtest schema')
         source_table_schemas = transactions_v1
+    else:
+        logger.log('Load using new schema with new DimObservationMethod and FactObservation schema')
+        source_table_schemas = transactions_v2
 
     # Create and run driver
     driver = MarketplaceDriver(
@@ -85,9 +92,8 @@ if __name__ == "__main__":
 
     logger.log('Apply custom nullify trimmify')
     for table in driver.source_table_schema.TABLE_CONF:
-        postprocessor.nullify(
-            postprocessor.trimmify(driver.spark.table(table))
-            , ['NULL', 'Null', 'null', 'unknown', 'Unknown', 'UNKNOWN', '19000101', '']).createOrReplaceTempView(table)
+        cleaned_df = postprocessor.nullify(postprocessor.trimmify(driver.spark.table(table)), ['NULL', 'Null', 'null', 'unknown', 'Unknown', 'UNKNOWN', '19000101', ''])
+        cleaned_df.createOrReplaceTempView(table)
 
     driver.transform()
     driver.save_to_disk()

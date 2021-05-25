@@ -40,13 +40,13 @@ SELECT
     --- ptnt_birth_yr
     --------------------------------------------------------------------------------------------------
 	CAST(
-	    CAP_YEAR_OF_BIRTH
+	CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        CAST(EXTRACT_DATE(imm.immunizationdateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
 	    )
-	  AS INT)                                                                               AS ptnt_birth_yr,
+	  AS INT)                                                                                AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
     --------------------------------------------------------------------------------------------------
@@ -94,8 +94,8 @@ SELECT
     END                                                                         AS part_mth
 
 FROM factimmunization imm
-LEFT OUTER JOIN matching_payload pay        ON imm.residentid       = pay.personid        AND COALESCE(imm.residentid, '0') <> '0'
-LEFT OUTER JOIN dimorganization dorg        ON imm.organizationid   = dorg.organizationid AND COALESCE(imm.organizationid, '0') <> '0'
-LEFT OUTER JOIN dimimmunization dimm        ON imm.immunizationid   = dimm.immunizationid AND COALESCE(imm.immunizationid, '0') <> '0'
-LEFT OUTER JOIN dimvaccine dvcx             ON imm.vaccineid        = dvcx.vaccineid      AND COALESCE(imm.vaccineid, '0') <> '0'
+LEFT OUTER JOIN matching_payload          pay  ON imm.residentid    = pay.personid        AND COALESCE(imm.residentid, '0') <> '0'
+LEFT OUTER JOIN dimorganization dorg           ON imm.organizationid= dorg.organizationid AND COALESCE(imm.organizationid, '0') <> '0'
+LEFT OUTER JOIN dimimmunization          dimm  ON imm.immunizationid= dimm.immunizationid AND COALESCE(imm.immunizationid, '0') <> '0'
+LEFT OUTER JOIN dimvaccine        dvcx         ON imm.vaccineid     = dvcx.vaccineid      AND COALESCE(imm.vaccineid, '0') <> '0'
 WHERE TRIM(lower(COALESCE(imm.immunizationdateid, 'empty'))) <> 'immunizationdateid'

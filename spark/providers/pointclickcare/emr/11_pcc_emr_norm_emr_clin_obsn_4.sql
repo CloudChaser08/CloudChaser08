@@ -69,7 +69,7 @@ SELECT
     --------------------------------------------------------------------------------------------------
     '0_PREDATES_HVM_HISTORY'                                                                 AS part_mth
 FROM factcareprofile cpf
-LEFT OUTER JOIN matching_payload pay            ON cpf.residentid            = pay.personid               AND COALESCE(cpf.residentid, '0')            <> '0'
-LEFT OUTER JOIN dimorganization dorg            ON cpf.organizationid        = dorg.organizationid        AND COALESCE(cpf.organizationid, '0')        <> '0'
-LEFT OUTER JOIN dimcareprofilequestion dcpf     ON cpf.careprofilequestionid = dcpf.careprofilequestionid AND COALESCE(cpf.careprofilequestionid, '0') <> '0'
+LEFT OUTER JOIN matching_payload pay         ON cpf.residentid            = pay.personid               AND COALESCE(cpf.residentid, '0')            <> '0'
+LEFT OUTER JOIN dimorganization dorg         ON cpf.organizationid        = dorg.organizationid        AND COALESCE(cpf.organizationid, '0')        <> '0'
+LEFT OUTER JOIN dimcareprofilequestion dcpf  ON cpf.careprofilequestionid = dcpf.careprofilequestionid AND COALESCE(cpf.careprofilequestionid, '0') <> '0'
 WHERE TRIM(lower(COALESCE(cpf.careprofilequestionid, 'empty'))) <> 'careprofilequestionid'

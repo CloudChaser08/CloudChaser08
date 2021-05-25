@@ -9,7 +9,7 @@ SELECT
                         '156_',
                         COALESCE(obs.organizationid, 'UNAVAILABLE'),
                         '_',
-                        COALESCE(obs.factobservationid, 'UNAVAILABLE')
+                        COALESCE(obs.fact_row_set_id, 'UNAVAILABLE')
                     )
         ELSE NULL
     END                                                                                     AS hv_clin_obsn_id,
@@ -22,7 +22,7 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- vdr_clin_obsn_id and vdr_clin_obsn_id_qual
     --------------------------------------------------------------------------------------------------
-	obs.factobservationid                                                                   AS vdr_clin_obsn_id,
+	obs.factobservationid                                                                 AS vdr_clin_obsn_id,
     CASE
         WHEN obs.factobservationid IS NOT NULL THEN 'FACT_OBSERVATION_ID'
         ELSE NULL
@@ -31,21 +31,21 @@ SELECT
     --- hvid
     --------------------------------------------------------------------------------------------------
 	CASE
-	    WHEN 0 <> LENGTH(TRIM(COALESCE(pay.hvid, '')))        THEN pay.hvid
+	    WHEN 0 <> LENGTH(TRIM(COALESCE(pay.hvid, '')))          THEN pay.hvid
 	    WHEN 0 <> LENGTH(TRIM(COALESCE(obs.residentid, '')))  THEN CONCAT('156_', obs.residentid)
     ELSE NULL
 	END																				        AS hvid,
     --------------------------------------------------------------------------------------------------
     --- ptnt_birth_yr
     --------------------------------------------------------------------------------------------------
-    CAST(
-        CAP_YEAR_OF_BIRTH
+	CAST(
+	    CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        CAST(EXTRACT_DATE(obs.observationdateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
 	    )
-	  AS INT)                                                                               AS ptnt_birth_yr,
+	    AS INT)                                                                              AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
     --------------------------------------------------------------------------------------------------
@@ -64,14 +64,14 @@ SELECT
     ELSE     CAST(EXTRACT_DATE(obs.observationdateid, '%Y%m%d') AS DATE)
     END                                                                                     AS clin_obsn_dt,
     CAST(NULL AS DATE)                                                                      AS clin_obsn_onset_dt,
-    obs.obs_typ                                                                             AS clin_obsn_typ_cd,
+    obs.gen_ref_1_txt                                                                       AS clin_obsn_typ_cd,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_alt_cd,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_alt_cd_qual,
-    obs.obs_msrmt                                                                           AS clin_obsn_msrmt,
-    'mmHg'                                                                                  AS clin_obsn_uom,
-	'fact_observation'																		AS prmy_src_tbl_nm,
+    obs.observationvalueimperial                                                            AS clin_obsn_msrmt,
+    obs.gen_ref_2_txt                                                                       AS clin_obsn_uom,
+	obs.prmysrctblnm																		AS prmy_src_tbl_nm,
 	'156'																			        AS part_hvm_vdr_feed_id,
-   --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------
     --- part_mth
     --------------------------------------------------------------------------------------------------
     CASE
@@ -82,24 +82,7 @@ SELECT
 	                SUBSTR(obs.observationdateid, 1, 4), '-',
 	                SUBSTR(obs.observationdateid, 5, 2)
                 )
-    END                                                                                    AS part_mth
-FROM
-    (
-        SELECT
-            CAST(CASE
-                WHEN 0 <> LENGTH(COALESCE(observationsystolic, '')) THEN observationsystolic
-                WHEN 0 <> LENGTH(COALESCE(observationdiastolic, '')) THEN observationdiastolic
-                ELSE NULL
-            END AS STRING) AS obs_msrmt,
-            CAST(CASE
-                WHEN 0 <> LENGTH(COALESCE(observationsystolic, '')) THEN 'SYSTOLIC'
-                WHEN 0 <> LENGTH(COALESCE(observationdiastolic, '')) THEN 'DIASTOLIC'
-                ELSE NULL
-            END AS STRING) AS obs_typ,
-            sub.*
-        FROM factobservation sub
-        WHERE 0 <> LENGTH(COALESCE(observationsystolic, '')) OR 0 <> LENGTH(COALESCE(observationdiastolic, ''))
-    ) obs
-LEFT OUTER JOIN matching_payload pay            ON obs.residentid           = pay.personid         AND COALESCE(obs.residentid, '0') <> '0'
-LEFT OUTER JOIN dimorganization dorg            ON obs.organizationid       = dorg.organizationid AND COALESCE(obs.organizationid, '0') <> '0'
-WHERE TRIM(lower(COALESCE(obs.observationdateid, 'empty'))) <> 'observationdateid'
+    END                                                                         AS part_mth
+FROM pcc_fact_obs_no_blood_pressure_norm obs
+LEFT OUTER JOIN matching_payload pay ON obs.residentid           = pay.personid         AND COALESCE(obs.residentid, '0') <> '0'
+LEFT OUTER JOIN dimorganization dorg ON obs.organizationid       = dorg.organizationid AND COALESCE(obs.organizationid, '0') <> '0'

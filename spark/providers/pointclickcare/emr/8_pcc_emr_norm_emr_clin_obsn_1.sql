@@ -39,14 +39,14 @@ SELECT
     ---------------------------------------------------------------------------------------------------
     --- ptnt_birth_yr
     --------------------------------------------------------------------------------------------------
-    CAST(
-        CAP_YEAR_OF_BIRTH
+	CAST(
+	    CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
 	    )
-	  AS INT)                                                                               AS ptnt_birth_yr,
+	   AS INT) AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
     --------------------------------------------------------------------------------------------------
@@ -134,10 +134,10 @@ SELECT
                 )
     END                                                                         AS part_mth
 FROM factallergy alg
-LEFT OUTER JOIN dimorganization dorg            ON alg.organizationid      = dorg.organizationid     AND COALESCE(alg.organizationid, '0') <> '0'
-LEFT OUTER JOIN matching_payload pay            ON alg.residentid          = pay.personid            AND COALESCE(alg.residentid, '0') <> '0'
-LEFT OUTER JOIN dimallergen dalg                ON alg.allergenid          = dalg.allergenid         AND COALESCE(alg.allergenid, '0') <> '0'
-LEFT OUTER JOIN dimallergyattribute dala              ON alg.allergyattributeid  = dala.allergyattributeid AND COALESCE(alg.allergyattributeid, '0') <> '0'
-LEFT OUTER JOIN dimallergycategory dalc         ON alg.allergycategoryid   = dalc.allergycategoryid  AND COALESCE(alg.allergycategoryid, '0') <> '0'
-LEFT OUTER JOIN dimallergyreaction dalr         ON alg.allergyreactionid   = dalr.allergyreactionid  AND COALESCE(alg.allergyreactionid, '0') <> '0'
+LEFT OUTER JOIN dimorganization dorg           ON alg.organizationid      = dorg.organizationid     AND COALESCE(alg.organizationid, '0') <> '0'
+LEFT OUTER JOIN matching_payload pay           ON alg.residentid          = pay.personid            AND COALESCE(alg.residentid, '0') <> '0'
+LEFT OUTER JOIN dimallergen dalg               ON alg.allergenid          = dalg.allergenid         AND COALESCE(alg.allergenid, '0') <> '0'
+LEFT OUTER JOIN dimallergyattribute dala       ON alg.allergyattributeid  = dala.allergyattributeid AND COALESCE(alg.allergyattributeid, '0') <> '0'
+LEFT OUTER JOIN dimallergycategory dalc        ON alg.allergycategoryid   = dalc.allergycategoryid  AND COALESCE(alg.allergycategoryid, '0') <> '0'
+LEFT OUTER JOIN dimallergyreaction dalr        ON alg.allergyreactionid   = dalr.allergyreactionid  AND COALESCE(alg.allergyreactionid, '0') <> '0'
 WHERE TRIM(lower(COALESCE(alg.onsetdateid, 'empty'))) <> 'onsetdateid'

@@ -42,13 +42,13 @@ DISTINCT
     --- ptnt_birth_yr
     --------------------------------------------------------------------------------------------------
 	CAST(
-	    CAP_YEAR_OF_BIRTH
+	CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        CAST(EXTRACT_DATE(dgn.onsetdateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
 	   )
-	 AS INT)                                                                                AS ptnt_birth_yr,
+	    AS INT)                                                                             AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
     --------------------------------------------------------------------------------------------------
@@ -107,10 +107,10 @@ DISTINCT
         ELSE NULL
     END                                                                                     AS admt_diag_flg,
     CASE
-        WHEN ddgr.diagnosisrank IS NOT NULL
-         AND ddgc.diagnosisclassification IS NOT NULL  THEN CONCAT('DIAGNOSIS_RANK: ', ddgr.diagnosisrank, ' | ', 'DIAGNOSIS_CLASSIFICATION: ', ddgc.diagnosisclassification)
-        WHEN ddgr.diagnosisrank IS NOT NULL            THEN CONCAT('DIAGNOSIS_RANK: ', ddgr.diagnosisrank)
-        WHEN ddgc.diagnosisclassification IS NOT NULL THEN CONCAT('DIAGNOSIS_CLASSIFICATION: ', ddgc.diagnosisclassification)
+        WHEN rank.diagnosisrank IS NOT NULL
+         AND class.diagnosisclassification IS NOT NULL  THEN CONCAT('DIAGNOSIS_RANK: ', rank.diagnosisrank, ' | ', 'DIAGNOSIS_CLASSIFICATION: ', class.diagnosisclassification)
+        WHEN rank.diagnosisrank IS NOT NULL            THEN CONCAT('DIAGNOSIS_RANK: ', rank.diagnosisrank)
+        WHEN class.diagnosisclassification IS NOT NULL THEN CONCAT('DIAGNOSIS_CLASSIFICATION: ', class.diagnosisclassification)
     ELSE NULL
     END                                                                                     AS diag_grp_txt,
 	'fact_diagnosis'																		AS prmy_src_tbl_nm,
@@ -127,9 +127,9 @@ DISTINCT
     END                                                                         AS part_mth
 
 FROM factdiagnosis dgn
-LEFT OUTER JOIN matching_payload pay                ON dgn.residentid                   = pay.personid         AND COALESCE(dgn.residentid, '0') <> '0'
-LEFT OUTER JOIN dimorganization dorg                ON dgn.organizationid               = dorg.organizationid AND COALESCE(dgn.organizationid, '0') <> '0'
-LEFT OUTER JOIN dimdiagnosis ddgn                   ON dgn.diagnosisid                  = ddgn.diagnosisid    AND COALESCE(dgn.diagnosisid, '0') <> '0'
-LEFT OUTER JOIN dimdiagnosisrank ddgr               ON dgn.diagnosisrankid              = ddgr.diagnosisrankid  AND COALESCE(dgn.diagnosisrankid, '0') <> '0'
-LEFT OUTER JOIN dimdiagnosisclassification ddgc     ON dgn.diagnosisclassificationid    = ddgc.diagnosisclassificationid  AND COALESCE(dgn.diagnosisclassificationid, '0') <> '0'
+LEFT OUTER JOIN matching_payload pay                   ON dgn.residentid           = pay.personid         AND COALESCE(dgn.residentid, '0') <> '0'
+LEFT OUTER JOIN dimorganization dorg                   ON dgn.organizationid       = dorg.organizationid AND COALESCE(dgn.organizationid, '0') <> '0'
+LEFT OUTER JOIN dimdiagnosis                   ddgn    ON dgn.diagnosisid          = ddgn.diagnosisid    AND COALESCE(dgn.diagnosisid, '0') <> '0'
+LEFT OUTER JOIN dimdiagnosisrank               rank    ON dgn.diagnosisrankid     = rank.diagnosisrankid  AND COALESCE(dgn.diagnosisrankid, '0') <> '0'
+LEFT OUTER JOIN dimdiagnosisclassification     class   ON dgn.diagnosisclassificationid     = class.diagnosisclassificationid  AND COALESCE(dgn.diagnosisclassificationid, '0') <> '0'
 WHERE TRIM(lower(COALESCE(dgn.onsetdateid, 'empty'))) <> 'onsetdateid'

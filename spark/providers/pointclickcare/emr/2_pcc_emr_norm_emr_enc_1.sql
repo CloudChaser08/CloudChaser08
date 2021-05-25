@@ -57,13 +57,13 @@ SELECT
     --- ptnt_birth_yr
     --------------------------------------------------------------------------------------------------
 	CAST(
-	    CAP_YEAR_OF_BIRTH
+	CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        CAST(EXTRACT_DATE(vis.admitdateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
 	    )
-      AS INT)                                                                               AS ptnt_birth_yr,
+	    AS INT)                                                                             AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
     --------------------------------------------------------------------------------------------------
@@ -112,6 +112,6 @@ SELECT
                 )
     END                                                                         AS part_mth
 FROM factvisit vis
-LEFT OUTER JOIN matching_payload pay        ON vis.residentid     = pay.personid			AND COALESCE(vis.residentid, '0') <> '0'
-LEFT OUTER JOIN dimorganization dorg        ON vis.organizationid = dorg.organizationid	AND COALESCE(vis.organizationid, '0') <> '0'
+LEFT OUTER JOIN matching_payload pay			  ON vis.residentid     = pay.personid			AND COALESCE(vis.residentid, '0') <> '0'
+LEFT OUTER JOIN dimorganization dorg ON vis.organizationid = dorg.organizationid	AND COALESCE(vis.organizationid, '0') <> '0'
 WHERE TRIM(lower(COALESCE(vis.admitdateid, 'empty'))) <> 'admitdateid'

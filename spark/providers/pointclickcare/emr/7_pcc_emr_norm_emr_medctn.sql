@@ -39,14 +39,14 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- ptnt_birth_yr
     --------------------------------------------------------------------------------------------------
-    CAST(
-        CAP_YEAR_OF_BIRTH
+	CAST(
+	    CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        COALESCE( CAST(EXTRACT_DATE(med.orderstartdateid, '%Y%m%d') AS DATE), CAST('{VDR_FILE_DT}' AS DATE)) ,
 	        pay.yearofbirth
 	    )
-      AS INT)                                                                               AS ptnt_birth_yr,
+	  AS INT)                                                                                AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
     --------------------------------------------------------------------------------------------------
@@ -86,13 +86,8 @@ SELECT
     -----------------------------------------------------------------------------------------------------------
     CLEAN_UP_NDC_CODE(ref_ndc_ddid.ndc_upc_hri)                                             AS medctn_ndc,
     -----------------------------------------------------------------------------------------------------------
-    ---- medctn_alt_cd and medctn_alt_cd_qual
+    ---- medctn_alt_cd and medctn_alt_cd_qual are removed 5/4/2021
     -----------------------------------------------------------------------------------------------------------
-	ddru.gpi                                                                                AS medctn_alt_cd,
-	CASE
-	    WHEN ddru.gpi IS NOT NULL THEN 'GPI'
-    ELSE NULL
-	END                                                                                     AS medctn_alt_cd_qual,
 	ddru.drugname                                                                           AS medctn_brd_nm,
 	ddru.lvl4drugbasename                                                                   AS medctn_genc_nm,
 	COALESCE(ddru.form, ddru.lvl6drugform)                                               AS medctn_admin_form_nm,
@@ -116,20 +111,21 @@ SELECT
     -----------------------------------------------------------------------------------------------------------
     CASE
         WHEN med.Orderstartdateid = ''
-          OR med.Orderstartdateid IS NULL
-          OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
-          OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)
-        THEN '0_PREDATES_HVM_HISTORY'
+         -- OR med.Orderstartdateid IS NULL
+         -- OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
+         -- OR CAST(EXTRACT_DATE(med.Orderstartdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)
+          THEN '0_PREDATES_HVM_HISTORY'
     ELSE  CONCAT
              (
                  SUBSTR(med.Orderstartdateid, 1, 4), '-',
                  SUBSTR(med.Orderstartdateid, 5, 2)
                 )
     END                                                                         AS part_mth
+
 FROM factmedicationorder med
-LEFT OUTER JOIN matching_payload pay            ON med.residentid           = pay.personid            AND COALESCE(med.residentid, '0') <> '0'
-LEFT OUTER JOIN dimorganization dorg            ON med.organizationid       = dorg.organizationid AND COALESCE(med.organizationid, '0') <> '0'
-LEFT OUTER JOIN dimdrug ddru                    ON med.drugid               = ddru.drugid                     AND COALESCE(med.drugid, '0') <> '0'
-LEFT OUTER JOIN ref_ndc_ddid                    ON CAST(ddru.ddid AS INT)   = CAST(ref_ndc_ddid.drug_descriptor_id AS INT)  AND COALESCE(ddru.ddid, '0') <> '0'
+LEFT OUTER JOIN matching_payload pay      ON med.residentid = pay.personid            AND COALESCE(med.residentid, '0') <> '0'
+LEFT OUTER JOIN dimorganization dorg      ON med.organizationid = dorg.organizationid AND COALESCE(med.organizationid, '0') <> '0'
+LEFT OUTER JOIN dimdrug  ddru             ON med.ddid = ddru.ddid                     AND COALESCE(med.ddid, '0') <> '0'
+LEFT OUTER JOIN ref_ndc_ddid ref_ndc_ddid ON CAST(med.ddid AS INT) = CAST(ref_ndc_ddid.drug_descriptor_id AS INT)  AND COALESCE(med.ddid, '0') <> '0'
                                                                       AND ref_ndc_ddid.id_number_format_code IN ('1', '2', '3', '6')
 WHERE TRIM(lower(COALESCE(med.orderstartdateid, 'empty'))) <> 'orderstartdateid'

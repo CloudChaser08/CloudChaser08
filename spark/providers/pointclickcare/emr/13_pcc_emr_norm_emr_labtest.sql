@@ -28,14 +28,14 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- ptnt_birth_yr
     --------------------------------------------------------------------------------------------------
-    CAST(
-        CAP_YEAR_OF_BIRTH
+	CAST(
+	    CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        CAST(EXTRACT_DATE(lts.reporteddateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
 	    )
-	  AS INT)                                                                               AS ptnt_birth_yr,
+	    AS INT)                                                                              AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
     --------------------------------------------------------------------------------------------------
@@ -106,10 +106,10 @@ SELECT
     END                                                                         AS part_mth
 
 FROM factlabtest lts
-LEFT OUTER JOIN matching_payload pay            ON lts.residentid          = pay.personid              AND COALESCE(lts.residentid, '0')             <> '0'
-LEFT OUTER JOIN dimlabreportstatus dlrs         ON lts.labreportstatusid   = dlrs.labreportstatusid    AND COALESCE(lts.labreportstatusid, '0')    <> '0'
-LEFT OUTER JOIN dimlabtest dlts                 ON lts.labtestid           = dlts.labtestid            AND COALESCE(lts.labtestid, '0')             <> '0'
-LEFT OUTER JOIN dimlabtestcondition dtcd        ON lts.labtestconditionid  = dtcd.labtestconditionid   AND COALESCE(lts.labtestconditionid, '0')   <> '0'
-LEFT OUTER JOIN dimlabtestabnormality dtan      ON lts.labtestabnormalityid= dtan.labtestabnormalityid AND COALESCE(lts.labtestabnormalityid, '0') <> '0'
-LEFT OUTER JOIN dimlabresultuom drum            ON lts.labresultuomid      = drum.labresultuomid       AND COALESCE(lts.labresultuomid, '0')       <> '0'
+LEFT OUTER JOIN matching_payload pay        ON lts.residentid          = pay.personid              AND COALESCE(lts.residentid, '0')             <> '0'
+LEFT OUTER JOIN dimlabreportstatus dlrs     ON lts.labreportstatusid   = dlrs.labreportstatusid    AND COALESCE(lts.labreportstatusid, '0')    <> '0'
+LEFT OUTER JOIN dimLabtest dlts             ON lts.labtestid           = dlts.labtestid            AND COALESCE(lts.labtestid, '0')             <> '0'
+LEFT OUTER JOIN dimLabtestcondition dtcd    ON lts.labtestconditionid  = dtcd.labtestconditionid   AND COALESCE(lts.labtestconditionid, '0')   <> '0'
+LEFT OUTER JOIN dimLabtestabnormality dtan  ON lts.labtestabnormalityid= dtan.labtestabnormalityid AND COALESCE(lts.labtestabnormalityid, '0') <> '0'
+LEFT OUTER JOIN dimlabresultuom drum        ON lts.labresultuomid      = drum.labresultuomid       AND COALESCE(lts.labresultuomid, '0')       <> '0'
 WHERE TRIM(lower(COALESCE(lts.specimencollectiondateid, 'empty'))) <> 'specimencollectiondateid'
