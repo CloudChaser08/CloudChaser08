@@ -1,7 +1,7 @@
 import argparse
 import spark.providers.change_dhc.medicalclaims.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.dhc.medicalclaims import schemas as dhc_medicalclaims_schemas
+from spark.common.datamart.dhc.medicalclaims import schemas as dhc_medicalclaims_schemas
 import spark.helpers.postprocessor as postprocessor
 import spark.common.utility.logger as logger
 

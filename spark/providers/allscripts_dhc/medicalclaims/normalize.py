@@ -2,7 +2,7 @@ import argparse
 import spark.providers.allscripts_dhc.medicalclaims.transactional_schemas_v1 as transactions_v1
 import spark.providers.allscripts_dhc.medicalclaims.transactional_schemas_v2 as transactions_v2
 from spark.common.marketplace_driver import MarketplaceDriver
-from spark.common.dhc.medicalclaims import schemas as dhc_medicalclaims_schemas
+from spark.common.datamart.dhc.medicalclaims import schemas as dhc_medicalclaims_schemas
 import spark.helpers.postprocessor as postprocessor
 import spark.common.utility.logger as logger
 from datetime import datetime
