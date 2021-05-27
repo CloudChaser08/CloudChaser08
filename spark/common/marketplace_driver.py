@@ -25,6 +25,7 @@ TEST = 'test'
 PRODUCTION = 'production'
 TRANSFORM = 'transform'
 RESTRICTED = 'restricted'
+DELIVERY = 'datamart'
 DRIVER_MODULE_NAME = 'driver'
 
 MODE_RECORDS_PATH_TEMPLATE = {
@@ -32,7 +33,8 @@ MODE_RECORDS_PATH_TEMPLATE = {
     END_TO_END_TEST: s3_constants.RECORDS_PATH,
     PRODUCTION: s3_constants.RECORDS_PATH,
     TRANSFORM: s3_constants.RECORDS_PATH,
-    RESTRICTED: s3_constants.RECORDS_PATH
+    RESTRICTED: s3_constants.RECORDS_PATH,
+    DELIVERY: s3_constants.RECORDS_PATH
 }
 
 MODE_MATCHING_PATH_TEMPLATE = {
@@ -40,7 +42,8 @@ MODE_MATCHING_PATH_TEMPLATE = {
     END_TO_END_TEST: s3_constants.MATCHING_PATH,
     PRODUCTION: s3_constants.MATCHING_PATH,
     TRANSFORM: s3_constants.MATCHING_PATH,
-    RESTRICTED: s3_constants.MATCHING_PATH
+    RESTRICTED: s3_constants.MATCHING_PATH,
+    DELIVERY: s3_constants.MATCHING_PATH
 }
 
 MODE_OUTPUT_PATH = {
@@ -48,7 +51,8 @@ MODE_OUTPUT_PATH = {
     END_TO_END_TEST: s3_constants.E2E_OUTPUT_PATH,
     PRODUCTION: s3_constants.PRODUCTION_PATH,
     TRANSFORM: s3_constants.TRANSFORM_PATH,
-    RESTRICTED: s3_constants.RESTRICTED_PATH
+    RESTRICTED: s3_constants.RESTRICTED_PATH,
+    DELIVERY: s3_constants.DELIVERY_PATH
 }
 
 
@@ -72,7 +76,8 @@ class MarketplaceDriver(object):
                  count_transform_sql=False,
                  restricted_private_source=False,
                  additional_output_path=None, # additional_output_schemas are written to this exact s3 key
-                 additional_output_schemas=None # dict with same keys as output_table_names_to_schemas
+                 additional_output_schemas=None, # dict with same keys as output_table_names_to_schemas
+                 output_to_delivery_path=False
                  ):
 
         # get directory and path for provider
@@ -105,6 +110,7 @@ class MarketplaceDriver(object):
         self.restricted_private_source = restricted_private_source
         self.additional_output_path = additional_output_path
         self.additional_output_schemas = additional_output_schemas
+        self.output_to_delivery_path  = output_to_delivery_path
         self.available_start_date = None
         self.earliest_service_date = None
         self.earliest_diagnosis_date = None
@@ -124,6 +130,8 @@ class MarketplaceDriver(object):
             mode = TRANSFORM
         elif self.restricted_private_source:
             mode = RESTRICTED
+        elif self.output_to_delivery_path:
+            mode = DELIVERY
         else:
             mode = PRODUCTION
 
@@ -251,7 +259,7 @@ class MarketplaceDriver(object):
             provider_partition_name=schema_obj.provider_partition_column,
             distribution_key=schema_obj.distribution_key,
             staging_subdir=schema_obj.output_directory,
-            partition_by_part_file_date=self.output_to_transform_path,
+            partition_by_part_file_date=self.output_to_transform_path or self.output_to_delivery_path,
             unload_partition_count=self.unload_partition_count,
             test_dir=(self.output_path if self.test else None)
         )
