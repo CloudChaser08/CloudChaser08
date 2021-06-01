@@ -66,7 +66,7 @@ re.fullmatch to match the whole string
 """
 
 GENETIC_PATTERN = r'[ACGT]>[ACGT]\s*[ACGT]/[ACGT]'
-SCIENTIFIC_PATTERN = r'(?:\d+(?:\.\d{1,10})?-?[eE]\d{1,3})'  # ex 1e10, 1.00023-E5
+SCIENTIFIC_PATTERN = r'(?:\d+(?:\.\d{1,10})?[eE]-?\d{1,3})'  # ex 1e10, 1.00023-E5
 DIGIT_IN_DIGIT = r'\d+\s*in\s*\d+'  # ex. 1 in 300, 1 IN 10000
 
 
@@ -204,9 +204,9 @@ def parse_value(result: Column):
 
         # Evaluate scientific notations.
         if re.search(SCIENTIFIC_PATTERN, result):
-            match_result = re.search(r'(\d+(?:\.\d{1,10})?)(-?[eE])(\d{1,3})', result)
-            prefix, sign, exponent = match_result.groups()
-            converted = float(prefix + sign + exponent)
+            match_result = re.search(r'(\d+(?:\.\d{1,10})?)([eE])(-?\d{1,3})', result)
+            prefix, lit_e, exponent = match_result.groups()
+            converted = float(prefix + lit_e + exponent)
             result = re.sub(match_result.group(0), str(converted), result)
 
         operator_check = r'[><]=?'

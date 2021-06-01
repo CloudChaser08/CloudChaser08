@@ -88,6 +88,8 @@ def test_scientific_notation(spark):
     """
     eval_test('10E3', '', '10000', '', '', spark)
     eval_test('>10E3', '>', '10000', '', '', spark)
+    # This is not a valid Scientific Notation.
+    eval_test('5265-E1', '', '5265', '-E1', '', spark)
 
 
 def test_comma(spark):
