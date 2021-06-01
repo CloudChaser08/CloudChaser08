@@ -5,7 +5,6 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.datamart.dhc.medicalclaims import schemas as dhc_medicalclaims_schemas
 import spark.helpers.postprocessor as postprocessor
 import spark.common.utility.logger as logger
-from datetime import datetime
 
 hasDeliveryPath = True
 if __name__ == "__main__":
@@ -29,9 +28,7 @@ if __name__ == "__main__":
 
     # # ------------------------ Common for all providers -----------------------
     # # New layout after 2018-07-25, but we already got it once on 2018-07-24
-    has_template_v2 = \
-        datetime.strptime(date_input, '%Y-%m-%d').date() > datetime.strptime('2018-07-25', '%Y-%m-%d').date() or \
-        datetime.strptime(date_input, '%Y-%m-%d').date() == datetime.strptime('2018-07-24', '%Y-%m-%d').date()
+    has_template_v2 = date_input > '2018-07-25' or date_input == '2018-07-24'
 
     # New layout after 2018-07-25, but we already got it once on 2018-07-24
     if has_template_v2:
