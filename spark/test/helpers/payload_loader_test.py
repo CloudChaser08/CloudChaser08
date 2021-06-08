@@ -20,7 +20,7 @@ no_hvid_location = file_utils.get_abs_path(
     script_path, '../resources/no_id_test_payload.json'
 )
 
-no_hvid_location = file_utils.get_abs_path(
+confidence_score_location = file_utils.get_abs_path(
     script_path, '../resources/confidence_score_test_payload.json'
 )
 
@@ -68,7 +68,7 @@ def test_extra_cols(spark):
 
 
 def test_confidence_scores_loaded(spark):
-    payload_loader.load(spark['runner'], no_hvid_location)
+    payload_loader.load(spark['runner'], confidence_score_location)
 
     confidence_not_null = spark['sqlContext'].sql('SELECT * FROM matching_payload').where(col("topCandidatesConfidence").isNotNull()).count()
 
