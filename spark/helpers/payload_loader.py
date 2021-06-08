@@ -20,7 +20,8 @@ DEFAULT_ATTRS = [
     'claimId',
     'hvJoinKey',
     'matchStatus',
-    'flexibleMatchingUsed'
+    'flexibleMatchingUsed',
+    'topCandidatesConfidence'
 ]
 
 
