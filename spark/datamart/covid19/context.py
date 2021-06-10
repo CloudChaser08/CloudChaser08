@@ -34,7 +34,7 @@ Datamart Configuration for...........LabTests
 LAB_PART_PROVIDER_LIST = ['quest', 'bioreference', 'ovation', 'luminate', 'labcorp_covid']
 LAB_PARTITIONS = ['part_mth', 'part_provider']
 LAB_FIRST_RUN_MONTH = '2018-01'
-LAB_REFRESH_NBR_OF_MONTHS = 6
+LAB_REFRESH_NBR_OF_MONTHS = 9
 LAB_SKIP_ARCHIVE = False
 
 FULL_ARCHIVE_REQUESTED_DAYS = ['Sunday']
