@@ -1,8 +1,8 @@
-SELECT
+SELECT 
     MONOTONICALLY_INCREASING_ID()                                                           AS row_id,
     --------------------------------------------------------------------------------------------------
     ---  hv_lab_test_id
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------    
     CONCAT('156', '_', lts.factlabtestid)                                                   AS hv_lab_test_id,
     CURRENT_DATE()                                                                          AS crt_dt,
 	'03'                                                                                    AS mdl_vrsn_num,
@@ -20,26 +20,26 @@ SELECT
    ---------------------------------------------------------------------------------------------------
     --- hvid
     --------------------------------------------------------------------------------------------------
-	CASE
+	CASE 
 	    WHEN 0 <> LENGTH(TRIM(COALESCE(pay.hvid, '')))        THEN pay.hvid
-	    WHEN 0 <> LENGTH(TRIM(COALESCE(lts.residentid, '')))  THEN CONCAT('156_', lts.residentid)
-	ELSE NULL
+	    WHEN 0 <> LENGTH(TRIM(COALESCE(lts.residentid, '')))  THEN CONCAT('156_', lts.residentid) 
+	ELSE NULL 
 	END																				        AS hvid,
     --------------------------------------------------------------------------------------------------
     --- ptnt_birth_yr
     --------------------------------------------------------------------------------------------------
-    CAST(
-        CAP_YEAR_OF_BIRTH
+	CAST(
+	    CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        CAST(EXTRACT_DATE(lts.reporteddateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
 	    )
-	  AS INT)                                                                               AS ptnt_birth_yr,
+	    AS INT)                                                                              AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
-    --------------------------------------------------------------------------------------------------
-	CASE
+    --------------------------------------------------------------------------------------------------	
+	CASE 
 	    WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M', 'U')  THEN SUBSTR(UPPER(pay.gender), 1, 1)
 	    ELSE NULL
 	END																				    	AS ptnt_gender_cd,
@@ -48,7 +48,7 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- lab_test_smpl_collctn_dt
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)
@@ -56,7 +56,7 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- lab_result_dt
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN CAST(EXTRACT_DATE(lts.resultdatetimeid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(lts.resultdatetimeid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(lts.resultdatetimeid, '%Y%m%d') AS DATE)
@@ -65,7 +65,7 @@ SELECT
     --- lab_test_nm
     --------------------------------------------------------------------------------------------------
     dlts.testdescription                                                                   AS lab_test_nm,
-    CLEAN_UP_NUMERIC_CODE(dlts.loinccode)                                                  AS lab_test_loinc_cd,
+    CLEAN_UP_NUMERIC_CODE(dlts.loinccode)                                                  AS lab_test_loinc_cd, 
     lts.resultvalue                                                                        AS lab_result_msrmt,
     drum.resultuom                                                                         AS lab_result_uom,
     --------------------------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- data_captr_dt
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN CAST(EXTRACT_DATE(lts.reporteddateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(lts.reporteddateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(lts.reporteddateid, '%Y%m%d') AS DATE)
@@ -95,7 +95,7 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- part_mth
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(lts.specimencollectiondateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)                    THEN '0_PREDATES_HVM_HISTORY'
     ELSE  CONCAT
@@ -104,12 +104,12 @@ SELECT
 	                SUBSTR(lts.specimencollectiondateid, 5, 2)
                 )
     END                                                                         AS part_mth
-
+    
 FROM factlabtest lts
-LEFT OUTER JOIN matching_payload pay            ON lts.residentid          = pay.personid              AND COALESCE(lts.residentid, '0')             <> '0'
-LEFT OUTER JOIN dimlabreportstatus dlrs         ON lts.labreportstatusid   = dlrs.labreportstatusid    AND COALESCE(lts.labreportstatusid, '0')    <> '0'
-LEFT OUTER JOIN dimlabtest dlts                 ON lts.labtestid           = dlts.labtestid            AND COALESCE(lts.labtestid, '0')             <> '0'
-LEFT OUTER JOIN dimlabtestcondition dtcd        ON lts.labtestconditionid  = dtcd.labtestconditionid   AND COALESCE(lts.labtestconditionid, '0')   <> '0'
-LEFT OUTER JOIN dimlabtestabnormality dtan      ON lts.labtestabnormalityid= dtan.labtestabnormalityid AND COALESCE(lts.labtestabnormalityid, '0') <> '0'
-LEFT OUTER JOIN dimlabresultuom drum            ON lts.labresultuomid      = drum.labresultuomid       AND COALESCE(lts.labresultuomid, '0')       <> '0'
+LEFT OUTER JOIN matching_payload pay                   ON lts.residentid          = pay.personid              AND COALESCE(lts.residentid, '0')             <> '0'
+LEFT OUTER JOIN dimlabreportstatus dlrs    ON lts.labreportstatusid   = dlrs.labreportstatusid    AND COALESCE(lts.labreportstatusid, '0')    <> '0'
+LEFT OUTER JOIN dimLabtest dlts             ON lts.labtestid           = dlts.labtestid            AND COALESCE(lts.labtestid, '0')             <> '0'
+LEFT OUTER JOIN dimLabtestcondition dtcd   ON lts.labtestconditionid  = dtcd.labtestconditionid   AND COALESCE(lts.labtestconditionid, '0')   <> '0'
+LEFT OUTER JOIN dimLabtestabnormality dtan ON lts.labtestabnormalityid= dtan.labtestabnormalityid AND COALESCE(lts.labtestabnormalityid, '0') <> '0'
+LEFT OUTER JOIN dimlabresultuom drum       ON lts.labresultuomid      = drum.labresultuomid       AND COALESCE(lts.labresultuomid, '0')       <> '0'
 WHERE TRIM(lower(COALESCE(lts.specimencollectiondateid, 'empty'))) <> 'specimencollectiondateid'

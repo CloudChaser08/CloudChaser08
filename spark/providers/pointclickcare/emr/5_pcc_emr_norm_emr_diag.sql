@@ -1,10 +1,10 @@
-SELECT
+SELECT 
 DISTINCT
     MONOTONICALLY_INCREASING_ID()                                                           AS row_id,
     --------------------------------------------------------------------------------------------------
     ---  hv_diag_id
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN COALESCE(dgn.organizationid, dgn.factdiagnosisid) IS NOT NULL
             THEN CONCAT
                     (
@@ -15,7 +15,7 @@ DISTINCT
                     )
         ELSE NULL
     END                                                                                     AS hv_diag_id,
-
+    
     CURRENT_DATE()                                                                          AS crt_dt,
 	'10'                                                                                    AS mdl_vrsn_num,
     SPLIT(dgn.input_file_name, '/')[SIZE(SPLIT(dgn.input_file_name, '/')) - 1]              AS data_set_nm,
@@ -33,26 +33,26 @@ DISTINCT
     --------------------------------------------------------------------------------------------------
     --- hvid
     --------------------------------------------------------------------------------------------------
-	CASE
+	CASE 
 	    WHEN 0 <> LENGTH(TRIM(COALESCE(pay.hvid, '')))        THEN pay.hvid
-	    WHEN 0 <> LENGTH(TRIM(COALESCE(dgn.residentid, '')))  THEN CONCAT('156_', dgn.residentid)
-	ELSE NULL
+	    WHEN 0 <> LENGTH(TRIM(COALESCE(dgn.residentid, '')))  THEN CONCAT('156_', dgn.residentid) 
+	ELSE NULL 
 	END																				        AS hvid,
     --------------------------------------------------------------------------------------------------
     --- ptnt_birth_yr
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------	
 	CAST(
-	    CAP_YEAR_OF_BIRTH
+	CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        CAST(EXTRACT_DATE(dgn.onsetdateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
 	   )
-	 AS INT)                                                                                AS ptnt_birth_yr,
+	    AS INT)                                                                             AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
-    --------------------------------------------------------------------------------------------------
-	CASE
+    --------------------------------------------------------------------------------------------------	
+	CASE 
 	    WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M', 'U')  THEN SUBSTR(UPPER(pay.gender), 1, 1)
 	    ELSE NULL
 	END																				    	AS ptnt_gender_cd,
@@ -61,7 +61,7 @@ DISTINCT
     --------------------------------------------------------------------------------------------------
     --- diag_onset_dt
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN CAST(EXTRACT_DATE(dgn.onsetdateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(dgn.onsetdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(dgn.onsetdateid, '%Y%m%d') AS DATE)
@@ -69,7 +69,7 @@ DISTINCT
     --------------------------------------------------------------------------------------------------
     --- diag_resltn_dt
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN CAST(EXTRACT_DATE(dgn.resolveddateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(dgn.resolveddateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(dgn.resolveddateid, '%Y%m%d') AS DATE)
@@ -81,7 +81,7 @@ DISTINCT
 	    (
 	        ddgn.icdcode,
 	        '02',
-	        CAST(EXTRACT_DATE(dgn.onsetdateid, '%Y%m%d') AS DATE)
+	        CAST(EXTRACT_DATE(dgn.onsetdateid, '%Y%m%d') AS DATE) 
 	    )                                                                                   AS diag_cd,
     --------------------------------------------------------------------------------------------------
     --- diag_cd_qual
@@ -106,17 +106,17 @@ DISTINCT
         WHEN COALESCE(dgn.isadmissiondiagnosisind, 'X') = '1' THEN 'Y'
         ELSE NULL
     END                                                                                     AS admt_diag_flg,
-    CASE
-        WHEN ddgr.diagnosisrank IS NOT NULL
-         AND ddgc.diagnosisclassification IS NOT NULL  THEN CONCAT('DIAGNOSIS_RANK: ', ddgr.diagnosisrank, ' | ', 'DIAGNOSIS_CLASSIFICATION: ', ddgc.diagnosisclassification)
-        WHEN ddgr.diagnosisrank IS NOT NULL            THEN CONCAT('DIAGNOSIS_RANK: ', ddgr.diagnosisrank)
-        WHEN ddgc.diagnosisclassification IS NOT NULL THEN CONCAT('DIAGNOSIS_CLASSIFICATION: ', ddgc.diagnosisclassification)
-    ELSE NULL
+    CASE 
+        WHEN rank.diagnosisrank IS NOT NULL 
+         AND class.diagnosisclassification IS NOT NULL  THEN CONCAT('DIAGNOSIS_RANK: ', rank.diagnosisrank, ' | ', 'DIAGNOSIS_CLASSIFICATION: ', class.diagnosisclassification) 
+        WHEN rank.diagnosisrank IS NOT NULL            THEN CONCAT('DIAGNOSIS_RANK: ', rank.diagnosisrank)
+        WHEN class.diagnosisclassification IS NOT NULL THEN CONCAT('DIAGNOSIS_CLASSIFICATION: ', class.diagnosisclassification)
+    ELSE NULL       
     END                                                                                     AS diag_grp_txt,
 	'fact_diagnosis'																		AS prmy_src_tbl_nm,
 	'156'																			        AS part_hvm_vdr_feed_id,
 	/* part_mth */
-    CASE
+    CASE 
         WHEN CAST(EXTRACT_DATE(dgn.onsetdateid, '%Y%m%d') AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(dgn.onsetdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)                    THEN '0_PREDATES_HVM_HISTORY'
     ELSE  CONCAT
@@ -125,11 +125,11 @@ DISTINCT
 	                SUBSTR(dgn.onsetdateid, 5, 2)
                 )
     END                                                                         AS part_mth
-
+    
 FROM factdiagnosis dgn
-LEFT OUTER JOIN matching_payload pay                ON dgn.residentid                   = pay.personid         AND COALESCE(dgn.residentid, '0') <> '0'
-LEFT OUTER JOIN dimorganization dorg                ON dgn.organizationid               = dorg.organizationid AND COALESCE(dgn.organizationid, '0') <> '0'
-LEFT OUTER JOIN dimdiagnosis ddgn                   ON dgn.diagnosisid                  = ddgn.diagnosisid    AND COALESCE(dgn.diagnosisid, '0') <> '0'
-LEFT OUTER JOIN dimdiagnosisrank ddgr               ON dgn.diagnosisrankid              = ddgr.diagnosisrankid  AND COALESCE(dgn.diagnosisrankid, '0') <> '0'
-LEFT OUTER JOIN dimdiagnosisclassification ddgc     ON dgn.diagnosisclassificationid    = ddgc.diagnosisclassificationid  AND COALESCE(dgn.diagnosisclassificationid, '0') <> '0'
+LEFT OUTER JOIN matching_payload pay           ON dgn.residentid           = pay.personid         AND COALESCE(dgn.residentid, '0') <> '0'
+LEFT OUTER JOIN dimorganization dorg ON dgn.organizationid       = dorg.organizationid AND COALESCE(dgn.organizationid, '0') <> '0'
+LEFT OUTER JOIN dimdiagnosis      ddgn    ON dgn.diagnosisid          = ddgn.diagnosisid    AND COALESCE(dgn.diagnosisid, '0') <> '0'
+LEFT OUTER JOIN dimdiagnosisrank      rank    ON dgn.diagnosisrankid     = rank.diagnosisrankid  AND COALESCE(dgn.diagnosisrankid, '0') <> '0'
+LEFT OUTER JOIN dimdiagnosisclassification     class   ON dgn.diagnosisclassificationid     = class.diagnosisclassificationid  AND COALESCE(dgn.diagnosisclassificationid, '0') <> '0'
 WHERE TRIM(lower(COALESCE(dgn.onsetdateid, 'empty'))) <> 'onsetdateid'

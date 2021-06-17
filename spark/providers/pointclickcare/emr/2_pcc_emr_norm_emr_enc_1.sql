@@ -1,8 +1,8 @@
-SELECT
+SELECT 
     --------------------------------------------------------------------------------------------------
     ---  hv_enc_id
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN COALESCE(vis.organizationid, vis.factvisitid) IS NOT NULL
             THEN CONCAT
                     (
@@ -28,18 +28,18 @@ SELECT
         ELSE NULL
 	END                                                                                     AS vdr_enc_id_qual,
     --------------------------------------------------------------------------------------------------
-    --- vdr_alt_enc_id
-    --------------------------------------------------------------------------------------------------
+    --- vdr_alt_enc_id  
+    --------------------------------------------------------------------------------------------------	
 	CASE
-	    WHEN vis.admitfactcensusid IS NOT NULL
+	    WHEN vis.admitfactcensusid IS NOT NULL 
 	     AND vis.dischargefactcensusid IS NOT NULL THEN CONCAT(vis.admitfactcensusid, '-', vis.dischargefactcensusid)
 	    WHEN vis.admitfactcensusid IS NOT NULL     THEN vis.admitfactcensusid
 	    WHEN vis.dischargefactcensusid IS NOT NULL THEN vis.dischargefactcensusid
 	    ELSE NULL
 	END                                                                                     AS vdr_alt_enc_id,
-
+	
 	CASE
-	    WHEN vis.admitfactcensusid IS NOT NULL
+	    WHEN vis.admitfactcensusid IS NOT NULL 
 	     AND vis.dischargefactcensusid IS NOT NULL THEN 'ADMIT_FROM_CENSUS_ID-DISCHARGE_TO_CENSUS_ID'
 	    WHEN vis.admitfactcensusid IS     NOT NULL THEN 'ADMIT_FROM_CENSUS_ID'
 	    WHEN vis.dischargefactcensusid IS NOT NULL THEN 'DISCHARGE_TO_CENSUS_ID'
@@ -48,26 +48,26 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- hvid
     --------------------------------------------------------------------------------------------------
-	CASE
+	CASE 
 	    WHEN 0 <> LENGTH(TRIM(COALESCE(pay.hvid, '')))        THEN pay.hvid
-	    WHEN 0 <> LENGTH(TRIM(COALESCE(vis.residentid, ''))) THEN CONCAT('156_', vis.residentid)
-	    ELSE NULL
+	    WHEN 0 <> LENGTH(TRIM(COALESCE(vis.residentid, ''))) THEN CONCAT('156_', vis.residentid) 
+	    ELSE NULL 
 	END																				        AS hvid,
     --------------------------------------------------------------------------------------------------
     --- ptnt_birth_yr
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------	
 	CAST(
-	    CAP_YEAR_OF_BIRTH
+	CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        CAST(EXTRACT_DATE(vis.admitdateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
-	    )
-      AS INT)                                                                               AS ptnt_birth_yr,
+	    )																					
+	    AS INT)                                                                             AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
-    --------------------------------------------------------------------------------------------------
-	CASE
+    --------------------------------------------------------------------------------------------------	
+	CASE 
 	    WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M', 'U')  THEN SUBSTR(UPPER(pay.gender), 1, 1)
 	    ELSE NULL
 	END																				    	AS ptnt_gender_cd,
@@ -75,16 +75,16 @@ SELECT
 	MASK_ZIP_CODE(SUBSTR(COALESCE(pay.threedigitzip, '000'), 1, 3))						    AS ptnt_zip3_cd,
     --------------------------------------------------------------------------------------------------
     --- enc_start_dt
-    --------------------------------------------------------------------------------------------------
-    CASE
+    --------------------------------------------------------------------------------------------------	
+    CASE 
         WHEN CAST(EXTRACT_DATE(vis.admitdateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(vis.admitdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(vis.admitdateid, '%Y%m%d') AS DATE)
     END                                                                                   AS enc_start_dt,
     --------------------------------------------------------------------------------------------------
     --- enc_end_dt
-    --------------------------------------------------------------------------------------------------
-    CASE
+    --------------------------------------------------------------------------------------------------	
+    CASE 
         WHEN CAST(EXTRACT_DATE(vis.dischargedateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(vis.dischargedateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(vis.dischargedateid, '%Y%m%d') AS DATE)
@@ -92,7 +92,7 @@ SELECT
     CAST(NULL AS STRING)                                                                  AS enc_typ_cd,
     --------------------------------------------------------------------------------------------------
     --- enc_grp_txt
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------	
     CASE
         WHEN vis.lengthofstay IS NULL THEN NULL
     ELSE CONCAT('LENGTH_OF_STAY: ', vis.lengthofstay)
@@ -101,8 +101,8 @@ SELECT
 	'156'																			        AS part_hvm_vdr_feed_id,
     --------------------------------------------------------------------------------------------------
     --- part_mth
-    --------------------------------------------------------------------------------------------------
-    CASE
+    --------------------------------------------------------------------------------------------------	
+    CASE 
         WHEN CAST(EXTRACT_DATE(vis.admitdateid, '%Y%m%d') AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(vis.admitdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)                    THEN '0_PREDATES_HVM_HISTORY'
     ELSE  CONCAT
@@ -110,8 +110,8 @@ SELECT
 	                SUBSTR(vis.admitdateid, 1, 4), '-',
 	                SUBSTR(vis.admitdateid, 5, 2)
                 )
-    END                                                                         AS part_mth
+    END                                                                         AS part_mth 
 FROM factvisit vis
-LEFT OUTER JOIN matching_payload pay        ON vis.residentid     = pay.personid			AND COALESCE(vis.residentid, '0') <> '0'
-LEFT OUTER JOIN dimorganization dorg        ON vis.organizationid = dorg.organizationid	AND COALESCE(vis.organizationid, '0') <> '0'
+LEFT OUTER JOIN matching_payload pay			  ON vis.residentid     = pay.personid			AND COALESCE(vis.residentid, '0') <> '0'
+LEFT OUTER JOIN dimorganization dorg ON vis.organizationid = dorg.organizationid	AND COALESCE(vis.organizationid, '0') <> '0'
 WHERE TRIM(lower(COALESCE(vis.admitdateid, 'empty'))) <> 'admitdateid'

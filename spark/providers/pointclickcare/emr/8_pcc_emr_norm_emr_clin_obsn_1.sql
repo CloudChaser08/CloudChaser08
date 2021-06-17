@@ -1,8 +1,8 @@
-SELECT
+SELECT 
     --------------------------------------------------------------------------------------------------
     ---  hv_clin_obsn_id
-    --------------------------------------------------------------------------------------------------
-    CASE
+    --------------------------------------------------------------------------------------------------    
+    CASE 
         WHEN COALESCE(alg.organizationid, alg.factallergyid) IS NOT NULL
             THEN CONCAT
                     (
@@ -13,16 +13,16 @@ SELECT
                     )
         ELSE NULL
     END                                                                                     AS hv_clin_obsn_id,
-
+    
     CURRENT_DATE()                                                                          AS crt_dt,
 	'11'                                                                                    AS mdl_vrsn_num,
     SPLIT(alg.input_file_name, '/')[SIZE(SPLIT(alg.input_file_name, '/')) - 1]              AS data_set_nm,
 	511                                                                                     AS hvm_vdr_id,
 	156                                                                                     AS hvm_vdr_feed_id,
-	UPPER(dorg.OrganizationCode)                                                            AS vdr_org_id,
+	UPPER(dorg.OrganizationCode)                                                            AS vdr_org_id,	
     --------------------------------------------------------------------------------------------------
     --- vdr_clin_obsn_id and vdr_clin_obsn_id_qual
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------	
 	alg.factallergyid                                                                      AS vdr_clin_obsn_id,
 	CASE
 	    WHEN alg.factallergyid IS NOT NULL THEN 'FACT_ALLERGY_ID'
@@ -31,26 +31,26 @@ SELECT
     ---------------------------------------------------------------------------------------------------
     --- hvid
     --------------------------------------------------------------------------------------------------
-	CASE
+	CASE 
 	    WHEN 0 <> LENGTH(TRIM(COALESCE(pay.hvid, '')))         THEN pay.hvid
-	    WHEN 0 <> LENGTH(TRIM(COALESCE(alg.residentid, ''))) THEN CONCAT('156_', alg.residentid)
-	    ELSE NULL
+	    WHEN 0 <> LENGTH(TRIM(COALESCE(alg.residentid, ''))) THEN CONCAT('156_', alg.residentid) 
+	    ELSE NULL 
 	END																				        AS hvid,
     ---------------------------------------------------------------------------------------------------
     --- ptnt_birth_yr
     --------------------------------------------------------------------------------------------------
-    CAST(
-        CAP_YEAR_OF_BIRTH
+	CAST(
+	    CAP_YEAR_OF_BIRTH
 	    (
 	        pay.age,
 	        CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
 	    )
-	  AS INT)                                                                               AS ptnt_birth_yr,
+	   AS INT) AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
-    --------------------------------------------------------------------------------------------------
-	CASE
+    --------------------------------------------------------------------------------------------------	
+	CASE 
 	    WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M', 'U')  THEN SUBSTR(UPPER(pay.gender), 1, 1)
 	    ELSE NULL
 	END																				    	AS ptnt_gender_cd,
@@ -63,7 +63,7 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- clin_obsn_onset_dt
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)
@@ -108,11 +108,11 @@ SELECT
         WHEN COALESCE(dalr.allergyreaction, dalr.allergysubreaction) IS NOT NULL
             THEN SUBSTR(CONCAT
                         (
-                            CASE
+                            CASE 
                                 WHEN dalr.allergyreaction IS NOT NULL    THEN ' - '
                             END,
                             COALESCE(dalr.allergyreaction, ''),
-                            CASE
+                            CASE 
                                 WHEN dalr.allergysubreaction IS NOT NULL THEN ' - '
                             END,
                             COALESCE(dalr.allergysubreaction, '')
@@ -124,7 +124,7 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- part_mth
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(alg.onsetdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)                    THEN '0_PREDATES_HVM_HISTORY'
     ELSE  CONCAT
@@ -132,12 +132,12 @@ SELECT
 	                SUBSTR(alg.onsetdateid, 1, 4), '-',
 	                SUBSTR(alg.onsetdateid, 5, 2)
                 )
-    END                                                                         AS part_mth
-FROM factallergy alg
-LEFT OUTER JOIN dimorganization dorg            ON alg.organizationid      = dorg.organizationid     AND COALESCE(alg.organizationid, '0') <> '0'
-LEFT OUTER JOIN matching_payload pay            ON alg.residentid          = pay.personid            AND COALESCE(alg.residentid, '0') <> '0'
-LEFT OUTER JOIN dimallergen dalg                ON alg.allergenid          = dalg.allergenid         AND COALESCE(alg.allergenid, '0') <> '0'
-LEFT OUTER JOIN dimallergyattribute dala              ON alg.allergyattributeid  = dala.allergyattributeid AND COALESCE(alg.allergyattributeid, '0') <> '0'
-LEFT OUTER JOIN dimallergycategory dalc         ON alg.allergycategoryid   = dalc.allergycategoryid  AND COALESCE(alg.allergycategoryid, '0') <> '0'
-LEFT OUTER JOIN dimallergyreaction dalr         ON alg.allergyreactionid   = dalr.allergyreactionid  AND COALESCE(alg.allergyreactionid, '0') <> '0'
+    END                                                                         AS part_mth	
+ FROM factallergy alg
+LEFT OUTER JOIN dimorganization dorg      ON alg.organizationid      = dorg.organizationid     AND COALESCE(alg.organizationid, '0') <> '0'
+LEFT OUTER JOIN matching_payload pay                ON alg.residentid          = pay.personid            AND COALESCE(alg.residentid, '0') <> '0'
+LEFT OUTER JOIN dimallergen dalg          ON alg.allergenid          = dalg.allergenid         AND COALESCE(alg.allergenid, '0') <> '0'
+LEFT OUTER JOIN dimallergyattribute dala ON alg.allergyattributeid  = dala.allergyattributeid AND COALESCE(alg.allergyattributeid, '0') <> '0'
+LEFT OUTER JOIN dimallergycategory dalc  ON alg.allergycategoryid   = dalc.allergycategoryid  AND COALESCE(alg.allergycategoryid, '0') <> '0'
+LEFT OUTER JOIN dimallergyreaction dalr  ON alg.allergyreactionid   = dalr.allergyreactionid  AND COALESCE(alg.allergyreactionid, '0') <> '0'
 WHERE TRIM(lower(COALESCE(alg.onsetdateid, 'empty'))) <> 'onsetdateid'

@@ -1,4 +1,4 @@
-SELECT
+SELECT 
     MONOTONICALLY_INCREASING_ID()  AS row_id,
     sub.*
  FROM
