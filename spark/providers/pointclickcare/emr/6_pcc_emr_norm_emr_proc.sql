@@ -1,9 +1,9 @@
-SELECT
+SELECT 
     MONOTONICALLY_INCREASING_ID()                                                           AS row_id,
     --------------------------------------------------------------------------------------------------
     ---  hv_enc_id
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN COALESCE(imm.organizationid, imm.factimmunizationid) IS NOT NULL
             THEN CONCAT
                     (
@@ -22,7 +22,7 @@ SELECT
 	UPPER(dorg.OrganizationCode)                                                            AS vdr_org_id,
     --------------------------------------------------------------------------------------------------
     --- vdr_proc_id and vdr_proc_id_qual
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------	
 	imm.factimmunizationid                                                                  AS vdr_proc_id,
 	CASE
 	    WHEN imm.factimmunizationid IS NOT NULL THEN 'FACT_IMMUNIZATION_ID'
@@ -31,10 +31,10 @@ SELECT
     --------------------------------------------------------------------------------------------------
     --- hvid
     --------------------------------------------------------------------------------------------------
-	CASE
+	CASE 
 	    WHEN 0 <> LENGTH(TRIM(COALESCE(pay.hvid, '')))         THEN pay.hvid
-	    WHEN 0 <> LENGTH(TRIM(COALESCE(imm.residentid, ''))) THEN CONCAT('156_', imm.residentid)
-	    ELSE NULL
+	    WHEN 0 <> LENGTH(TRIM(COALESCE(imm.residentid, ''))) THEN CONCAT('156_', imm.residentid) 
+	    ELSE NULL 
 	END																				        AS hvid,
     --------------------------------------------------------------------------------------------------
     --- ptnt_birth_yr
@@ -45,12 +45,12 @@ SELECT
 	        pay.age,
 	        CAST(EXTRACT_DATE(imm.immunizationdateid, '%Y%m%d') AS DATE),
 	        pay.yearofbirth
-	    )
+	    )																					
 	  AS INT)                                                                                AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
-    --------------------------------------------------------------------------------------------------
-	CASE
+    --------------------------------------------------------------------------------------------------	
+	CASE 
 	    WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M', 'U')  THEN SUBSTR(UPPER(pay.gender), 1, 1)
 	ELSE NULL
 	END																				    	AS ptnt_gender_cd,
@@ -58,15 +58,15 @@ SELECT
 	MASK_ZIP_CODE(SUBSTR(COALESCE(pay.threedigitzip, '000'), 1, 3))						    AS ptnt_zip3_cd,
     --------------------------------------------------------------------------------------------------
     --- proc_dt
-    --------------------------------------------------------------------------------------------------
-    CASE
+    --------------------------------------------------------------------------------------------------	
+    CASE 
         WHEN CAST(EXTRACT_DATE(imm.immunizationdateid, '%Y%m%d') AS DATE)  < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(imm.immunizationdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
     ELSE     CAST(EXTRACT_DATE(imm.immunizationdateid, '%Y%m%d') AS DATE)
     END                                                                                     AS proc_dt,
     --------------------------------------------------------------------------------------------------
     --- proc_cd ans qualifier
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------	    
 	CLEAN_UP_PROCEDURE_CODE(dvcx.vaccinecode)                                               AS proc_cd,
 	CASE
 	    WHEN dvcx.vaccinecode IS NOT NULL THEN 'CVX'
@@ -74,7 +74,7 @@ SELECT
 	END                                                                                     AS proc_cd_qual,
     --------------------------------------------------------------------------------------------------
     --- proc_typ_cd and qualifier
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------	    
 	dimm.immunization                                                                       AS proc_typ_cd,
     CASE
         WHEN dimm.immunization IS NULL THEN NULL
@@ -83,7 +83,7 @@ SELECT
 	'fact_immunization'																		AS prmy_src_tbl_nm,
 	'156'																			        AS part_hvm_vdr_feed_id,
 	/* part_mth */
-    CASE
+    CASE 
         WHEN CAST(EXTRACT_DATE(imm.immunizationdateid, '%Y%m%d') AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
           OR CAST(EXTRACT_DATE(imm.immunizationdateid, '%Y%m%d') AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)                    THEN '0_PREDATES_HVM_HISTORY'
     ELSE  CONCAT
@@ -92,10 +92,10 @@ SELECT
 	                SUBSTR(imm.immunizationdateid, 5, 2)
                 )
     END                                                                         AS part_mth
-
-FROM factimmunization imm
+    
+ FROM factimmunization imm
 LEFT OUTER JOIN matching_payload          pay  ON imm.residentid    = pay.personid        AND COALESCE(imm.residentid, '0') <> '0'
-LEFT OUTER JOIN dimorganization dorg           ON imm.organizationid= dorg.organizationid AND COALESCE(imm.organizationid, '0') <> '0'
-LEFT OUTER JOIN dimimmunization          dimm  ON imm.immunizationid= dimm.immunizationid AND COALESCE(imm.immunizationid, '0') <> '0'
-LEFT OUTER JOIN dimvaccine        dvcx         ON imm.vaccineid     = dvcx.vaccineid      AND COALESCE(imm.vaccineid, '0') <> '0'
+LEFT OUTER JOIN dimorganization dorg ON imm.organizationid= dorg.organizationid AND COALESCE(imm.organizationid, '0') <> '0'
+LEFT OUTER JOIN dimimmunization          dimm ON imm.immunizationid= dimm.immunizationid AND COALESCE(imm.immunizationid, '0') <> '0'
+LEFT OUTER JOIN dimvaccine          dvcx ON imm.vaccineid     = dvcx.vaccineid      AND COALESCE(imm.vaccineid, '0') <> '0'
 WHERE TRIM(lower(COALESCE(imm.immunizationdateid, 'empty'))) <> 'immunizationdateid'

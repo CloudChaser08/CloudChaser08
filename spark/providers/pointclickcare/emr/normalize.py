@@ -31,8 +31,8 @@ if __name__ == "__main__":
         'pcc_emr_norm_emr_proc': procedure_schemas['schema_v12'],
         'pcc_emr_norm_emr_labtest': lab_test_schema['schema_v3']
     }
-    provider_partition_name = '156'
 
+    provider_partition_name = '156'
     # ------------------------ Common for all providers -----------------------
 
     # Parse input arguments
@@ -78,22 +78,41 @@ if __name__ == "__main__":
     driver.init_spark_context(conf_parameters=conf_parameters)
     driver.load()
 
-    logger.log('Loading external table: ref_ndc_ddid')
-    external_table_loader.load_analytics_db_table(
-        driver.sql_context, 'dw', 'ref_ndc_ddid', 'ref_ndc_ddid'
-    )
-
-    logger.log('Building ref_ndc_ddid reference data')
-    hdfs_utils.clean_up_output_hdfs(v_ref_hdfs_output_path)
-    table_name = 'ref_ndc_ddid'
-    driver.spark.table(table_name).repartition(1).write.parquet(
-        v_ref_hdfs_output_path + table_name, compression='gzip', mode='append')
-    driver.spark.read.parquet(v_ref_hdfs_output_path + table_name).cache().createOrReplaceTempView(table_name)
+    logger.log(' -trimmify-nullify matching_payload data')
+    matching_payload_df = driver.spark.table('matching_payload')
+    cleaned_matching_payload_df = (
+        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
+    cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
     logger.log('Apply custom nullify trimmify')
     for table in driver.source_table_schema.TABLE_CONF:
         cleaned_df = postprocessor.nullify(postprocessor.trimmify(driver.spark.table(table)), ['NULL', 'Null', 'null', 'unknown', 'Unknown', 'UNKNOWN', '19000101', ''])
         cleaned_df.createOrReplaceTempView(table)
+
+    if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date() or b_transactions_v1:
+        logger.log('Loading external table: ref_ndc_ddid')
+        external_table_loader.load_analytics_db_table(
+            driver.sql_context, 'dw', 'ref_ndc_ddid', 'ref_ndc_ddid'
+        )
+
+        logger.log('Building ref_ndc_ddid reference data')
+        table_name = 'ref_ndc_ddid'
+        hdfs_utils.clean_up_output_hdfs(v_ref_hdfs_output_path + table_name)
+        driver.spark.table(table_name).repartition(1).write.parquet(
+            v_ref_hdfs_output_path + table_name, compression='gzip', mode='append')
+        driver.spark.read.parquet(v_ref_hdfs_output_path + table_name).cache().createOrReplaceTempView(table_name)
+    else:
+        logger.log('Loading external table: ref_ndc_code')
+        external_table_loader.load_analytics_db_table(
+            driver.sql_context, 'default', 'ref_ndc_code', 'ref_ndc_code'
+        )
+
+        logger.log('Building ref_ndc_code reference data')
+        table_name = 'ref_ndc_code'
+        hdfs_utils.clean_up_output_hdfs(v_ref_hdfs_output_path + table_name)
+        driver.spark.table(table_name).repartition(1).write.parquet(
+            v_ref_hdfs_output_path + table_name, compression='gzip', mode='append')
+        driver.spark.read.parquet(v_ref_hdfs_output_path + table_name).cache().createOrReplaceTempView(table_name)
 
     driver.transform()
     driver.save_to_disk()

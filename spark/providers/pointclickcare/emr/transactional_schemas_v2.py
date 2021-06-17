@@ -508,5 +508,13 @@ TABLE_CONF = {
             'organizationid',
             'residentid'
         ]
+    ),
+    'drugndccrosswalk': SourceTable(
+        'csv',
+        separator='|',
+        columns=[
+            'drugid',
+            'ndc'
+        ]
     )
 }

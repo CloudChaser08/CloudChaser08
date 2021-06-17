@@ -1,8 +1,8 @@
-SELECT
+SELECT 
     --------------------------------------------------------------------------------------------------
     ---  hv_clin_obsn_id
     --------------------------------------------------------------------------------------------------
-    CASE
+    CASE 
         WHEN COALESCE(cpf.organizationid, cpf.factcareprofileid) IS NOT NULL
             THEN CONCAT
                     (
@@ -21,19 +21,19 @@ SELECT
 	UPPER(dorg.OrganizationCode)                                                            AS vdr_org_id,
     --------------------------------------------------------------------------------------------------
     --- vdr_clin_obsn_id and vdr_clin_obsn_id_qual
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------	
 	cpf.factcareprofileid                                                                AS vdr_clin_obsn_id,
  	CASE
  	    WHEN cpf.factcareprofileid IS NOT NULL THEN 'FACT_CARE_PROFILE_ID'
     ELSE NULL
  	END                                                                                  AS vdr_clin_obsn_id_qual,
     --------------------------------------------------------------------------------------------------
-    --- hvid
+    --- hvid 
     --------------------------------------------------------------------------------------------------
- 	CASE
+ 	CASE 
  	    WHEN 0 <> LENGTH(TRIM(COALESCE(pay.hvid, '')))       THEN pay.hvid
- 	    WHEN 0 <> LENGTH(TRIM(COALESCE(cpf.residentid, ''))) THEN CONCAT('156_', cpf.residentid)
- 	ELSE NULL
+ 	    WHEN 0 <> LENGTH(TRIM(COALESCE(cpf.residentid, ''))) THEN CONCAT('156_', cpf.residentid) 
+ 	ELSE NULL 
  	END																				        AS hvid,
     --------------------------------------------------------------------------------------------------
     --- ptnt_birth_yr
@@ -48,8 +48,8 @@ SELECT
  	  AS INT) AS ptnt_birth_yr,
     --------------------------------------------------------------------------------------------------
     --- ptnt_gender_cd
-    --------------------------------------------------------------------------------------------------
-	CASE
+    --------------------------------------------------------------------------------------------------	
+	CASE 
 	    WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M', 'U')  THEN SUBSTR(UPPER(pay.gender), 1, 1)
 	    ELSE NULL
 	END																				    	 AS ptnt_gender_cd,
@@ -66,10 +66,10 @@ SELECT
     '156'																			         AS part_hvm_vdr_feed_id,
     --------------------------------------------------------------------------------------------------
     --- hard coded because there is no dates in this fact table
-    --------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------	
     '0_PREDATES_HVM_HISTORY'                                                                 AS part_mth
 FROM factcareprofile cpf
-LEFT OUTER JOIN matching_payload pay         ON cpf.residentid            = pay.personid               AND COALESCE(cpf.residentid, '0')            <> '0'
-LEFT OUTER JOIN dimorganization dorg         ON cpf.organizationid        = dorg.organizationid        AND COALESCE(cpf.organizationid, '0')        <> '0'
-LEFT OUTER JOIN dimcareprofilequestion dcpf  ON cpf.careprofilequestionid = dcpf.careprofilequestionid AND COALESCE(cpf.careprofilequestionid, '0') <> '0'
+LEFT OUTER JOIN matching_payload pay                    ON cpf.residentid            = pay.personid               AND COALESCE(cpf.residentid, '0')            <> '0'
+LEFT OUTER JOIN dimorganization dorg          ON cpf.organizationid        = dorg.organizationid        AND COALESCE(cpf.organizationid, '0')        <> '0'
+LEFT OUTER JOIN dimcareprofilequestion dcpf ON cpf.careprofilequestionid = dcpf.careprofilequestionid AND COALESCE(cpf.careprofilequestionid, '0') <> '0'
 WHERE TRIM(lower(COALESCE(cpf.careprofilequestionid, 'empty'))) <> 'careprofilequestionid'
