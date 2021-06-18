@@ -93,7 +93,9 @@ def test_14(spark):
     """
     3.2
     """
-    eval_test('< 1.30 NOT DETECTED', '<', '1.3', 'NOT DETECTED', '', spark)
+    # See test_zero_leading_trailing_remain
+    # eval_test('< 1.30 NOT DETECTED', '<', '1.3', 'NOT DETECTED', '', spark)
+    eval_test('< 1.30 NOT DETECTED', '<', '1.30', 'NOT DETECTED', '', spark)
 
 
 def test_15(spark):
@@ -107,7 +109,9 @@ def test_16(spark):
     """
     3.2
     """
-    eval_test('<1.0 NEG', '<', '1', 'NEGATIVE', '', spark)
+    # See test_zero_leading_trailing_remain
+    # eval_test('<1.0 NEG', '<', '1', 'NEGATIVE', '', spark)
+    eval_test('<1.0 NEG', '<', '1.0', 'NEGATIVE', '', spark)
 
 
 def test_17(spark):

@@ -36,7 +36,8 @@ def test_whole_decimal(spark):
     Entire decimal must be in the numeric HV field
     """
     eval_test('> 1.201', '>', '1.201', '', '', spark)
-    eval_test('> 1.2010', '>', '1.201', '', '', spark)
+    # See test_zero_leading_trailing_remain
+    # eval_test('> 1.2010', '>', '1.201', '', '', spark)
 
 
 def test_precede_zero(spark):
@@ -44,10 +45,11 @@ def test_precede_zero(spark):
     Entire decimal must be in the numeric HV field
     """
     eval_test('> .201', '>', '0.201', '', '', spark)
-    eval_test('> .2010', '>', '0.201', '', '', spark)
-    eval_test('07242014', '', '7242014', '', '', spark)
-    eval_test('007242014', '', '7242014', '', '', spark)
-    eval_test('-02344', '', '-2344', '', '', spark)
+    # See test_zero_leading_trailing_remain
+    # eval_test('> .2010', '>', '0.201', '', '', spark)
+    # eval_test('07242014', '', '7242014', '', '', spark)
+    # eval_test('007242014', '', '7242014', '', '', spark)
+    # eval_test('-02344', '', '-2344', '', '', spark)
 
 
 def test_ratio(spark):
@@ -86,10 +88,12 @@ def test_scientific_notation(spark):
     """
     Covert scientific notation to a real number
     """
+
     eval_test('10E3', '', '10000', '', '', spark)
     eval_test('>10E3', '>', '10000', '', '', spark)
     # This is not a valid Scientific Notation.
     eval_test('5265-E1', '', '5265', '-E1', '', spark)
+    eval_test('5265E-1', '', '526.5', '', '', spark)
 
 
 def test_comma(spark):
@@ -130,6 +134,18 @@ def test_alpha_no_case_change(spark):
     eval_test('10,000 FOOBAR', '', '10000', 'FOOBAR', '', spark)
 
 
+def test_zero_leading_trailing_remain(spark):
+    """
+    Confirms leading and trailing zeroes do not get stripped off.
+    See: https://healthverity.atlassian.net/browse/DE-176?focusedCommentId=18554
+    """
+    eval_test('> 1.2010', '>', '1.2010', '', '', spark)
+    eval_test('> .2010', '>', '0.2010', '', '', spark)
+    eval_test('07242014', '', '07242014', '', '', spark)
+    eval_test('007242014', '', '007242014', '', '', spark)
+    eval_test('-02344', '', '-02344', '', '', spark)
+
+
 def test_004(spark):
     """
 
@@ -148,7 +164,9 @@ def test_006(spark):
     """
     Entire decimal must be in the numeric column
     """
-    eval_test('<0.10', '<', '0.1', '', '', spark)
+    # See test_zero_leading_trailing_remain
+    # eval_test('<0.10', '<', '0.1', '', '', spark)
+    eval_test('<0.10', '<', '0.10', '', '', spark)
 
 
 def test_007(spark):
@@ -183,14 +201,18 @@ def test_011(spark):
     """
     Entire decimal must be in the numeric column
     """
-    eval_test('>4000.00', '>', '4000', '', '', spark)
+    # See test_zero_leading_trailing_remain
+    # eval_test('>4000.00', '>', '4000', '', '', spark)
+    eval_test('>4000.00', '>', '4000.00', '', '', spark)
 
 
 def test_038(spark):
     """
     Covert operator words to symbols (e.g.  > OR = to >=, MORE THAN to >, LESS THAN to <)
     """
-    eval_test('> OR = 0.10', '>=', '0.1', '', '', spark)
+    # See test_zero_leading_trailing_remain
+    # eval_test('> OR = 0.10', '>=', '0.1', '', '', spark)
+    eval_test('> OR = 0.10', '>=', '0.10', '', '', spark)
 
 
 def test_488(spark):
@@ -246,7 +268,9 @@ def test_710(spark):
     """
     remove Not Quantified from Alpha Column
     """
-    eval_test('<1.30 Detected, Not Quantified', '<', '1.3', 'DETECTED', '', spark)
+    # See test_zero_leading_trailing_remain
+    # eval_test('<1.30 Detected, Not Quantified', '<', '1.3', 'DETECTED', '', spark)
+    eval_test('<1.30 Detected, Not Quantified', '<', '1.30', 'DETECTED', '', spark)
 
 
 def test_711(spark):
@@ -267,7 +291,9 @@ def test_726(spark):
     """
     Remove ~ from Alpha field
     """
-    eval_test('>=32.0~R', '>=', '32', 'R', '', spark)
+    # See test_zero_leading_trailing_remain
+    # eval_test('>=32.0~R', '>=', '32', 'R', '', spark)
+    eval_test('>=32.0~R', '>=', '32.0', 'R', '', spark)
 
 
 def test_727(spark):
@@ -281,7 +307,9 @@ def test_771(spark):
     """
     Remove ~ from Alpha field
     """
-    eval_test('<=4.0~NR', '<=', '4', 'NR', '', spark)
+    # See test_zero_leading_trailing_remain
+    # eval_test('<=4.0~NR', '<=', '4', 'NR', '', spark)
+    eval_test('<=4.0~NR', '<=', '4.0', 'NR', '', spark)
 
 
 def test_804(spark):

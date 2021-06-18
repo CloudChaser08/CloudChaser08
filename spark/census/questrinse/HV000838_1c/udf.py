@@ -114,15 +114,19 @@ def clean_numeric(value):
         if re.match(r'\d{1,3}(,\d{3})*(\.\d+)?', value):
             value = re.sub(r',', r'', value)
 
-        # drop a leading zero from integer values
-        value = re.sub(r'^(-)?0+(\d+(?!\.)[0-9])', r'\1\2', value)
+        # https://healthverity.atlassian.net/browse/DE-176?focusedCommentId=18554
+        # We are no longer dropping leading/trailing zeroes
+        # # drop a leading zero from integer values
+        # value = re.sub(r'^(-)?0+(\d+(?!\.)[0-9])', r'\1\2', value)
 
         # add a zero to the front of decimals
         if re.match(r'^\.\d+', value):
             value = '0' + value
 
-        # strip zeros from the end of a decimal
-        value = re.sub(r'^(\d*\.\d*?)0*$', r'\1', value)
+        # https://healthverity.atlassian.net/browse/DE-176?focusedCommentId=18554
+        # We are no longer dropping leading/trailing zeroes
+        # # strip zeros from the end of a decimal
+        # value = re.sub(r'^(\d*\.\d*?)0*$', r'\1', value)
 
         # remove decimal from end of non-decimal
         value = re.sub(r'^(\d+)\.$', r'\1', value)
@@ -207,7 +211,7 @@ def parse_value(result: Column):
             match_result = re.search(r'(\d+(?:\.\d{1,10})?)([eE])(-?\d{1,3})', result)
             prefix, lit_e, exponent = match_result.groups()
             converted = float(prefix + lit_e + exponent)
-            result = re.sub(match_result.group(0), str(converted), result)
+            result = re.sub(match_result.group(0), str(converted).rstrip('0').rstrip('.'), result)
 
         operator_check = r'[><]=?'
         alpha_check = r'[^\d]+.*'
