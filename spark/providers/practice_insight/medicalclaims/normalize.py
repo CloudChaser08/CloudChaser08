@@ -1,279 +1,111 @@
-#! /usr/bin/python
+import os
 import argparse
-import time
-from datetime import datetime
-import calendar
-
-from spark.runner import Runner
-from spark.spark_setup import init
-import spark.helpers.payload_loader as payload_loader
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.file_utils as file_utils
-import spark.helpers.explode as explode
-import spark.providers.practice_insight.medicalclaims.udf as pi_udf
+import subprocess
+import spark.providers.practice_insight.medicalclaims.transactional_schemas as source_table_schemas
+from spark.common.marketplace_driver import MarketplaceDriver
+from spark.common.medicalclaims import schemas as medicalclaims_schemas
+import spark.common.utility.logger as logger
 import spark.helpers.postprocessor as postprocessor
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
-from spark.common.utility.output_type import DataType, RunType
-from spark.common.utility.run_recorder import RunRecorder
-from spark.common.utility import logger
-
-
-TODAY = time.strftime('%Y-%m-%d', time.localtime())
-AIRFLOW_TEST_DIR = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/'
-
-OUTPUT_PATH_TEST = AIRFLOW_TEST_DIR + 'spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/medicalclaims/2017-02-24/'
-
-input_path, min_date, max_date, matching_path, setid = \
-    None, None, None, None, None
-
-
-def run_part(
-        spark, runner, part, date_input, shuffle_partitions, test=False, airflow_test=False
-):
-    """
-    Normalize one of 4 parts of practice insight
-    """
-
-    # initialize globals on first part
-    if part == '1':
-        global input_path, min_date, max_date, matching_path, setid
-
-        # register practice insight udfs:
-        runner.sqlContext.registerFunction(
-            'generate_place_of_service_std_id',
-            pi_udf.generate_place_of_service_std_id
-        )
-        runner.sqlContext.registerFunction(
-            'generate_inst_type_of_bill_std_id',
-            pi_udf.generate_inst_type_of_bill_std_id
-        )
-
-        # Increase default partitions to avoid memory errors
-        #
-        # This is necessary due to the relatively large size of each
-        # chunk of Practice Insight data to be normalized, as well as
-        # the relative complexity of the normalization SQL
-        runner.sqlContext.setConf(
-            "spark.sql.shuffle.partitions", shuffle_partitions
-        )
-
-        date_obj = datetime.strptime(date_input, '%Y-%m-%d')
-
-        if test:
-            input_path = file_utils.get_abs_path(
-                __file__, '../../../test/providers/practice_insight/medicalclaims/resources/input/'
-            ) + '/'
-            matching_path = file_utils.get_abs_path(
-                __file__, '../../../test/providers/practice_insight/medicalclaims/resources/matching/'
-            )
-            max_date = '2016-12-31'
-            setid = 'TEST'
-
-        elif airflow_test:
-            input_path = AIRFLOW_TEST_DIR + 'out/{}/{}/'.format(
-                str(date_obj.year),
-                str(date_obj.month).zfill(2)
-            )
-
-            max_date = date_obj.strftime('%Y-%m-') + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
-            matching_path = AIRFLOW_TEST_DIR + 'payload/{}/{}/'.format(
-                str(date_obj.year),
-                str(date_obj.month).zfill(2)
-            )
-            setid = 'HV.data.837.' + str(date_obj.year) + '.' \
-                    + date_obj.strftime('%b').lower() + '.csv.gz'
-
-        else:
-            input_path = 's3a://salusv/incoming/medicalclaims/practice_insight/{}/{}/'.format(
-                str(date_obj.year),
-                str(date_obj.month).zfill(2)
-            )
-
-            if date_obj.year <= 2016:
-                max_date = str(date_obj.year) + '-12-31'
-                matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/'.format(
-                    str(date_obj.year)
-                )
-                setid = 'HV.data.837.' + str(date_obj.year) + '.csv.gz_' \
-                        + str(date_obj.month)
-            else:
-                max_date = date_obj.strftime('%Y-%m-') \
-                           + str(calendar.monthrange(date_obj.year, date_obj.month)[1])
-                matching_path = 's3a://salusv/matching/payload/medicalclaims/practice_insight/{}/{}/'.format(
-                    str(date_obj.year),
-                    str(date_obj.month).zfill(2)
-                )
-                setid = 'HV.data.837.' + str(date_obj.year) + '.' \
-                        + date_obj.strftime('%b').lower() + '.csv.gz'
-
-        min_date = '2010-01-01'
-
-        # create helper tables
-        runner.run_spark_script('create_helper_tables.sql')
-        payload_loader.load(runner, matching_path, ['claimId'])
-
-    # end init #
-
-    runner.run_spark_script('../../../common/medicalclaims_common_model.sql', [
-        ['table_name', 'medicalclaims_common_model', False],
-        ['properties', '', False]
-    ])
-
-    # load transactions and payload
-    runner.run_spark_script('load_transactions.sql', [
-        ['input_path', input_path + part + '/']
-    ])
-
-    postprocessor.compose(
-        postprocessor.trimmify,
-        postprocessor.nullify
-    )(
-        runner.sqlContext.sql('SELECT * FROM transactional_raw')
-    ).createOrReplaceTempView('transactional_raw')
-
-    # create explosion maps
-    runner.run_spark_script('create_exploded_diagnosis_map.sql')
-    runner.run_spark_script('create_exploded_procedure_map.sql')
-
-    postprocessor.compose(
-        postprocessor.trimmify,
-        postprocessor.nullify
-    )(
-        runner.sqlContext.sql('SELECT * FROM exploded_diag_codes')
-    ).createOrReplaceTempView('exploded_diag_codes')
-
-    postprocessor.compose(
-        postprocessor.trimmify,
-        postprocessor.nullify
-    )(
-        runner.sqlContext.sql('SELECT * FROM exploded_proc_codes')
-    ).createOrReplaceTempView('exploded_proc_codes')
-
-    # normalize
-    runner.run_spark_script('normalize.sql', [
-        [
-            'date_service_sl',
-            """
-            CASE
-            WHEN extract_date(transactional.svc_from_dt, '%Y%m%d',
-                CAST('{min_date}' as date), CAST('{max_date}' as date)) IS NOT NULL
-            AND diags.diag_code IN (transactional.diag_cd_1,
-                transactional.diag_cd_2, transactional.diag_cd_3,
-                transactional.diag_cd_4)
-            THEN CAST(extract_date(transactional.svc_from_dt, '%Y%m%d',
-                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
-            WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d',
-                CAST('{min_date}' as date), CAST('{max_date}' as date)) IS NOT NULL
-            THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d',
-                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
-            ELSE MIN(
-            CAST(extract_date(transactional.svc_from_dt, '%Y%m%d',
-            CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
-            ) OVER(PARTITION BY transactional.src_claim_id
-            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
-            END
-            """.format(
-                min_date=min_date,
-                max_date=max_date
-            ), False
-        ],
-        [
-            'date_service_inst',
-            """
-            CASE
-            WHEN extract_date(transactional.svc_from_dt, '%Y%m%d',
-                CAST('{min_date}' as date), CAST('{max_date}' as date)) IS NOT NULL
-            THEN CAST(extract_date(transactional.svc_from_dt, '%Y%m%d',
-                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
-            WHEN extract_date(transactional.stmnt_from_dt, '%Y%m%d',
-                CAST('{min_date}' as date), CAST('{max_date}' as date)) IS NOT NULL
-            THEN CAST(extract_date(transactional.stmnt_from_dt, '%Y%m%d',
-                CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
-            ELSE MIN(
-            CAST(extract_date(transactional.svc_from_dt, '%Y%m%d',
-            CAST('{min_date}' as date), CAST('{max_date}' as date)) AS DATE)
-            ) OVER(PARTITION BY transactional.src_claim_id
-            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
-            END
-            """.format(
-                min_date=min_date,
-                max_date=max_date
-            ), False
-        ],
-        [
-            'place_of_service_std_id',
-            """
-            generate_place_of_service_std_id(
-                transactional.claim_type_cd,
-                transactional.pos_cd,
-                transactional.fclty_type_pos_cd,
-                transactional.diag_cd_1,
-                transactional.diag_cd_2,
-                transactional.diag_cd_3,
-                transactional.diag_cd_4,
-                diags.diag_code
-            )
-            """,
-            False
-        ],
-        ['setid', setid + '_' + part],
-        ['today', TODAY],
-        ['feedname', '22'],
-        ['vendor', '3'],
-        ['min_date', '2010-01-01'],
-        ['max_date', max_date]
-    ])
-
-    # explode date ranges
-    explode.explode_medicalclaims_dates(runner)
-
-    if not test:
-        normalized_records_unloader.partition_and_rename(
-            spark, runner, 'medicalclaims', 'medicalclaims_common_model.sql',
-            'practice_insight', 'medicalclaims_common_model', 'date_service',
-            args.date + '_' + part, unload_partition_count=50
-        )
-
-        runner.sqlContext.dropTempTable('medicalclaims_common_model')
-
-
-def main(args):
-    # init
-    spark, sql_context = init("Practice Insight")
-
-    # initialize runner
-    runner = Runner(sql_context)
-
-    for part in ['1', '2', '3', '4']:
-        run_part(
-            spark, runner, part, args.date, args.shuffle_partitions, airflow_test=args.airflow_test
-        )
-
-    if not args.airflow_test:
-        logger.log_run_details(
-            provider_name='Practice_Fusion',
-            data_type=DataType.MEDICAL_CLAIMS,
-            data_source_transaction_path=input_path,
-            data_source_matching_path=matching_path,
-            output_path=OUTPUT_PATH_PRODUCTION,
-            run_type=RunType.MARKETPLACE,
-            input_date=args.date
-        )
-
-    spark.stop()
-
-    if args.airflow_test:
-        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
-    else:
-        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
-        RunRecorder().record_run_details(additional_time=hadoop_time)
-
+b_run_dedup = True
 
 if __name__ == "__main__":
+
+    # ------------------------ Provider specific configuration -----------------------
+    provider_name = 'practice_insight'
+    schema = medicalclaims_schemas['schema_v1']
+    output_table_names_to_schemas = {
+        'practice_insight_16_norm_final': schema,
+    }
+    provider_partition_name = 'practice_insight'
+
+    # ------------------------ Common for all providers -----------------------
+
+    # Parse input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
-    parser.add_argument('--shuffle_partitions', type=str, default="1200")
-    parser.add_argument('--airflow_test', default=False, action='store_true')
+    parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
-    main(args)
+    date_input = args.date
+    end_to_end_test = args.end_to_end_test
+
+    # Create and run driver
+    driver = MarketplaceDriver(
+        provider_name,
+        provider_partition_name,
+        source_table_schemas,
+        output_table_names_to_schemas,
+        date_input,
+        end_to_end_test,
+        output_to_transform_path=True,
+        vdr_feed_id=22,
+        use_ref_gen_values=True,
+        unload_partition_count=10,
+        load_date_explode=True
+    )
+
+    conf_parameters = {
+        'spark.default.parallelism': 2000,
+        'spark.sql.shuffle.partitions': 2000,
+        'spark.executor.memoryOverhead': 1024,
+        'spark.driver.memoryOverhead': 1024,
+        'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.sql.autoBroadcastJoinThreshold': 26214400
+    }
+
+    driver.init_spark_context(conf_parameters=conf_parameters)
+
+    logger.log('Loading external tables')
+    driver.spark.read.parquet(os.path.join(driver.output_path, schema.output_directory, 'part_provider=practice_insight/')) \
+        .createOrReplaceTempView('_temp_medicalclaims_nb')
+
+    driver.load(extra_payload_cols=['claimId'])
+
+    matching_payload_df = driver.spark.table('matching_payload')
+    cleaned_matching_payload_df = (
+        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
+    cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
+
+    logger.log('Start transform')
+    driver.transform()
+
+    logger.log('Apply custom nullify trimmify for exploded')
+    diag_exploded_df = driver.spark.table('practice_insight_03_clm_diag')
+    cleaned_diag_exploded_df = (
+        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(diag_exploded_df))
+    cleaned_diag_exploded_df.createOrReplaceTempView("practice_insight_03_clm_diag")
+
+    proc_exploded_df = driver.spark.table('practice_insight_05_clm_proc')
+    cleaned_proc_exploded_df = (
+        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(proc_exploded_df))
+    cleaned_proc_exploded_df.createOrReplaceTempView("practice_insight_05_clm_proc")
+
+    driver.save_to_disk()
+    driver.stop_spark()
+    driver.log_run()
+
+    if b_run_dedup:
+        logger.log('Backup historical data')
+        if end_to_end_test:
+            tmp_path = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/backup/'
+        else:
+            tmp_path = 's3://salusv/backup/practice_insight/medicalclaims/{}/'.format(args.date)
+        date_part = 'part_provider=practice_insight/part_best_date={}/'
+
+        current_year_month = args.date[:7]
+        one_month_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m')
+        two_months_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m')
+
+        for month in [current_year_month, one_month_prior, two_months_prior]:
+            subprocess.check_call(
+                ['aws', 's3', 'mv', '--recursive',
+                 driver.output_path + 'medicalclaims/2017-02-24/' + date_part.format(month),
+                 tmp_path + date_part.format(month)]
+            )
+    else:
+        logger.log('De-dupe process disabled')
+    driver.copy_to_output_path()
+    logger.log('Done')
