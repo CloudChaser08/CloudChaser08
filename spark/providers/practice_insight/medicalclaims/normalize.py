@@ -19,7 +19,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     provider_name = 'practice_insight'
     schema = medicalclaims_schemas['schema_v1']
     output_table_names_to_schemas = {
-        'practice_insight_16_norm_final': schema,
+        'practice_insight_16_norm_final': schema
     }
     provider_partition_name = 'practice_insight'
 
@@ -34,11 +34,11 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         date_input,
         end_to_end_test,
         test=test,
-        output_to_transform_path=True,
         vdr_feed_id=22,
         use_ref_gen_values=True,
         unload_partition_count=10,
-        load_date_explode=True
+        load_date_explode=True,
+        output_to_transform_path=False
     )
 
     conf_parameters = {
@@ -57,8 +57,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         driver.spark = spark
         driver.runner = runner
 
-    script_path = __file__
     normalized_path = ""
+    script_path = __file__
     if test:
         driver.input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/practice_insight/medicalclaims/resources/input/'
@@ -136,5 +136,4 @@ if __name__ == "__main__":
     parser.add_argument('--date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
-
     run(args.date, args.end_to_end_test)
