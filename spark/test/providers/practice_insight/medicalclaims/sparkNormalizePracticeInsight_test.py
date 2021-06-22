@@ -13,43 +13,19 @@ def get_rows_for_test(claim_id):
 
 
 def clean_up(spark):
-    try:
-        spark['sqlContext'].sql('DROP VIEW IF EXISTS transactional_raw')
-    except:
-        pass
-    try:
-        spark['sqlContext'].sql('DROP TABLE IF EXISTS transactional_raw')
-    except:
-        pass
-    try:
-        spark['sqlContext'].sql('DROP VIEW IF EXISTS exploded_proc_codes')
-    except:
-        pass
-    try:
-        spark['sqlContext'].sql('DROP TABLE IF EXISTS exploded_proc_codes')
-    except:
-        pass
-    try:
-        spark['sqlContext'].sql('DROP VIEW IF EXISTS exploded_diag_codes')
-    except:
-        pass
-    try:
-        spark['sqlContext'].sql('DROP TABLE IF EXISTS exploded_diag_codes')
-    except:
-        pass
+    spark['sqlContext'].dropTempTable('practice_insight_16_norm_final')
+
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     clean_up(spark)
-    practice_insight.run_part(
-        spark['spark'], spark['runner'], '1', '2016-12-31', 40, True
-    )
+    practice_insight.run('2016-12-31', end_to_end_test=False, test=True, spark=spark['spark'], runner=spark['runner'])
 
     global results, res2
     results = spark['sqlContext'].sql(
-        'select * from medicalclaims_common_model'
+        'select * from practice_insight_16_norm_final'
     ).collect()
-    res2 = spark['sqlContext'].sql("select * from tmp where claim_id = 'no_diag_cds'").collect()
+    res2 = spark['sqlContext'].sql("select * from practice_insight_16_norm_final where claim_id = 'no_diag_cds'").collect()
 
 
 def test_diag_code_explosion_p_all_present():
@@ -179,9 +155,11 @@ def test_service_date_p_use_stmnt():
     ]
     assert svc_date == [datetime.date(2016, 2, 1)]
 
+
 def test_row_count_no_diagnosis_priority():
     "Ensure that with diagnosis codes but no diagnosis pointers are populated"
     assert len(get_rows_for_test('no_diag_cds')) == 4
+
 
 def test_clean_up(spark):
     clean_up(spark)
