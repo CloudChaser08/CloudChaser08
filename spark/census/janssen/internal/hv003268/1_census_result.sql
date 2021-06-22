@@ -1,6 +1,7 @@
 SELECT
     mp.hvid AS hvid,
-    mp.claimId as claimId
+    mp.claimId as claimId,
+    {study_id} as study
 FROM records r
     INNER JOIN matching_payload mp ON r.hvJoinKey = mp.hvJoinKey
 WHERE
