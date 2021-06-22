@@ -3,6 +3,8 @@ import re
 from spark.common.census_driver import CensusDriver
 from spark.common.utility.logger import log
 
+VALID_STUDY_IDS = {"3001", "3009"}
+
 class JanssenInternalCensusDriver(CensusDriver):
     CLIENT_NAME = "janssen_delivery"
     OPPORTUNITY_ID = "hv003268"
@@ -22,7 +24,7 @@ class JanssenInternalCensusDriver(CensusDriver):
         match = re.match(pattern, batch_id)
 
         # If study_id cannot be parsed or is not a valid value, use empty string
-        if not match or match.group("study_id") not in ["3001", "3009"]:
+        if not match or match.group("study_id") not in VALID_STUDY_IDS:
             log("Could not retrieve valid study_id from batch ID {}".format(batch_id))
             study_id = ""
         else:
