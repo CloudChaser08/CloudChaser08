@@ -431,10 +431,10 @@ SELECT DISTINCT
     SPLIT(clm.input_file_name, '/')[SIZE(SPLIT(clm.input_file_name, '/')) - 1]              AS sourcefilename,
     'citra_riwaka'                                                                          AS data_vendor,                 -- Will verified source/target names 4/27/2021.
     CAST(NULL AS STRING)                                                                    AS dhcreceiveddate,             -- Set to NULL per Will 4/22/2021.
-    CAST(NULL AS STRING)                                                                    AS rownumber,                   -- Set to NULL per Will 4/22/2021.
-    CAST(NULL AS STRING)                                                                    AS fileyear,
-    CAST(NULL AS STRING)                                                                    AS filemonth,
-    CAST(NULL AS STRING)                                                                    AS fileday,
+    CAST(NULL AS BIGINT)                                                                    AS rownumber,                   -- Set to NULL per Will 4/22/2021.
+    CAST(NULL AS INT)                                                                       AS fileyear,
+    CAST(NULL AS INT)                                                                       AS filemonth,
+    CAST(NULL AS INT)                                                                       AS fileday,
     '220'                                                                                   AS data_feed,
     'change_relay'                                                                          AS part_provider,
     CASE

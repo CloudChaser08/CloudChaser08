@@ -56,7 +56,7 @@ SELECT DISTINCT
     SPLIT(sln.input_file_name, '/')[SIZE(SPLIT(sln.input_file_name, '/')) - 1] AS sourcefilename,
     'apollo'                                                              AS data_vendor,
     CAST(NULL AS STRING)                                                  AS dhcreceiveddate,
-    CAST(NULL AS INT)                                                     AS rownumber,
+    CAST(NULL AS BIGINT)                                                  AS rownumber,
     CAST(NULL AS INT)                                                     AS fileyear,
     CAST(NULL AS INT)                                                     AS filemonth,
     CAST(NULL AS INT)                                                     AS fileday,

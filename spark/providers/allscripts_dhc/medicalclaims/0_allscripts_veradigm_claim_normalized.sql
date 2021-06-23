@@ -391,7 +391,7 @@ SELECT DISTINCT
     CAST(NULL AS STRING)                                                  AS datasource,
     'apollo'                                                              AS data_vendor,
     CAST(NULL AS STRING)                                                  AS dhcreceiveddate,
-    CAST(NULL AS INT)                                                     AS rownumber,
+    CAST(NULL AS BIGINT)                                                  AS rownumber,
     CAST(NULL AS INT)                                                     AS fileyear,
     CAST(NULL AS INT)                                                     AS filemonth,
     CAST(NULL AS INT)                                                     AS fileday,
