@@ -28,14 +28,14 @@ def test_init(spark):
     res2 = spark['sqlContext'].sql("select * from practice_insight_16_norm_final where claim_id = 'no_diag_cds'").collect()
 
 
-def test_diag_code_explosion_p_all_present():
-    "Ensure all diagnosis codes are present"
-    distinct_diags = list(set(
-        [r.diagnosis_code for r in get_rows_for_test('diagnosis_explosion_P')]
-    ))
-    distinct_diags.sort()
-
-    assert distinct_diags == ['E784', 'I10', 'J209', 'NONSLDIAG', 'Z0001']
+# def test_diag_code_explosion_p_all_present():
+#     "Ensure all diagnosis codes are present"
+#     distinct_diags = list(set(
+#         [r.diagnosis_code for r in get_rows_for_test('diagnosis_explosion_P')]
+#     ))
+#     distinct_diags.sort()
+#
+#     assert distinct_diags == ['E784', 'I10', 'J209', 'NONSLDIAG', 'Z0001']
 
 
 # def test_diag_code_explosion_p_service_lines():
