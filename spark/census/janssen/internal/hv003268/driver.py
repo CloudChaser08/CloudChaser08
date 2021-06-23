@@ -20,7 +20,7 @@ class JanssenInternalCensusDriver(CensusDriver):
         
         # Parse study_id from batch_id to include in output
         log("Attempting to pull study_id from batch ID: {}".format(batch_id))
-        pattern = r"^VAC(\d{5})COV(?P<study_id>\d{4})_(\d+)$"
+        pattern = r"^VAC\d{5}COV(?P<study_id>\d{4})_\d+$"
         match = re.match(pattern, batch_id)
 
         # If study_id cannot be parsed or is not a valid value, use empty string
