@@ -19,13 +19,13 @@ def clean_up(spark):
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     clean_up(spark)
-    practice_insight.run('2016-12-31', end_to_end_test=False, test=True, spark=spark['spark'], runner=spark['runner'])
-
-    global results, res2
-    results = spark['sqlContext'].sql(
-        'select * from practice_insight_16_norm_final'
-    ).collect()
-    res2 = spark['sqlContext'].sql("select * from practice_insight_16_norm_final where claim_id = 'no_diag_cds'").collect()
+    # practice_insight.run('2016-12-31', end_to_end_test=False, test=True, spark=spark['spark'], runner=spark['runner'])
+    #
+    # global results, res2
+    # results = spark['sqlContext'].sql(
+    #     'select * from practice_insight_16_norm_final'
+    # ).collect()
+    # res2 = spark['sqlContext'].sql("select * from practice_insight_16_norm_final where claim_id = 'no_diag_cds'").collect()
 
 
 # def test_diag_code_explosion_p_all_present():
