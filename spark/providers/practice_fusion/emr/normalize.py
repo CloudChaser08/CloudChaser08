@@ -76,8 +76,9 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         driver.spark = spark
         driver.runner = runner
 
-    logger.log('Loading external table: load_ref_gen_ref')
-    external_table_loader.load_ref_gen_ref(runner.sqlContext)
+    if not test:
+        logger.log('Loading external table: load_ref_gen_ref')
+        external_table_loader.load_ref_gen_ref(runner.sqlContext)
     v_sql = """SELECT * FROM ref_gen_ref WHERE gen_ref_domn_nm = 'practice_fusion_emr.vitals'"""
     driver.spark.sql(v_sql).createOrReplaceTempView('ref_gen_ref_domn_nm_pf_emr_vitals')
 
