@@ -1,4 +1,6 @@
 APP_NAME=dewey
+CONTAINER_NAME=dewey-spark-tester-3
+NOW=$(shell date '+%F_%H_%M_%S')
 
 analytics-deploy:
 	scp -i ~/.ssh/emr_deployer target/dewey.zip hadoop@analytics.aws.healthverity.com:/tmp/
@@ -72,7 +74,7 @@ test-python3: build-container clean-test build-notest
 		$(eval SECRET_OPT=-e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}") \
 		:; \
 	fi
-	@docker run --rm --name dewey-spark-tester-3 -v "${PWD}:/dewey/spark" \
+	@docker run --rm --name ${CONTAINER_NAME}-${NOW} -v "${PWD}:/dewey/spark" \
 		$(ID_OPT) \
 		${SECRET_OPT} \
 		-e "AWS_DEFAULT_REGION=us-east-1" \
@@ -98,7 +100,7 @@ dewey-spark-shell: build-container clean-test build-notest
 		$(eval SECRET_OPT=-e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}") \
 		:; \
 	fi
-	@docker run --rm --name dewey-spark-tester-3 -v "${PWD}:/dewey/spark" \
+	@docker run --rm --name ${CONTAINER_NAME} -v "${PWD}:/dewey/spark" \
 		$(ID_OPT) \
 		${SECRET_OPT} \
 		-e "AWS_DEFAULT_REGION=us-east-1" \
