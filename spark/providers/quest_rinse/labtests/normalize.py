@@ -57,7 +57,7 @@ if __name__ == "__main__":
     )
     driver.spark.table('ref_geo_state').createOrReplaceTempView('ref_geo_state')
     driver.spark.read.parquet(
-        "s3://salusv/incoming/labtests/quest_rinse/order_result_comments_hist/").createOrReplaceTempView("res_comment")
+        "s3://salusv/incoming/labtests/quest_rinse/order_result_comments_hist/").createOrReplaceTempView("result_comments_hist")
     driver.load()
     driver.transform()
     driver.save_to_disk()

@@ -70,7 +70,7 @@ SELECT
      rslt.result_name                                                                         AS result_name           ,
      rslt.units                                                                               AS result_unit_of_measure,
      rslt.result_type                                                                         AS result_desc           ,
-     comm.res_comm_text			                                                              AS result_comments       ,
+     COALESCE(comm.res_comm_text, histcomm.res_comm_text)		                              AS result_comments       ,
      CASE
         WHEN rslt.ref_range_alpha IS NOT NULL                                                                     THEN rslt.ref_range_alpha
         WHEN rslt.ref_range_alpha IS NULL AND rslt.ref_range_low IS NOT NULL AND rslt.ref_range_high IS NOT NULL  THEN CONCAT(rslt.ref_range_low,' - ', rslt.ref_range_high)
@@ -207,13 +207,21 @@ FROM order_result rslt
 LEFT OUTER JOIN diagnosis         diag ON rslt.unique_accession_id = diag.unique_accession_id
 LEFT OUTER JOIN transactions       txn  ON rslt.unique_accession_id = txn.unique_accession_id
 LEFT OUTER JOIN matching_payload  pay  ON txn.hvjoinkey            = pay.hvJoinKey
-LEFT OUTER JOIN res_comment comm ON rslt.dos_id = comm.dos_id
+LEFT OUTER JOIN result_comments comm ON rslt.dos_id = comm.dos_id
                           AND rslt.dos_yyyymm          = comm.dos_yyyymm
                           AND rslt.lab_code            = comm.lab_code
                           AND rslt.accn_id             = comm.accn_id
                           AND rslt.unique_accession_id = comm.unique_accession_id
                           AND rslt.ord_seq             = comm.ord_seq
                           AND rslt.res_seq             = comm.res_seq
+LEFT OUTER JOIN result_comments_hist histcomm ON rslt.dos_id = histcomm.dos_id
+                          AND rslt.dos_yyyymm          = histcomm.dos_yyyymm
+                          AND rslt.lab_code            = histcomm.lab_code
+                          AND rslt.accn_id             = histcomm.accn_id
+                          AND rslt.unique_accession_id = histcomm.unique_accession_id
+                          AND rslt.ord_seq             = histcomm.ord_seq
+                          AND rslt.res_seq             = histcomm.res_seq
+
 WHERE
  LOWER(COALESCE(rslt.unique_accession_id, '')) <> 'unique_accession_id'
 AND
