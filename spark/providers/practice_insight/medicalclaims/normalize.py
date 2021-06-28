@@ -42,14 +42,15 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     )
 
     conf_parameters = {
-        'spark.default.parallelism': 2000,
-        'spark.sql.shuffle.partitions': 2000,
+        'spark.default.parallelism': 600,
+        'spark.sql.shuffle.partitions': 600,
         'spark.executor.memoryOverhead': 1024,
         'spark.driver.memoryOverhead': 1024,
-        'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
-        'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
-        'spark.sql.autoBroadcastJoinThreshold': 26214400
+        'spark.sql.autoBroadcastJoinThreshold': 52428800
     }
+
+
+
 
     if not test:
         driver.init_spark_context(conf_parameters=conf_parameters)
