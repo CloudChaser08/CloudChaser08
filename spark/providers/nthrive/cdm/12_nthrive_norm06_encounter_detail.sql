@@ -4,11 +4,11 @@ SELECT
  FROM
 (
     SELECT *
-     FROM nthrive_norm03_encounter_detail_1
+     FROM darch.nthrive_norm03_encounter_detail_1
     UNION ALL
     SELECT *
-     FROM nthrive_norm04_encounter_detail_2
+     FROM darch.nthrive_norm04_encounter_detail_2
     UNION ALL
     SELECT *
-     FROM nthrive_norm05_encounter_detail_3
+     FROM darch.nthrive_norm05_encounter_detail_3
 ) sub
