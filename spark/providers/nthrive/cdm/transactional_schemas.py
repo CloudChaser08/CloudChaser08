@@ -249,7 +249,7 @@ TABLE_CONF = {
             'ahrq_version'
         ]
     ),
-    'patient_procedure': SourceTable(
+    'nthrive_patient_procedure': SourceTable(
         'csv',
         separator='|',
         columns=[

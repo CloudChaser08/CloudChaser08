@@ -191,7 +191,7 @@ SELECT
    ON COALESCE(ptn_prc.record_id, 'EMPTY') = COALESCE(epi.record_id, 'DUMMY')
  LEFT OUTER JOIN nthrive_patient ptn
    ON COALESCE(epi.record_id, 'EMPTY') = COALESCE(ptn.record_id, 'DUMMY')
- LEFT OUTER JOIN nthrive_payload pay
+ LEFT OUTER JOIN matching_payload pay
    ON COALESCE(ptn.hvjoinkey, 'EMPTY') = COALESCE(pay.hvjoinkey, 'DUMMY')
  LEFT OUTER JOIN
     (
