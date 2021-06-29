@@ -55,10 +55,12 @@ if __name__ == "__main__":
     conf_parameters = {
         'spark.default.parallelism': 600,
         'spark.sql.shuffle.partitions': 600,
-        'spark.sql.autoBroadcastJoinThreshold': 10485760,
+        'spark.sql.autoBroadcastJoinThreshold': -1,
         'spark.executor.cores': 5,
         'spark.buffer.pageSize': '2m',
-        'spark.network.timeout': '600s'
+        'spark.network.timeout': '600s',
+        'spark.sql.crossJoin.enabled': 'true',
+        'spark.sql.broadcastTimeout' : 9000
     }
 
     driver.run(conf_parameters=conf_parameters)
