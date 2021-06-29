@@ -145,10 +145,10 @@ SELECT
                     SUBSTR(epi.admit_dt, 5, 2)
                 )
 	END                                                                                     AS part_mth
- FROM nthrive_patient_cpt ptn_cpt
- LEFT OUTER JOIN nthrive_episodes epi
+ FROM patient_cpt ptn_cpt
+ LEFT OUTER JOIN episodes epi
    ON COALESCE(ptn_cpt.record_id, 'EMPTY') = COALESCE(epi.record_id, 'DUMMY')
- LEFT OUTER JOIN nthrive_patient ptn
+ LEFT OUTER JOIN patient ptn
    ON COALESCE(epi.record_id, 'EMPTY') = COALESCE(ptn.record_id, 'DUMMY')
  LEFT OUTER JOIN matching_payload pay
    ON COALESCE(ptn.hvjoinkey, 'EMPTY') = COALESCE(pay.hvjoinkey, 'DUMMY')
@@ -160,8 +160,8 @@ WHERE UPPER(COALESCE(ptn_cpt.record_id, '')) <> 'RECORD_ID'
         SELECT 1
          FROM nthrive_norm_temp03_ptn_chg_temp ptn_chg
          WHERE COALESCE(ptn_cpt.record_id, 'DUMMY') = ptn_chg.record_id
-          AND COALESCE(ptn_cpt.procedure_day, 'DUMMY') = ptn_chg.service_day
-          AND COALESCE(ptn_cpt.cpt_code, 'DUMMY') = ptn_chg.cpt_code
+         AND COALESCE(ptn_cpt.procedure_day, 'DUMMY') = ptn_chg.service_day
+         AND COALESCE(ptn_cpt.cpt_code, 'DUMMY') = ptn_chg.cpt_code
     )
 /* ...AND haven't already been loaded from patient_procedure. */
   AND NOT EXISTS
@@ -169,6 +169,7 @@ WHERE UPPER(COALESCE(ptn_cpt.record_id, '')) <> 'RECORD_ID'
         SELECT 1
          FROM nthrive_norm_temp04_ptn_prc_temp ptn_prc
          WHERE COALESCE(ptn_cpt.record_id, 'DUMMY') = ptn_prc.record_id
-          AND COALESCE(ptn_cpt.procedure_day, 'DUMMY') = ptn_prc.procedure_day
-          AND COALESCE(ptn_cpt.cpt_code, 'DUMMY') = ptn_prc.icd_procedure_code
+         AND COALESCE(ptn_cpt.procedure_day, 'DUMMY') = ptn_prc.procedure_day
+         AND COALESCE(ptn_cpt.cpt_code, 'DUMMY') = ptn_prc.icd_procedure_code
     )
+    

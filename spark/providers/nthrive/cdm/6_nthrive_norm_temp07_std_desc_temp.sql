@@ -18,5 +18,4 @@ SELECT DISTINCT
 ) tmp
  LEFT OUTER JOIN ref_gen_ref ref
    ON ref.gen_ref_domn_nm = 'cdm_desc_blacklist'
-  
   AND tmp.cdm_std_desc RLIKE REGEXP_REPLACE(ref.gen_ref_itm_nm, "\\.", "\\.")

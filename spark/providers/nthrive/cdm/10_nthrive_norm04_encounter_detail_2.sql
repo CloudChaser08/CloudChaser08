@@ -186,10 +186,10 @@ SELECT
                     SUBSTR(epi.admit_dt, 5, 2)
                 )
 	END                                                                                     AS part_mth
- FROM nthrive_patient_procedure ptn_prc
- LEFT OUTER JOIN nthrive_episodes epi
+ FROM patient_procedure ptn_prc
+ LEFT OUTER JOIN episodes epi
    ON COALESCE(ptn_prc.record_id, 'EMPTY') = COALESCE(epi.record_id, 'DUMMY')
- LEFT OUTER JOIN nthrive_patient ptn
+ LEFT OUTER JOIN patient ptn
    ON COALESCE(epi.record_id, 'EMPTY') = COALESCE(ptn.record_id, 'DUMMY')
  LEFT OUTER JOIN matching_payload pay
    ON COALESCE(ptn.hvjoinkey, 'EMPTY') = COALESCE(pay.hvjoinkey, 'DUMMY')
@@ -204,3 +204,4 @@ WHERE UPPER(COALESCE(ptn_prc.record_id, '')) <> 'RECORD_ID'
           AND COALESCE(ptn_prc.procedure_day, 'DUMMY') = ptn_chg.service_day
           AND COALESCE(ptn_prc.icd_procedure_code, 'DUMMY') = ptn_chg.cpt_code
     )
+    
