@@ -204,4 +204,3 @@ WHERE UPPER(COALESCE(ptn_prc.record_id, '')) <> 'RECORD_ID'
           AND COALESCE(ptn_prc.procedure_day, 'DUMMY') = ptn_chg.service_day
           AND COALESCE(ptn_prc.icd_procedure_code, 'DUMMY') = ptn_chg.cpt_code
     )
-    
