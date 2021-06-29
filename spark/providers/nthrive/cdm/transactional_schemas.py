@@ -3,7 +3,7 @@ from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
 
-    'nthrive_patient': SourceTable(
+    'patient': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -23,7 +23,7 @@ TABLE_CONF = {
             'hvjoinkey'
         ]
     ),
-    'nthrive_master_drg': SourceTable(
+    'master_drg': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -37,7 +37,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'nthrive_master_ms_drg': SourceTable(
+    'master_ms_drg': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -67,7 +67,7 @@ TABLE_CONF = {
     #            'cpt_modifier_desc'
     #        ]
     #    ),
-    'nthrive_chargemaster': SourceTable(
+    'chargemaster': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -84,7 +84,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'nthrive_standard_chargemaster': SourceTable(
+    'standard_chargemaster': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -106,7 +106,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'nthrive_providers': SourceTable(
+    'providers': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -125,7 +125,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'nthrive_provider_county': SourceTable(
+    'provider_county': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -134,7 +134,7 @@ TABLE_CONF = {
             'county_res_ratio'
         ]
     ),
-    'nthrive_provider_cbsa': SourceTable(
+    'provider_cbsa': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -143,7 +143,7 @@ TABLE_CONF = {
             'cbsa_res_ratio'
         ]
     ),
-    'nthrive_episodes': SourceTable(
+    'episodes': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -202,7 +202,7 @@ TABLE_CONF = {
             'servingphysiciannpi'
         ]
     ),
-    'nthrive_patient_payer': SourceTable(
+    'patient_payer': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -216,7 +216,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'nthrive_patient_charges': SourceTable(
+    'patient_charges': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -230,7 +230,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'nthrive_patient_diagnosis': SourceTable(
+    'patient_diagnosis': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -249,7 +249,7 @@ TABLE_CONF = {
             'ahrq_version'
         ]
     ),
-    'nthrive_patient_procedure': SourceTable(
+    'patient_procedure': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -264,7 +264,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'nthrive_patient_cpt': SourceTable(
+    'patient_cpt': SourceTable(
         'csv',
         separator='|',
         columns=[
@@ -278,7 +278,7 @@ TABLE_CONF = {
             'extra_col'
         ]
     ),
-    'nthrive_weights': SourceTable(
+    'weights': SourceTable(
         'csv',
         separator='|',
         columns=[

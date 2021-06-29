@@ -85,15 +85,15 @@ SELECT
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
-            CAST(${VDR_FILE_DT} AS DATE)
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
+            CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_start_dt,
 	/* enc_end_dt */
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
-            esdt.gen_ref_1_dt,
-            CAST(${VDR_FILE_DT} AS DATE)
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
+            CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_end_dt,
 	/* proc_dt */
 -- 	CASE
@@ -102,8 +102,8 @@ SELECT
 --         ELSE CAP_DATE
 --         	    (
 --         	        DATE_ADD(CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), CAST(ptn_prc.procedure_day AS INTEGER)),
---                     esdt.gen_ref_1_dt,
---                     CAST(${VDR_FILE_DT} AS DATE)
+--                     CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
+--                     CAST('{VDR_FILE_DT}' AS DATE)
 --         	    )
 -- 	END                                                                                     AS proc_dt,
 	
@@ -117,8 +117,8 @@ SELECT
 	    WHEN CAST(ptn_prc.procedure_day AS INTEGER) < 1                                              THEN DATE_ADD(TO_DATE(epi.admit_dt, 'yyyyMMdd'), CAST(ptn_prc.procedure_day AS INTEGER))
 	ELSE NULL
 	END,
-	esdt.gen_ref_1_dt,
-    CAST(${VDR_FILE_DT} AS DATE)
+	CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
+    CAST('{VDR_FILE_DT}' AS DATE)
     )                                                                                       AS proc_dt,	
 	
     CLEAN_UP_PROCEDURE_CODE(ptn_prc.icd_procedure_code)                                     AS proc_cd,
@@ -176,8 +176,8 @@ SELECT
 	    WHEN 0 = LENGTH(TRIM(COALESCE(CAP_DATE
                                         (
                                             CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE), 
-                                            COALESCE(ahdt.gen_ref_1_dt, esdt.gen_ref_1_dt),
-                                            CAST(${VDR_FILE_DT} AS DATE)
+                                            COALESCE(CAST('{AVAILABLE_START_DATE}' AS DATE), CAST('{EARLIEST_SERVICE_DATE}' AS DATE)),
+                                            CAST('{VDR_FILE_DT}' AS DATE)
                                         ), '')))
 	        THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE CONCAT
@@ -193,31 +193,13 @@ SELECT
    ON COALESCE(epi.record_id, 'EMPTY') = COALESCE(ptn.record_id, 'DUMMY')
  LEFT OUTER JOIN matching_payload pay
    ON COALESCE(ptn.hvjoinkey, 'EMPTY') = COALESCE(pay.hvjoinkey, 'DUMMY')
- LEFT OUTER JOIN
-    (
-        SELECT gen_ref_1_dt
-         FROM dw.ref_gen_ref
-        WHERE hvm_vdr_feed_id = 149
-          AND gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE'
-        LIMIT 1
-    ) esdt
-   ON 1 = 1
- LEFT OUTER JOIN 
-    (
-        SELECT gen_ref_1_dt
-         FROM dw.ref_gen_ref
-        WHERE hvm_vdr_feed_id = 149
-          AND gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE'
-        LIMIT 1
-    ) ahdt
-   ON 1 = 1
 /* Eliminate column headers. */
 WHERE UPPER(COALESCE(ptn_prc.record_id, '')) <> 'RECORD_ID'
 /* Only load records that haven't already been loaded from patient_charges. */
   AND NOT EXISTS
     (
         SELECT 1
-         FROM darch.nthrive_norm_temp03_ptn_chg_temp ptn_chg
+         FROM nthrive_norm_temp03_ptn_chg_temp ptn_chg
         WHERE COALESCE(ptn_prc.record_id, 'DUMMY') = ptn_chg.record_id
           AND COALESCE(ptn_prc.procedure_day, 'DUMMY') = ptn_chg.service_day
           AND COALESCE(ptn_prc.icd_procedure_code, 'DUMMY') = ptn_chg.cpt_code
