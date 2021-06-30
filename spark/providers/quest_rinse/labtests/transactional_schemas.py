@@ -161,18 +161,18 @@ TABLE_CONF = {
             'idw_pm_email_address',
             'hvjoinkey'
         ]
-    ),
-    'result_comments': SourceTable(
-        'parquet',
-        columns=[
-            'unique_accession_id',
-            'dos_id',
-            'dos_yyyymm',
-            'lab_code',
-            'accn_id',
-            'ord_seq',
-            'res_seq',
-            'res_comm_text'
-        ]
     )
+    # 'result_comments': SourceTable(
+    #     'parquet',
+    #     columns=[
+    #         'unique_accession_id',
+    #         'dos_id',
+    #         'dos_yyyymm',
+    #         'lab_code',
+    #         'accn_id',
+    #         'ord_seq',
+    #         'res_seq',
+    #         'res_comm_text'
+    #     ]
+    # )
 }
