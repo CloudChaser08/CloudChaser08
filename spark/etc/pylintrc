@@ -2,4 +2,3 @@
 extension-pkg-whitelist=pyspark
 generated-members=pyspark.*
 ignored-modules=boto3,botocore,pyspark.sql.functions
-init-hook='import sys; sys.setrecursionlimit(8 * sys.getrecursionlimit())'
