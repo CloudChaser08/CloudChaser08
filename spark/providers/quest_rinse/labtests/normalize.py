@@ -79,7 +79,8 @@ if __name__ == "__main__":
     logger.log(' -trimmify-nullify matchig_payload and transactions data')
     matching_payload_df = driver.spark.table('matching_payload')
     cleaned_matching_payload_df = (
-        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
+        postprocessor.compose(
+            postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
     cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
     for tbl in ['transactions', 'diagnosis', 'result_comments', 'result_comments_hist']:
