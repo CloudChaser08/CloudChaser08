@@ -33,19 +33,19 @@ SELECT
 	MASK_ZIP_CODE(SUBSTR(pay.threedigitzip, 1, 3))                                           AS patient_zip3          ,
     VALIDATE_STATE_CODE(UPPER(COALESCE(txn.pat_state, pay.state)))                           AS patient_state         ,
     CASE
-        WHEN CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_service, 1, 10), '%Y-%m-%d') AS DATE) < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_service, 1, 10), '%Y-%m-%d') AS DATE) > '{VDR_FILE_DT}' THEN NULL
+        WHEN CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_service, 1, 10), '%Y-%m-%d') AS DATE) < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_service, 1, 10), '%Y-%m-%d') AS DATE) > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
         ELSE CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_service, 1, 10), '%Y-%m-%d') AS DATE)
     END                                                                                      AS date_service          ,
     CASE
-        WHEN CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_collection, 1, 10), '%Y-%m-%d') AS DATE) < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_collection, 1, 10), '%Y-%m-%d') AS DATE) > '{VDR_FILE_DT}' THEN NULL
+        WHEN CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_collection, 1, 10), '%Y-%m-%d') AS DATE) < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_collection, 1, 10), '%Y-%m-%d') AS DATE) > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
         ELSE CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_collection, 1, 10), '%Y-%m-%d') AS DATE)
     END                                                                                      AS date_specimen          ,
 
     CASE
-        WHEN CAST(EXTRACT_DATE(SUBSTR(COALESCE(rslt.date_final_report, rslt.date_reported), 1, 10), '%Y-%m-%d') AS DATE) < '{EARLIEST_SERVICE_DATE}'
-          OR CAST(EXTRACT_DATE(SUBSTR(COALESCE(rslt.date_final_report, rslt.date_reported), 1, 10), '%Y-%m-%d') AS DATE) > '{VDR_FILE_DT}' THEN NULL
+        WHEN CAST(EXTRACT_DATE(SUBSTR(COALESCE(rslt.date_final_report, rslt.date_reported), 1, 10), '%Y-%m-%d') AS DATE) < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
+          OR CAST(EXTRACT_DATE(SUBSTR(COALESCE(rslt.date_final_report, rslt.date_reported), 1, 10), '%Y-%m-%d') AS DATE) > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
         ELSE CAST(EXTRACT_DATE(SUBSTR(COALESCE(rslt.date_final_report, rslt.date_reported), 1, 10), '%Y-%m-%d') AS DATE)
     END                                                                                      AS date_report           ,
     CASE
@@ -204,7 +204,7 @@ SELECT
 
 
 FROM order_result rslt
-LEFT OUTER JOIN diagnosis         diag ON rslt.unique_accession_id = diag.unique_accession_id
+    LEFT OUTER JOIN diagnosis         diag ON rslt.unique_accession_id = diag.unique_accession_id
 LEFT OUTER JOIN transactions       txn  ON rslt.unique_accession_id = txn.unique_accession_id
 LEFT OUTER JOIN matching_payload  pay  ON txn.hvjoinkey            = pay.hvJoinKey
 LEFT OUTER JOIN result_comments comm ON rslt.dos_id = comm.dos_id

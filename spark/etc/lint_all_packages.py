@@ -8,7 +8,7 @@ import sys
 from setuptools import find_packages
 
 from pylint.lint import Run
-
+sys.setrecursionlimit(8 * sys.getrecursionlimit())
 LINT_TYPES = [
     'convention', 'error', 'fatal', 'refactor', 'warning'
 ]
