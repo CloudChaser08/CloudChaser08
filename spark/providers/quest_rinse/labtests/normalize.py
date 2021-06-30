@@ -63,11 +63,13 @@ if __name__ == "__main__":
     driver.spark.table('ref_geo_state').createOrReplaceTempView('ref_geo_state')
 
     logger.log('Loading temp table: result_comments_hist')
-    driver.spark.read.parquet(result_comments_hist_path).createOrReplaceTempView("result_comments_hist")
+    driver.spark.read.parquet(
+        result_comments_hist_path).createOrReplaceTempView("result_comments_hist")
 
     try:
         subprocess.check_call(['aws', 's3', 'ls', driver.input_path + 'result_comments/'])
-        driver.spark.read.parquet(driver.input_path + 'result_comments/').createOrReplaceTempView("result_comments")
+        driver.spark.read.parquet(
+            driver.input_path + 'result_comments/').createOrReplaceTempView("result_comments")
     except:
         logger.log('...result_comments_hist read from hist')
         driver.spark.table('result_comments_hist').createOrReplaceTempView("result_comments")
@@ -81,9 +83,11 @@ if __name__ == "__main__":
     cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
     for tbl in ['transactions', 'diagnosis', 'result_comments', 'result_comments_hist']:
-        cleaned_df = postprocessor.nullify(postprocessor.trimmify(driver.spark.table(tbl)), ['NULL', 'Null', 'null', 'N/A', ''])
+        cleaned_df = postprocessor.nullify(
+            postprocessor.trimmify(driver.spark.table(tbl)), ['NULL', 'Null', 'null', 'N/A', ''])
         if tbl == "diagnosis":
-            cleaned_df2 = cleaned_df.withColumn('date_of_service', cleaned_df['date_of_service'].cast(StringType())) \
+            cleaned_df2 = cleaned_df\
+                .withColumn('date_of_service', cleaned_df['date_of_service'].cast(StringType())) \
                 .withColumn('lab_code', cleaned_df['lab_code'].cast(StringType())) \
                 .withColumn('unique_accession_id', cleaned_df['unique_accession_id'].cast(StringType())) \
                 .withColumn('acct_number', cleaned_df['acct_number'].cast(StringType())) \
@@ -93,7 +97,8 @@ if __name__ == "__main__":
                 .withColumn('icd_codeset_ind', cleaned_df['icd_codeset_ind'].cast(StringType())) \
                 .withColumn('dos_yyyymm', cleaned_df['dos_yyyymm'].cast(StringType()))
         elif tbl == "result_comments":
-            cleaned_df2 = cleaned_df.withColumn('unique_accession_id', cleaned_df['unique_accession_id'].cast(StringType())) \
+            cleaned_df2 = cleaned_df.withColumn(
+                'unique_accession_id', cleaned_df['unique_accession_id'].cast(StringType())) \
                 .withColumn('dos_yyyymm', cleaned_df['dos_yyyymm'].cast(StringType())) \
                 .withColumn('lab_code', cleaned_df['lab_code'].cast(StringType())) \
                 .withColumn('res_comm_text', cleaned_df['res_comm_text'].cast(StringType()))
@@ -101,7 +106,8 @@ if __name__ == "__main__":
             cleaned_df2 = cleaned_df
         cleaned_df2.cache().createOrReplaceTempView(tbl)
 
-    df = postprocessor.nullify(postprocessor.trimmify(driver.spark.table('order_result')), ['NULL', 'Null', 'null', 'N/A', ''])
+    df = postprocessor.nullify(postprocessor.trimmify(
+        driver.spark.table('order_result')), ['NULL', 'Null', 'null', 'N/A', ''])
     df2 = df.withColumn('date_of_service', df['date_of_service'].cast(StringType())) \
         .withColumn('lab_code', df['lab_code'].cast(StringType())) \
         .withColumn('unique_accession_id', df['unique_accession_id'].cast(StringType())) \
