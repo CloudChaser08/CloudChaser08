@@ -23,7 +23,7 @@ def main(threshold, errors_only):
     ]
 
     args = packages
-    args.append('--rcfile=/root/spark/pylintrc')
+    args.append('--rcfile=/root/spark/etc/pylintrc')
     if errors_only:
         args.append('--errors-only')
 
