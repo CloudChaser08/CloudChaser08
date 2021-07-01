@@ -25,7 +25,6 @@ import subprocess
 from datetime import datetime
 from uuid import uuid4
 import os
-from math import ceil
 from urllib.parse import urlparse
 import logging
 import boto3
@@ -84,7 +83,8 @@ def _compact_files(compaction_plan, spark_session):
                                                        PARQUET_FILE_SIZE)
 
     logging.info("...will partition into %s files", repartition_count)
-    spark_session.read.parquet(compaction_plan['backup_path']).repartition(repartition_count).write \
+    spark_session.read.parquet(compaction_plan['backup_path'])\
+        .repartition(repartition_count).write \
         .parquet(compaction_plan['compact_path'], mode='append', compression='gzip')
     logging.info("...compaction written to %s", compaction_plan['compact_path'])
 
@@ -131,10 +131,19 @@ def _rename_files(compaction_plan, file_counter, process_date, file_uuid):
 
     file_list = [f for f in file_list_out.decode().split("\n") if f]
     for file_name in file_list:
-        resolved_file_name = f"{process_date}_c_part-{file_counter:05}-{file_uuid}.c000.gz.parquet"
+        resolved_file_name = "{process_date}_c_part-{file_counter:05}-{file_uuid}.c000.gz.parquet" \
+            .format(process_date=process_date,
+                    file_counter=file_counter,
+                    file_uuid=file_uuid)
         logging.info("...renaming %s as %s", file_name, resolved_file_name)
-        subprocess.check_output(['aws', 's3', 'mv', f"{compaction_plan['compact_path']}{file_name}",
-                                 f"{compaction_plan['rename_path']}{resolved_file_name}"])
+        subprocess.check_output(['aws', 's3', 'mv', "{compaction_path}{file_name}"
+                                .format(compaction_path=compaction_plan['compact_path'],
+                                        file_name=file_name
+                                        ),
+                                 "{rename_path}{resolved_file_name}".format(
+                                     rename_path=compaction_plan['rename_path'],
+                                     resolved_file_name=resolved_file_name
+                                 )])
         file_counter += 1
 
     logging.info("...files renamed to %s", compaction_plan['rename_path'])
@@ -172,7 +181,7 @@ def _move_completed_files(compaction_plan):
     logging.info("...moving %s files back to source path", compaction_plan['rename_path'])
     subprocess.check_output(
         ['aws', 's3', 'mv', '--recursive', '--exclude="*"', '--include="*.gz.parquet"',
-         f"{compaction_plan['rename_path']}", f"{compaction_plan['source_path']}"])
+         compaction_plan['rename_path'], compaction_plan['source_path']])
 
 
 def compact_s3_path(s3_source_path,
@@ -203,7 +212,7 @@ def compact_s3_path(s3_source_path,
         file_uuid = str(uuid4())
     logging.info("Run id: %s", file_uuid)
     if not process_date:
-        process_date = f"{datetime.now():%Y-%m-%d}"
+        process_date = "{today:%Y-%m-%d}".format(today=datetime.now())
     logging.info("Operation date: %s", process_date)
 
     compaction_plans = []
@@ -296,8 +305,8 @@ def compact_s3_path(s3_source_path,
 
                 files_already_moved = _s3_filtered_files_at_level(
                     plan['backup_path'],
-                    starts_with=f"{process_date}_c_part-",
-                    ends_with=f"-{file_uuid}.c000.gz.parquet")
+                    starts_with="{process_date}_c_part-".format(process_date=process_date),
+                    ends_with="-{file_uuid}.c000.gz.parquet".format(file_uuid=file_uuid))
 
                 files_already_moved_full_paths = [os.path.join(plan['source_path'], f) for f in
                                                   files_already_moved]
