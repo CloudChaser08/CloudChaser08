@@ -8,6 +8,7 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.postprocessor as postprocessor
 from pyspark.sql.functions import col
+import pyspark.sql.functions as F
 from pyspark.sql.types import *
 
 result_comments_hist_path = "s3://salusv/incoming/labtests/quest_rinse/order_result_comments_hist2/"
@@ -60,12 +61,19 @@ if __name__ == "__main__":
     external_table_loader.load_analytics_db_table(
         driver.sql_context, 'dw', 'ref_geo_state', 'ref_geo_state'
     )
-    driver.spark.table('ref_geo_state').createOrReplaceTempView('ref_geo_state')
+    driver.spark.table('ref_geo_state').cache_and_track('ref_geo_state').createOrReplaceTempView('ref_geo_state')
+    driver.spark.table('ref_geo_state').count()
 
     logger.log('Loading temp table: result_comments_hist')
     driver.spark.read.parquet(
         result_comments_hist_path).createOrReplaceTempView("result_comments_hist")
 
+    driver.load(cache_tables=False)
+
+    # filter down the results comments history table by removing rows that are definitely
+    # irrelevant
+    driver.spark.table("result_comments_hist").join(F.broadcast(driver.spark.table('order_result').select('accn_id').distinct()), 'accn_id').createOrReplaceTempView("result_comments_hist")
+    
     try:
         subprocess.check_call(['aws', 's3', 'ls', driver.input_path + 'result_comments/'])
         driver.spark.read.parquet(
@@ -73,8 +81,6 @@ if __name__ == "__main__":
     except:
         logger.log('...result_comments_hist read from hist')
         driver.spark.table('result_comments_hist').createOrReplaceTempView("result_comments")
-
-    driver.load(cache_tables=False)
 
     logger.log(' -trimmify-nullify matchig_payload and transactions data')
     matching_payload_df = driver.spark.table('matching_payload')
