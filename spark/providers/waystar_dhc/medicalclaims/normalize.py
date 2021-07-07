@@ -39,10 +39,10 @@ if __name__ == "__main__":
         end_to_end_test,
         vdr_feed_id=24,
         use_ref_gen_values=True,
-        unload_partition_count=20,
+        unload_partition_count=1,
         load_date_explode=False,
         output_to_delivery_path=hasDeliveryPath,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     conf_parameters = {
