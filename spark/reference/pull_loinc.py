@@ -4,50 +4,22 @@ Create a compressed version of LOINC to be loaded into lab_search
 usage: %prog
 """
 
-import csv
-import gzip
-import shutil
-import sys
-
 import boto3
 from spark.spark_setup import init
+from uuid import uuid4
+import pyspark.sql.functions as F
+from pyspark.sql.window import Window
+import os
+from spark.helpers.s3_utils import parse_s3_path
 
-s3 = boto3.resource('s3')
-basestring = None
+UUID = str(uuid4())
+S3_TEMP_PATH = 's3://salusv/warehouse/backup/weekly/loinc_raw/'
+S3_CONCAT_PATH = 's3://salusv/warehouse/backup/weekly/loinc_concat/'
 
-S3_CONF = {
+S3_DESTINATION = {
     'Bucket': 'salusv',
     'Key': 'marketplace/search/lab/lab.psv.gz'
 }
-
-sql1 = """
-SELECT 
-    loinc_code
-    , count(distinct claim_id) AS claims
-FROM 
-    dw._labtests_nb
-WHERE part_provider = 'quest' 
-    --AND loinc_code<>' ' 
-    --AND loinc_code<>'' 
-    --AND loinc_code is not null
-    AND 0 <> LENGTH(TRIM(COALESCE(loinc_code, '')))
-GROUP BY loinc_code
-"""
-
-sql2 = """
-SELECT DISTINCT 
-    trim(loinc_num) AS loinc_code
-    , trim(component) AS loinc_component
-    , trim(long_common_name) AS long_common_name
-    , loinc_system AS body_system
-    , trim(loinc_class) AS loinc_class 
-    , trim(method_type) AS loinc_method
-    , trim(relatednames2) AS related
-    , row_number() OVER(ORDER BY b.claims desc, b.loinc_code) AS ordernum
-FROM ref_loinc a
-    LEFT OUTER JOIN loinc_popularity b ON a.loinc_num=b.loinc_code
-ORDER BY 1
-"""
 
 # init
 conf_parameters = {
@@ -57,33 +29,69 @@ conf_parameters = {
     'spark.executor.memoryOverhead': 1024,
     'spark.driver.memoryOverhead': 1024
 }
+
 spark, sql_context = init("marketplace-pull-loinc", conf_parameters=conf_parameters)
 
-if not basestring:
-    basestring = str
+
+def upload_psv_to_s3(source_bucket, source_key, dest_bucket, dest_key):
+    s3 = boto3.client()
+
+    list_obj_paginator = s3.get_paginator('list_objects_v2')
+    source_key_file = None
+    for page in list_obj_paginator.paginate(Bucket=source_bucket, Prefix=source_key):
+        if 'Contents' in page:
+            for i, file_obj in enumerate(
+                    [x for x in page['Contents'] if x['Key'].endswith('.csv.gz')], 1):
+                if i > 1:
+                    raise Exception("More files than expected. Exiting.")
+                source_key_file = file_obj['Key']
+
+    if source_key_file:
+        s3.copy_object(CopySource={'Bucket': source_bucket, 'Key': source_key_file},
+                       Bucket=dest_bucket, Key=dest_key)
 
 
 def pull_loinc():
-    with open('marketplace_lab.psv', 'w') as ndc_out:
-        csv_writer = csv.writer(ndc_out, delimiter='|')
-        spark.sql(sql1).cache().createOrReplaceTempView('loinc_popularity')
-        spark.table('loinc_popularity').count()
-        ndc_table = spark.sql(sql2).collect()
-        for row in ndc_table:
-            try:
-                csv_writer.writerow(row)
-            except:
-                encoded_row = []
-                for c in row:
-                    if isinstance(c, basestring):
-                        c = c.encode('utf-8')
-                    encoded_row.append(c)
-                csv_writer.writerow(encoded_row)
+    s3_temp_dir = os.path.join(S3_TEMP_PATH, UUID)
+    s3_concat_dir = os.path.join(S3_CONCAT_PATH, UUID)
 
-    with open('marketplace_lab.psv', 'rb') as f_in, gzip.open('lab.psv.gz', 'wb') as f_out:
-        shutil.copyfileobj(f_in, f_out)
+    get_ref_loinc = """
+    SELECT DISTINCT 
+        trim(loinc_num) AS loinc_code
+        , trim(component) AS loinc_component
+        , trim(long_common_name) AS long_common_name
+        , loinc_system AS body_system
+        , trim(loinc_class) AS loinc_class 
+        , trim(method_type) AS loinc_method
+        , trim(relatednames2) AS related
+    FROM ref_loinc
+    """
 
-    s3.meta.client.upload_file('lab.psv.gz', **S3_CONF)
+    rank_window = Window.orderBy(F.col("claims").desc(), F.col("loinc_code").asc())
+
+    loinc_popularity = spark.read.parquet(
+        's3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/') \
+        .select("loinc_code", "claim_id").groupBy("loinc_code") \
+        .agg(F.approx_count_distinct('claim_id').alias('claims'))
+
+    ref_loinc = spark.sql(get_ref_loinc)
+    output_columns = ref_loinc.columns + ["ordernum"]
+
+    df = ref_loinc.join(loinc_popularity, "loinc_code", 'left_outer') \
+        .withColumn("ordernum", F.row_number().over(rank_window)) \
+        .select(output_columns)
+
+    df.write \
+        .option('sep', '|') \
+        .option('header', False) \
+        .csv(s3_temp_dir)
+
+    combined = spark.read.csv(s3_temp_dir)
+    combined.coalesce(1).write.csv(s3_concat_dir)
+
+    source_bucket, source_key = parse_s3_path(S3_CONCAT_PATH)
+
+    upload_psv_to_s3(source_bucket, source_key, S3_DESTINATION['Bucket'], S3_DESTINATION['Key'])
 
 
 if __name__ == "__main__":
