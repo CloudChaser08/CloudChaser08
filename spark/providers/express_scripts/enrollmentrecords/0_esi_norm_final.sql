@@ -14,7 +14,7 @@ SELECT
     CAST(NULL AS STRING)                                        AS source_version,
     CAST(NULL AS STRING)                                        AS patient_age,
     phi.year_of_birth                                           AS patient_year_of_birth,
-    phi.zip                                                     AS patient_zip,
+    phi.zip                                                     AS patient_zip3,
     zip3.state                                                  AS patient_state,
     phi.gender                                                  AS patient_gender,
     CAST(NULL AS STRING)                                        AS source_record_id,
