@@ -1,13 +1,13 @@
 SELECT
     MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
-    mp.claim_id                                                                         AS claim_id,
-    mp.hvid                                                                             AS hvid,
+    mp.claim_id                                                                             AS claim_id,
+    cast (case when mp.hvid = '' then NULL else hvid end as string)                         AS hvid,
     CURRENT_DATE()                                                                          AS created,
     '09'                                                                                    AS model_version, 
-    SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
+    SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]                AS data_set,
     '155'                                                                                   AS data_feed,
     '17'                                                                                    AS data_vendor, 
-    mp.patient_gender                                                                   AS patient_gender,
+    mp.patient_gender                                                                       AS patient_gender,
     /* patient_year_of_birth */
     cap_year_of_birth(
       NULL,
