@@ -1,7 +1,9 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.4
 """
 Create a compressed version of LOINC to be loaded into lab_search
-usage: %prog
+usage:
+$ /bin/sh -c "PYSPARK_PYTHON=python3 /home/hadoop/spark/bin/run.sh \
+    /home/hadoop/spark/reference/pull_loinc.py"
 """
 
 import boto3
@@ -10,6 +12,7 @@ from uuid import uuid4
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 import os
+import sys
 from spark.helpers.s3_utils import parse_s3_path
 
 UUID = str(uuid4())
@@ -34,7 +37,7 @@ spark, sql_context = init("marketplace-pull-loinc", conf_parameters=conf_paramet
 
 
 def upload_psv_to_s3(source_bucket, source_key, dest_bucket, dest_key):
-    s3 = boto3.client()
+    s3 = boto3.client('s3')
 
     list_obj_paginator = s3.get_paginator('list_objects_v2')
     source_key_file = None
@@ -56,12 +59,12 @@ def pull_loinc():
     s3_concat_dir = os.path.join(S3_CONCAT_PATH, UUID)
 
     get_ref_loinc = """
-    SELECT DISTINCT 
+    SELECT DISTINCT
         trim(loinc_num) AS loinc_code
         , trim(component) AS loinc_component
         , trim(long_common_name) AS long_common_name
         , loinc_system AS body_system
-        , trim(loinc_class) AS loinc_class 
+        , trim(loinc_class) AS loinc_class
         , trim(method_type) AS loinc_method
         , trim(relatednames2) AS related
     FROM ref_loinc
