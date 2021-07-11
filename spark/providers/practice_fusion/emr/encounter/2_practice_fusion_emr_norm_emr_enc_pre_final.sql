@@ -32,9 +32,9 @@ SELECT
     part_mth
 FROM
 (
-SELECT * FROM practice_fusion_emr_norm_emr_enc_1_chunk
+SELECT * FROM practice_fusion_emr_norm_emr_enc_1
 UNION ALL
-SELECT * FROM practice_fusion_emr_norm_emr_enc_2_chunk
+SELECT * FROM practice_fusion_emr_norm_emr_enc_2
 )
 GROUP BY  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
          11, 12, 13, 14, 15, 16, 17, 18, 19, 20,

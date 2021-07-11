@@ -246,7 +246,7 @@ SELECT
             THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(SUBSTR(trs.dos, 1, 10), 1, 7)
 	END                                                                                     AS part_mth
-FROM  transcript_chunk trs
+FROM  transcript trs
 
 LEFT OUTER JOIN patient ptn    ON COALESCE(trs.patient_id, 'NULL') = COALESCE(ptn.patient_id, 'empty')
 
