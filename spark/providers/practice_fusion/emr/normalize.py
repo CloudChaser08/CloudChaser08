@@ -11,6 +11,7 @@ from spark.common.emr.lab_test import schema_v1 as lab_test_schema
 from spark.common.emr.medication import schema_v9 as medication_schema
 from spark.common.emr.clinical_observation import schema_v9 as clinical_observation_schema
 import spark.helpers.file_utils as file_utils
+import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.records_loader as records_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -37,6 +38,7 @@ MODEL_SCHEMA = {
 MODELS = ['encounter', 'clinical_observation', 'diagnosis', 'lab_test','medication', 'procedure']
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/practice_fusion/spark-output-3/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/opp_1186_warehouse/parquet/emr/2019-04-17/'
+v_ref_hdfs_output_path = '/reference/'
 
 transaction_paths = []
 matching_paths = []
@@ -75,6 +77,14 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
+
+        logger.log('Loading external table: gen_ref_whtlst')
+        table_name = 'gen_ref_whtlst'
+        external_table_loader.load_analytics_db_table (runner.sqlContext, 'dw', table_name, table_name)
+        hdfs_utils.clean_up_output_hdfs(v_ref_hdfs_output_path)
+        spark.table(table_name).repartition(1).write.parquet(
+            v_ref_hdfs_output_path + table_name, compression='gzip', mode='append')
+        spark.read.parquet(v_ref_hdfs_output_path + table_name).cache().createOrReplaceTempView(table_name)
     else:
         pass
 
@@ -87,7 +97,18 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
         source_table_schemas = transactional_schemas
 
     records_loader.load_and_clean_all_v2(runner, input_path, source_table_schemas, load_file_name=True)
-    payload_loader.load(runner, matching_path, ['claimId', 'patientId', 'hvJoinKey'], table_name='payload')
+    payload_loader.load(runner, matching_path, ['claimId', 'patientId', 'hvJoinKey'], table_name='matching_payload')
+
+    matching_payload_df = spark.table('matching_payload')
+    cleaned_matching_payload_df = (
+        pp.compose(pp.trimmify, pp.nullify)(matching_payload_df))
+    cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
+
+    logger.log('Apply custom nullify trimmify')
+    for table in source_table_schemas.TABLE_CONF:
+        pp.nullify(
+            pp.trimmify(spark.table(table))
+            , ['NULL', 'Null', 'null', 'unknown', 'Unknown', 'UNKNOWN', '19000101', '']).createOrReplaceTempView(table)
 
     if has_template_v1:
         spark.table('lab_result').createOrReplaceTempView('laborder')
