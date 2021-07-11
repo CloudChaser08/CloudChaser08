@@ -109,7 +109,7 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
             .cache_and_track(table).createOrReplaceTempView(table)
 
     if has_template_v1:
-        spark.table('lab_result').createOrReplaceTempView('laborder')
+        spark.table('lab_result').cache_and_track('laborder').createOrReplaceTempView('laborder')
 
     earliest_service_date = pp.get_gen_ref_date(spark, FEED_ID, 'EARLIEST_VALID_SERVICE_DATE', get_as_string=True)
     available_start_date = pp.get_gen_ref_date(spark, FEED_ID, 'HVM_AVAILABLE_HISTORY_START_DATE', get_as_string=True)
@@ -122,26 +122,96 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
 
     models = [model] if model else MODELS
     for mdl in models:
-        normalized_output = runner.run_all_spark_scripts(variables,
-                                                         directory_path=os.path.dirname(script_path) + '/' + mdl)
-        df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
-                                          columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
-
         if not test:
-            unload_file_cnt = 100
-            if mdl == 'procedure':
-                unload_file_cnt = 40
-            _columns = df.columns
-            _columns.remove('part_hvm_vdr_feed_id')
-            _columns.remove('part_mth')
+            if mdl == 'lab_test' or mdl == 'medication':
+                for i in range(10):
+                    key = str(i)
+                    if mdl == 'lab_test':
+                        v_sql = """SELECT a.*, right(nvl(laborder_id,'0'), 1) as laborder_id_key FROM laborder a 
+                        WHERE right(nvl(laborder_id,'0'), 1) = '{}' """.format(key)
+                        this_df = spark.sql(v_sql).repartition(int(
+                            spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'laborder_id')
+                        this_df = this_df.cache_and_track('laborder')
+                        this_df.createOrReplaceTempView('laborder')
+                    elif mdl == 'medication':
+                        v_sql = """SELECT a.*, right(nvl(prescription_id,'0'), 1) as prescription_id_key FROM prescription a 
+                        WHERE right(nvl(prescription_id,'0'), 1) = '{}' """.format(key)
+                        this_df = spark.sql(v_sql).repartition(int(
+                            spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'prescription_id')
+                        this_df = this_df.cache_and_track('prescription')
+                        this_df.createOrReplaceTempView('prescription')
 
-            normalized_records_unloader.unload(
-                spark, runner, df, 'part_mth', date_input, FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
-                date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
-                unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
-            )
+                    normalized_output = runner.run_all_spark_scripts(
+                        variables, directory_path=os.path.dirname(script_path) + '/' + mdl)
+                    df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
+                                                      columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
+                    unload_file_cnt = 200
+                    _columns = df.columns
+                    _columns.remove('part_hvm_vdr_feed_id')
+                    _columns.remove('part_mth')
 
+                    normalized_records_unloader.unload(
+                        spark, runner, df, 'part_mth', date_input, FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
+                        date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
+                        unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
+                    )
+            elif mdl == 'diagnosis':
+                for i in range(100):
+                    key = str(i).zfill(2)
+                    if mdl == 'diagnosis':
+                        v_sql = """SELECT a.*, right(nvl(diagnosis_id,'00'), 2) as diagnosis_id_key FROM diagnosis a 
+                        WHERE right(nvl(diagnosis_id,'00'), 2) = '{}' """.format(key)
+                        this_df = spark.sql(v_sql).repartition(int(
+                            spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'diagnosis_id')
+                        this_df = this_df.cache_and_track('diagnosis')
+                        this_df.createOrReplaceTempView('diagnosis')
+
+                        v_sql = """SELECT a.*, right(nvl(encounter_id,'00'), 2) as encounter_id_key FROM encounter a 
+                        WHERE right(nvl(encounter_id,'00'), 2) = '{}' """.format(key)
+                        this_df = spark.sql(v_sql).repartition(int(
+                            spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'encounter_id')
+                        this_df = this_df.cache_and_track('encounter')
+                        this_df.createOrReplaceTempView('encounter')
+
+                    normalized_output = runner.run_all_spark_scripts(
+                        variables, directory_path=os.path.dirname(script_path) + '/' + mdl)
+                    df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
+                                                      columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
+                    unload_file_cnt = 100
+                    _columns = df.columns
+                    _columns.remove('part_hvm_vdr_feed_id')
+                    _columns.remove('part_mth')
+
+                    normalized_records_unloader.unload(
+                        spark, runner, df, 'part_mth', date_input, FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
+                        date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
+                        unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
+                    )
+            else:
+
+                normalized_output = runner.run_all_spark_scripts(
+                    variables, directory_path=os.path.dirname(script_path) + '/' + mdl)
+                df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
+                                                  columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
+                unload_file_cnt = 100
+                if mdl == 'procedure':
+                    unload_file_cnt = 40
+                elif mdl == 'encounter' or mdl == 'clinical_observation':
+                    unload_file_cnt = 400
+                _columns = df.columns
+                _columns.remove('part_hvm_vdr_feed_id')
+                _columns.remove('part_mth')
+
+                normalized_records_unloader.unload(
+                    spark, runner, df, 'part_mth', date_input, FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
+                    date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
+                    unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
+                )
         else:
+            normalized_output = runner.run_all_spark_scripts(variables,
+                                                             directory_path=os.path.dirname(script_path) + '/' + mdl)
+            df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
+                                              columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
             df.collect()
 
     if not test and not end_to_end_test:
@@ -164,9 +234,16 @@ def main(args):
 
     # # init
     conf_parameters = {
-        'spark.executor.memoryOverhead': 4096,
-        'spark.driver.memoryOverhead': 4096,
-        'spark.sql.autoBroadcastJoinThreshold': 5242880
+        'spark.default.parallelism': 1000,
+        'spark.sql.shuffle.partitions': 1000,
+        'spark.executor.memoryOverhead': 1024,
+        'spark.driver.memoryOverhead': 1024,
+        'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.sql.autoBroadcastJoinThreshold': 104857600,
+        'spark.shuffle.sasl.timeout': 60000,
+        'spark.task.maxFailures': 8,
+        'spark.max.executor.failures': 800
     }
 
     for model in models:
