@@ -38,7 +38,6 @@ MODEL_SCHEMA = {
 MODELS = ['encounter', 'clinical_observation', 'diagnosis', 'lab_test','medication', 'procedure']
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/practice_fusion/spark-output-3/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/opp_1186_warehouse/parquet/emr/2019-04-17/'
-v_ref_hdfs_output_path = '/reference/'
 
 transaction_paths = []
 matching_paths = []
@@ -80,11 +79,9 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
 
         logger.log('Loading external table: gen_ref_whtlst')
         table_name = 'gen_ref_whtlst'
-        external_table_loader.load_analytics_db_table (runner.sqlContext, 'dw', table_name, table_name)
-        hdfs_utils.clean_up_output_hdfs(v_ref_hdfs_output_path)
-        spark.table(table_name).repartition(1).write.parquet(
-            v_ref_hdfs_output_path + table_name, compression='gzip', mode='append')
-        spark.read.parquet(v_ref_hdfs_output_path + table_name).cache().createOrReplaceTempView(table_name)
+        external_table_loader.load_analytics_db_table(runner.sqlContext, 'dw', table_name, table_name)
+        spark.table(table_name).cache_and_track(table_name).createOrReplaceTempView(table_name)
+        spark.table(table_name).count()
     else:
         pass
 
@@ -102,13 +99,14 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
     matching_payload_df = spark.table('matching_payload')
     cleaned_matching_payload_df = (
         pp.compose(pp.trimmify, pp.nullify)(matching_payload_df))
-    cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
+    cleaned_matching_payload_df.cache_and_track('matching_payload').createOrReplaceTempView('matching_payload')
 
     logger.log('Apply custom nullify trimmify')
     for table in source_table_schemas.TABLE_CONF:
         pp.nullify(
             pp.trimmify(spark.table(table))
-            , ['NULL', 'Null', 'null', 'unknown', 'Unknown', 'UNKNOWN', '19000101', '']).createOrReplaceTempView(table)
+            , ['NULL', 'Null', 'null', 'unknown', 'Unknown', 'UNKNOWN', '19000101', ''])\
+            .cache_and_track(table).createOrReplaceTempView(table)
 
     if has_template_v1:
         spark.table('lab_result').createOrReplaceTempView('laborder')
