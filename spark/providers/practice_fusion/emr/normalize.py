@@ -15,15 +15,13 @@ import spark.helpers.payload_loader as payload_loader
 import spark.helpers.records_loader as records_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.external_table_loader as external_table_loader
-from spark.common.marketplace_driver import MarketplaceDriver
 import spark.helpers.schema_enforcer as schema_enforcer
 import spark.providers.practice_fusion.emr.transactional_schemas as transactional_schemas
 import spark.providers.practice_fusion.emr.transactional_schemas_v1 as transactional_schemas_v1
 import spark.helpers.postprocessor as pp
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
-# from spark.common.utility.spark_state import SparkState
-from spark.common.utility import logger, get_spark_time  # , get_spark_runtime
+from spark.common.utility import logger, get_spark_time
 
 
 FEED_ID = '136'
@@ -36,13 +34,9 @@ MODEL_SCHEMA = {
     'medication': medication_schema,
     'procedure': procedure_schema
 }
-
-MODELS = ['encounter', 'clinical_observation', 'diagnosis', 'lab_test',
-          'medication', 'procedure']
-
+MODELS = ['encounter', 'clinical_observation', 'diagnosis', 'lab_test','medication', 'procedure']
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/practice_fusion/spark-output-3/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/opp_1186_warehouse/parquet/emr/2019-04-17/'
-
 
 transaction_paths = []
 matching_paths = []
@@ -66,18 +60,12 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
         ) + '/'
     elif end_to_end_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/practice_fusion/out/{}/'.format(
-            date_input.replace('-', '/')
-        )
+            date_input.replace('-', '/'))
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/practice_fusion/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+            date_input.replace('-', '/'))
     else:
-        input_path = 's3://salusv/incoming/emr/practice_fusion/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3://salusv/matching/payload/emr/practice_fusion/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        input_path = 's3://salusv/incoming/emr/practice_fusion/{}/'.format(date_input.replace('-', '/'))
+        matching_path = 's3://salusv/matching/payload/emr/practice_fusion/{}/'.format(date_input.replace('-', '/'))
 
     if custom_input_path:
         input_path = custom_input_path
@@ -104,12 +92,9 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
     if has_template_v1:
         spark.table('lab_result').createOrReplaceTempView('laborder')
 
-    earliest_service_date = pp.get_gen_ref_date(spark, FEED_ID,
-                                                'EARLIEST_VALID_SERVICE_DATE', get_as_string=True)
-    available_start_date = pp.get_gen_ref_date(spark, FEED_ID,
-                                               'HVM_AVAILABLE_HISTORY_START_DATE', get_as_string=True)
-    earliest_diagnosis_date = pp.get_gen_ref_date(spark, FEED_ID,
-                                                  'EARLIEST_VALID_DIAGNOSIS_DATE', get_as_string=True)
+    earliest_service_date = pp.get_gen_ref_date(spark, FEED_ID, 'EARLIEST_VALID_SERVICE_DATE', get_as_string=True)
+    available_start_date = pp.get_gen_ref_date(spark, FEED_ID, 'HVM_AVAILABLE_HISTORY_START_DATE', get_as_string=True)
+    earliest_diagnosis_date = pp.get_gen_ref_date(spark, FEED_ID, 'EARLIEST_VALID_DIAGNOSIS_DATE', get_as_string=True)
 
     variables = [['VDR_FILE_DT', str(date_input), False],
                  ['AVAILABLE_START_DATE', available_start_date, False],
@@ -119,9 +104,7 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
     models = [model] if model else MODELS
     for mdl in models:
         normalized_output = runner.run_all_spark_scripts(variables,
-                                                         directory_path=os.path.dirname(script_path) + '/' + mdl
-                                                         )
-
+                                                         directory_path=os.path.dirname(script_path) + '/' + mdl)
         df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
                                           columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
 
@@ -134,11 +117,9 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
             _columns.remove('part_mth')
 
             normalized_records_unloader.unload(
-                spark, runner, df, 'part_mth', date_input, FEED_ID,
-                provider_partition_name='part_hvm_vdr_feed_id',
-                date_partition_name='part_mth', columns=_columns,
-                staging_subdir=mdl, unload_partition_count=unload_file_cnt,
-                distribution_key='row_id', substr_date_part=False
+                spark, runner, df, 'part_mth', date_input, FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
+                date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
+                unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
             )
 
         else:
@@ -161,6 +142,13 @@ def main(args):
         output_path = args.output_path
     else:
         output_path = OUTPUT_PATH_PRODUCTION
+
+    # # init
+    conf_parameters = {
+        'spark.executor.memoryOverhead': 4096,
+        'spark.driver.memoryOverhead': 4096,
+        'spark.sql.autoBroadcastJoinThreshold': 5242880
+    }
 
     for model in models:
         spark, sql_context = init('Practice Fusion {} Normalization'.format(model), conf_parameters=conf_parameters)
