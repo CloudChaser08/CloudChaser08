@@ -1,7 +1,3 @@
-%sparkpy3.sql
-
-CREATE TABLE darch.waystar_835_dedup_lines
-AS
 SELECT
     claim_payment_number            ,
     record_type                     ,
