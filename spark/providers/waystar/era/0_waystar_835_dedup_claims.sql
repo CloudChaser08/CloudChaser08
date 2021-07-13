@@ -50,7 +50,7 @@ SELECT
     adjustment_quantity_5               ,
     field1                              ,
     MAX(input_file_name)  AS input_file_name,
-    MAX(hvjoinkey) AS  hvjoinkey
+    MAX(hvjoinkey) AS  hvjoinkey                          
  FROM claimpayment
 GROUP BY
     supplier_claim_payment_number       ,
@@ -102,4 +102,4 @@ GROUP BY
     adjustment_reason_code_5            ,
     adjustment_amount_5                 ,
     adjustment_quantity_5               ,
-    field1
+    field1                                  

@@ -1,3 +1,7 @@
+%sparkpy3.sql
+
+CREATE TABLE darch.waystar_835_dedup_lines
+AS
 SELECT
     claim_payment_number            ,
     record_type                     ,
@@ -57,4 +61,4 @@ GROUP BY
     adjustment_reason_code_5        ,
     adjustment_amount_5             ,
     billed_units                    ,
-    paid_units
+    paid_units                      
