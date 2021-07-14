@@ -12,12 +12,12 @@ import spark.helpers.postprocessor as postprocessor
 import spark.census.questrinse.HV000838_1b.refbuild_loinc_delta_sql as refbuild_loinc_delta
 
 PARQUET_FILE_SIZE = 1024 * 1024 * 1024
-REFERENCE_OUTPUT_PATH = 's3://salusv/reference/questrinse_1b/loinc_ref/'
+REFERENCE_OUTPUT_PATH = 's3://salusv/reference/questrinse/loinc_ref/'
 
 REFERENCE_HDFS_OUTPUT_PATH = '/reference/'
 REFERENCE_LOINC_DELTA = "loinc_delta"
 
-POC_1B = True
+POC_1B = False
 poc_output_path = 's3a://salusv/deliverable/questrinse_1b/HV000838/'
 
 
