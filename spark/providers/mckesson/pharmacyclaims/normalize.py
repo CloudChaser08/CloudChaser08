@@ -23,6 +23,7 @@ spark = None
 pharma_schema = pharma_schemas['schema_v6']
 
 OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/' + pharma_schema.output_directory
+OUTPUT_PATH_TRANSFORMED = 's3://salusv/warehouse/transformed/'+ pharma_schema.output_directory
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/spark-output/'
 
 
@@ -153,7 +154,7 @@ def run(spark_in, runner_in, date_input, test=False, airflow_test=False):
             data_type=DataType.PHARMACY_CLAIMS,
             data_source_transaction_path=unres_input_path,
             data_source_matching_path=unres_matching_path,
-            output_path=OUTPUT_PATH_PRODUCTION,
+            output_path=OUTPUT_PATH_TRANSFORMED,
             run_type=RunType.MARKETPLACE,
             input_date=date_input
         )
@@ -174,7 +175,7 @@ def main(args):
     if args.airflow_test:
         normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
     else:
-        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
+        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_TRANSFORMED)
         RunRecorder().record_run_details(additional_time=hadoop_time)
 
 
