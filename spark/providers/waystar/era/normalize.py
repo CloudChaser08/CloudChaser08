@@ -10,8 +10,8 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'waystar'
     output_table_names_to_schemas = {
-        'waystar_835_normalized_detail': detail_schemas['schema_v5'],
-        'waystar_835_normalized_summary': summary_schemas['schema_v5']
+        'waystar_835_normalized_detail': detail_schemas['schema_v6'],
+        'waystar_835_normalized_summary': summary_schemas['schema_v6']
     }
     provider_partition_name = '145'
 
@@ -32,6 +32,7 @@ if __name__ == "__main__":
         source_table_schemas,
         output_table_names_to_schemas,
         date_input,
-        end_to_end_test
+        end_to_end_test,
+        output_to_transform_path=True
     )
     driver.run()

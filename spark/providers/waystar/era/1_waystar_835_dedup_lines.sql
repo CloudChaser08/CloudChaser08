@@ -57,4 +57,4 @@ GROUP BY
     adjustment_reason_code_5        ,
     adjustment_amount_5             ,
     billed_units                    ,
-    paid_units
+    paid_units                      
