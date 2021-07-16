@@ -122,8 +122,13 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
 
     models = [model] if model else MODELS
     for mdl in models:
-        if not test:
-            sql_file_path = os.path.dirname(script_path) + '/' + mdl  + '/'
+        sql_file_path = os.path.dirname(script_path) + '/' + mdl + '/'
+        if test:
+            normalized_output = runner.run_all_spark_scripts(variables, directory_path=sql_file_path)
+            df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
+                                              columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
+            df.collect()
+        else:
             if mdl == 'lab_test':
                 logger.log('Custom chunk processing for {}'.format(mdl))
                 spark.table('laborder').cache_and_track('laborder_full').createOrReplaceTempView('laborder_full')
@@ -388,11 +393,6 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
                     date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
                     unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
                 )
-        else:
-            normalized_output = runner.run_all_spark_scripts(variables, directory_path=sql_file_path)
-            df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
-                                              columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
-            df.collect()
 
     if not test and not end_to_end_test:
         transaction_paths.append(input_path)
