@@ -177,6 +177,7 @@ SELECT
             THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(COALESCE(apt.start_time, SUBSTR(trs.dos,1, 10)), 1, 7)
 	END																					    AS part_mth
+	,right(nvl(apt.appointment_id,'0'), 1) as vdr_enc_id_key
 FROM appointment apt
 LEFT OUTER JOIN transcript trs  ON COALESCE(apt.transcript_id, 'NULL')     = COALESCE(trs.transcript_id, 'empty')
 LEFT OUTER JOIN patient ptn     ON COALESCE(trs.patient_id, 'NULL')        = COALESCE(ptn.patient_id, 'empty')

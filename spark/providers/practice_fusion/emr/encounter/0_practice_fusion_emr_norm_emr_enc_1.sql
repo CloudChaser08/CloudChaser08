@@ -178,6 +178,7 @@ SELECT
             THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(SUBSTR(trs.dos,1, 10), 1, 7)
 	END																					    AS part_mth
+	,right(nvl(trs.transcript_id,'0'), 1) as vdr_enc_id_key
 FROM transcript trs
 LEFT OUTER JOIN patient ptn     ON COALESCE(trs.patient_id, 'NULL')           = COALESCE(ptn.patient_id, 'empty')
 LEFT OUTER JOIN matching_payload pay     ON LOWER(COALESCE(ptn.patient_id, 'NULL'))    = COALESCE(pay.claimid, 'empty')

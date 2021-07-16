@@ -203,7 +203,7 @@ SELECT
             THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(COALESCE(dgn.start_date, SUBSTR(trs.dos,1, 10)), 1, 7)
 	END																					    AS part_mth
-
+    ,right(nvl(dgn.diagnosis_id,'0'), 1) AS vdr_diag_id_key
 FROM diagnosis dgn
 LEFT OUTER JOIN transcript_diagnosis tdg        ON COALESCE(tdg.diagnosis_id, 'NULL')         = COALESCE(dgn.diagnosis_id, 'empty')
 LEFT OUTER JOIN diagnosis_icd9  icd9           ON COALESCE(dgn.diagnosis_id, 'NULL')         = COALESCE(icd9.diagnosis_id, 'empty')

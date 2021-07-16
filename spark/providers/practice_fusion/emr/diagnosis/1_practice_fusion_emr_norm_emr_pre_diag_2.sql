@@ -196,7 +196,7 @@ SELECT
             THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(COALESCE(enc.created_at, SUBSTR(trs.dos, 1, 10)), 1, 7)
 	END																					    AS part_mth
-
+    ,right(nvl(enc.encounter_id,'0'), 1) AS vdr_diag_id_key
 FROM encounter enc
 LEFT OUTER JOIN enctype    etp ON COALESCE(enc.enctype_id, 'NULL')    = COALESCE(etp.enctype_id, 'empty')
 LEFT OUTER JOIN enccat     ect ON COALESCE(etp.enccat_id, 'NULL')     = COALESCE(ect.enccat_id, 'empty')
@@ -207,7 +207,7 @@ LEFT OUTER JOIN practice   prc ON COALESCE(prv.practice_id, 'NULL')   = COALESCE
 LEFT OUTER JOIN specialty  spc ON COALESCE(prv.primary_specialty_id, 'NULL') = COALESCE(spc.specialty_id, 'empty')
 LEFT OUTER JOIN matching_payload    pay ON LOWER(COALESCE(ptn.patient_id, 'NULL'))    = LOWER(COALESCE(pay.claimid, 'empty'))
 
-WHERE TRIM(UPPER(COALESCE(enc.enctype_id, 'empty'))) <> 'ENCOUNTER_ID'
+WHERE TRIM(UPPER(COALESCE(enc.encounter_id, 'empty'))) <> 'ENCOUNTER_ID'
   AND UPPER(etp.code_name) IN ( 'ICD-10-CM', 'ICD-9-CM')
 
 

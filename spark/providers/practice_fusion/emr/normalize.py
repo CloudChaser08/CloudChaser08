@@ -35,7 +35,7 @@ MODEL_SCHEMA = {
     'medication': medication_schema,
     'procedure': procedure_schema
 }
-MODELS = ['encounter', 'clinical_observation', 'diagnosis', 'lab_test','medication', 'procedure']
+MODELS = ['procedure', 'clinical_observation', 'encounter', 'lab_test', 'medication', 'diagnosis']
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/practice_fusion/spark-output-3/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/opp_1186_warehouse/parquet/emr/2019-04-17/'
 
@@ -123,58 +123,21 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
     models = [model] if model else MODELS
     for mdl in models:
         if not test:
-            if mdl == 'lab_test' or mdl == 'medication':
+            sql_file_path = os.path.dirname(script_path) + '/' + mdl  + '/'
+            if mdl == 'lab_test':
+                logger.log('Custom chunk processing for {}'.format(mdl))
+                spark.table('laborder').cache_and_track('laborder_full').createOrReplaceTempView('laborder_full')
                 for i in range(10):
                     key = str(i)
-                    if mdl == 'lab_test':
-                        v_sql = """SELECT a.*, right(nvl(laborder_id,'0'), 1) as laborder_id_key FROM laborder a 
-                        WHERE right(nvl(laborder_id,'0'), 1) = '{}' """.format(key)
-                        this_df = spark.sql(v_sql).repartition(int(
-                            spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'laborder_id')
-                        this_df = this_df.cache_and_track('laborder')
-                        this_df.createOrReplaceTempView('laborder')
-                    elif mdl == 'medication':
-                        v_sql = """SELECT a.*, right(nvl(prescription_id,'0'), 1) as prescription_id_key FROM prescription a 
-                        WHERE right(nvl(prescription_id,'0'), 1) = '{}' """.format(key)
-                        this_df = spark.sql(v_sql).repartition(int(
-                            spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'prescription_id')
-                        this_df = this_df.cache_and_track('prescription')
-                        this_df.createOrReplaceTempView('prescription')
+                    logger.log('Custom chunk={} processing for {}'.format(key, mdl))
+                    v_sql = """SELECT a.*, right(nvl(laborder_id,'0'), 1) as laborder_id_key FROM laborder_full a 
+                    WHERE right(nvl(laborder_id,'0'), 1) = '{}' """.format(key)
+                    this_df = spark.sql(v_sql).repartition(int(
+                        spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'laborder_id')
+                    this_df = this_df.cache_and_track('laborder')
+                    this_df.createOrReplaceTempView('laborder')
 
-                    normalized_output = runner.run_all_spark_scripts(
-                        variables, directory_path=os.path.dirname(script_path) + '/' + mdl)
-                    df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
-                                                      columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
-                    unload_file_cnt = 200
-                    _columns = df.columns
-                    _columns.remove('part_hvm_vdr_feed_id')
-                    _columns.remove('part_mth')
-
-                    normalized_records_unloader.unload(
-                        spark, runner, df, 'part_mth', date_input, FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
-                        date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
-                        unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
-                    )
-            elif mdl == 'diagnosis':
-                for i in range(100):
-                    key = str(i).zfill(2)
-                    if mdl == 'diagnosis':
-                        v_sql = """SELECT a.*, right(nvl(diagnosis_id,'00'), 2) as diagnosis_id_key FROM diagnosis a 
-                        WHERE right(nvl(diagnosis_id,'00'), 2) = '{}' """.format(key)
-                        this_df = spark.sql(v_sql).repartition(int(
-                            spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'diagnosis_id')
-                        this_df = this_df.cache_and_track('diagnosis')
-                        this_df.createOrReplaceTempView('diagnosis')
-
-                        v_sql = """SELECT a.*, right(nvl(encounter_id,'00'), 2) as encounter_id_key FROM encounter a 
-                        WHERE right(nvl(encounter_id,'00'), 2) = '{}' """.format(key)
-                        this_df = spark.sql(v_sql).repartition(int(
-                            spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'encounter_id')
-                        this_df = this_df.cache_and_track('encounter')
-                        this_df.createOrReplaceTempView('encounter')
-
-                    normalized_output = runner.run_all_spark_scripts(
-                        variables, directory_path=os.path.dirname(script_path) + '/' + mdl)
+                    normalized_output = runner.run_all_spark_scripts(variables, directory_path=sql_file_path)
                     df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
                                                       columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
                     unload_file_cnt = 100
@@ -187,17 +150,235 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
                         date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
                         unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
                     )
-            else:
+            elif mdl == 'medication':
+                logger.log('Custom chunk processing for {}'.format(mdl))
+                spark.table('prescription').cache_and_track('prescription_full').createOrReplaceTempView('prescription_full')
+                hdfs_utils.clean_up_output_hdfs('/stagingout/{}/'.format('prescription'))
+                v_sql = """SELECT a.*, right(nvl(prescription_id,'00'), 2) as vdr_medctn_ord_id_key
+                    FROM prescription_full a  """
+                spark.sql(v_sql).repartition(100).write.parquet('/stagingout/{}/'.format('prescription'), compression='gzip',
+                                                                mode='append', partitionBy=['vdr_medctn_ord_id_key'])
 
-                normalized_output = runner.run_all_spark_scripts(
-                    variables, directory_path=os.path.dirname(script_path) + '/' + mdl)
+                this_tbl1 = 'practice_fusion_emr_norm_pre_emr_medctn'
+                hdfs_utils.clean_up_output_hdfs('/stagingout/{}/'.format(this_tbl1))
+                this_tbl2 = 'practice_fusion_emr_norm_dedup_emr_medctn'
+                hdfs_utils.clean_up_output_hdfs('/stagingout/{}/'.format(this_tbl2))
+
+                for i in range(100):
+                    key = str(i).zfill(2)
+                    logger.log('Custom chunk={} processing for {}'.format(key, mdl))
+                    this_df = spark.read.parquet('/stagingout/{}/vdr_medctn_ord_id_key={}/'.format('prescription', key))
+                    this_df = this_df.cache_and_track('prescription')
+                    this_df.createOrReplaceTempView('prescription')
+
+                    runner.run_spark_script(
+                        '0_practice_fusion_emr_norm_pre_emr_medctn.sql', variables,
+                        source_file_path=sql_file_path, return_output=True).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_medctn_ord_id').\
+                        write.parquet('/stagingout/{}/vdr_medctn_ord_id_key={}/'.format(this_tbl1, key)
+                                      , compression='gzip', mode='append')
+                    # 2
+                    logger.log('Custom pre-final chunk={} processing for {}'.format(key, mdl))
+                    # reassign practice_fusion_emr_norm_pre_emr_medctn table
+                    logger.log('reassign table for {}'.format(this_tbl1))
+                    this_df1 = spark.read.parquet(
+                        '/stagingout/{}/vdr_medctn_ord_id_key={}/'.format(this_tbl1, key))
+                    this_df1 = this_df1.cache_and_track(this_tbl1)
+                    this_df1.createOrReplaceTempView(this_tbl1)
+
+                    this_df2 = runner.run_spark_script('1_practice_fusion_emr_norm_dedup_emr_medctn.sql', variables,
+                                                       source_file_path=sql_file_path, return_output=True).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_medctn_ord_id')
+                    this_df2 = this_df2.cache_and_track(this_tbl2)
+                    this_df2.createOrReplaceTempView(this_tbl2)
+
+                    logger.log('normalized_records_unloader processing for {}'.format(mdl))
+                    normalized_output = runner.run_spark_script('2_practice_fusion_emr_norm_emr_medctn.sql',
+                                                                variables, source_file_path=sql_file_path
+                                                                , return_output=True)
+                    df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
+                                                      columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
+
+                    unload_file_cnt = 100
+                    _columns = df.columns
+                    _columns.remove('part_hvm_vdr_feed_id')
+                    _columns.remove('part_mth')
+
+                    normalized_records_unloader.unload(
+                        spark, runner, df, 'part_mth', date_input, FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
+                        date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
+                        unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
+                    )
+
+            elif mdl == 'encounter':
+                logger.log('Custom chunk processing for {}'.format(mdl))
+                this_tbl1 = 'practice_fusion_emr_norm_emr_enc_1'
+                logger.log('Custom chunk={} processing for {}'.format(this_tbl1, mdl))
+                hdfs_utils.clean_up_output_hdfs('/stagingout/{}/'.format(this_tbl1))
+                runner.run_spark_script(
+                    '0_practice_fusion_emr_norm_emr_enc_1.sql', variables,
+                    source_file_path=sql_file_path, return_output=True).repartition(
+                    int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_enc_id').\
+                    write.parquet('/stagingout/{}/'.format(this_tbl1)
+                                  , compression='gzip', mode='append', partitionBy=['vdr_enc_id_key'])
+
+                this_tbl2 = 'practice_fusion_emr_norm_emr_enc_2'
+                hdfs_utils.clean_up_output_hdfs('/stagingout/{}/'.format(this_tbl2))
+                spark.table('appointment').cache_and_track('appointment_full').createOrReplaceTempView('appointment_full')
+                for i in range(10):
+                    key = str(i)
+                    logger.log('Custom chunk={} processing for {}'.format(key, mdl))
+                    v_sql = """SELECT a.* FROM appointment_full a
+                    WHERE right(nvl(appointment_id,'0'), 1) = '{}' """.format(key)
+                    this_df = spark.sql(v_sql).repartition(int(
+                        spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'appointment_id')
+                    this_df = this_df.cache_and_track('appointment')
+                    this_df.createOrReplaceTempView('appointment')
+                    runner.run_spark_script(
+                        '1_practice_fusion_emr_norm_emr_enc_2.sql', variables,
+                        source_file_path=sql_file_path, return_output=True).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_enc_id').\
+                        write.parquet('/stagingout/{}/'.format(this_tbl2)
+                                      , compression='gzip', mode='append', partitionBy=['vdr_enc_id_key'])
+
+                this_tbl3 = 'practice_fusion_emr_norm_emr_enc_pre_final'
+                hdfs_utils.clean_up_output_hdfs('/stagingout/{}/'.format(this_tbl3))
+                for i in range(10):
+                    key = str(i)
+                    logger.log('Custom pre-final chunk={} processing for {}'.format(key, mdl))
+
+                    # reassign practice_fusion_emr_norm_emr_enc_1 table
+                    logger.log('reassign table for {}'.format(this_tbl1))
+                    this_df1 = spark.read.parquet(
+                        '/stagingout/{}/vdr_enc_id_key={}/'.format(this_tbl1, key)).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_enc_id')
+                    this_df1 = this_df1.cache_and_track(this_tbl1)
+                    this_df1.createOrReplaceTempView(this_tbl1)
+
+                    # reassign practice_fusion_emr_norm_emr_enc_2 table
+                    logger.log('reassign table for {}'.format(this_tbl2))
+                    this_df2 = spark.read.parquet(
+                        '/stagingout/{}/vdr_enc_id_key={}/'.format(this_tbl2, key)).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_enc_id')
+                    this_df2 = this_df2.cache_and_track(this_tbl2)
+                    this_df2.createOrReplaceTempView(this_tbl2)
+
+                    this_df3 = runner.run_spark_script('2_practice_fusion_emr_norm_emr_enc_pre_final.sql', variables,
+                                                       source_file_path=sql_file_path, return_output=True).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_enc_id')
+                    this_df3 = this_df3.cache_and_track(this_tbl3)
+                    this_df3.createOrReplaceTempView(this_tbl3)
+
+                    logger.log('normalized_records_unloader processing for {}'.format(mdl))
+                    normalized_output = runner.run_spark_script('3_practice_fusion_emr_norm_emr_enc_final.sql',
+                                                                variables, source_file_path=sql_file_path
+                                                                , return_output=True)
+                    df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
+                                                      columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
+
+                    unload_file_cnt = 100
+                    _columns = df.columns
+                    _columns.remove('part_hvm_vdr_feed_id')
+                    _columns.remove('part_mth')
+
+                    normalized_records_unloader.unload(
+                        spark, runner, df, 'part_mth', date_input, FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
+                        date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
+                        unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
+                    )
+            elif mdl == 'diagnosis':
+                logger.log('Custom chunk processing for {}'.format(mdl))
+                this_tbl1 = 'practice_fusion_emr_norm_emr_pre_diag'
+                hdfs_utils.clean_up_output_hdfs('/stagingout/{}/'.format(this_tbl1))
+                spark.table('diagnosis').cache_and_track('diagnosis_full').createOrReplaceTempView('diagnosis_full')
+                for i in range(10):
+                    key = str(i)
+                    logger.log('Custom chunk={} processing for {}'.format(key, mdl))
+                    v_sql = """SELECT a.* FROM diagnosis_full a
+                    WHERE right(nvl(diagnosis_id,'0'), 1) = '{}' """.format(key)
+                    this_df = spark.sql(v_sql).repartition(int(
+                        spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'diagnosis_id')
+                    this_df = this_df.cache_and_track('diagnosis')
+                    this_df.createOrReplaceTempView('diagnosis')
+                    runner.run_spark_script(
+                        '0_practice_fusion_emr_norm_emr_pre_diag.sql', variables,
+                        source_file_path=sql_file_path, return_output=True).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_diag_id'). \
+                        write.parquet('/stagingout/{}/vdr_diag_id_key={}/'.format(this_tbl1, key)
+                                      , compression='gzip', mode='append')
+
+                this_tbl2 = 'practice_fusion_emr_norm_emr_pre_diag_2'
+                hdfs_utils.clean_up_output_hdfs('/stagingout/{}/'.format(this_tbl2))
+                spark.table('encounter').cache_and_track('encounter_full').createOrReplaceTempView('encounter_full')
+                for i in range(10):
+                    key = str(i)
+                    logger.log('Custom chunk={} processing for {}'.format(key, mdl))
+                    v_sql = """SELECT a.* FROM encounter_full a
+                    WHERE right(nvl(encounter_id,'0'), 1) = '{}' """.format(key)
+                    this_df2 = spark.sql(v_sql).repartition(int(
+                        spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'encounter_id')
+                    this_df2 = this_df2.cache_and_track('encounter')
+                    this_df2.createOrReplaceTempView('encounter')
+                    runner.run_spark_script(
+                        '1_practice_fusion_emr_norm_emr_pre_diag_2.sql', variables,
+                        source_file_path=sql_file_path, return_output=True).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_diag_id'). \
+                        write.parquet('/stagingout/{}/vdr_diag_id_key={}/'.format(this_tbl2, key)
+                                      , compression='gzip', mode='append')
+
+                this_tbl3 = 'practice_fusion_emr_norm_emr_dedup_diag'
+                hdfs_utils.clean_up_output_hdfs('/stagingout/{}/'.format(this_tbl3))
+                for i in range(10):
+                    key = str(i)
+                    logger.log('Custom dedup chunk={} processing for {}'.format(key, mdl))
+
+                    # reassign practice_fusion_emr_norm_emr_pre_diag table
+                    logger.log('reassign table for {}'.format(this_tbl1))
+                    this_df1 = spark.read.parquet(
+                        '/stagingout/{}/vdr_diag_id_key={}/'.format(this_tbl1, key)).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_diag_id')
+                    this_df1 = this_df1.cache_and_track(this_tbl1)
+                    this_df1.createOrReplaceTempView(this_tbl1)
+
+                    # reassign practice_fusion_emr_norm_emr_pre_diag_2 table
+                    logger.log('reassign table for {}'.format(this_tbl2))
+                    this_df2 = spark.read.parquet(
+                        '/stagingout/{}/vdr_diag_id_key={}/'.format(this_tbl2, key)).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_diag_id')
+                    this_df2 = this_df2.cache_and_track(this_tbl2)
+                    this_df2.createOrReplaceTempView(this_tbl2)
+
+                    this_df3 = runner.run_spark_script('2_practice_fusion_emr_norm_emr_dedup_diag.sql', variables,
+                                                       source_file_path=sql_file_path, return_output=True).repartition(
+                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_diag_id')
+                    this_df3 = this_df3.cache_and_track(this_tbl3)
+                    this_df3.createOrReplaceTempView(this_tbl3)
+
+                    logger.log('normalized_records_unloader processing for {}'.format(mdl))
+                    normalized_output = runner.run_spark_script('3_practice_fusion_emr_norm_emr_diag.sql',
+                                                                variables, source_file_path=sql_file_path
+                                                                , return_output=True)
+                    df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
+                                                      columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
+
+                    unload_file_cnt = 100
+                    _columns = df.columns
+                    _columns.remove('part_hvm_vdr_feed_id')
+                    _columns.remove('part_mth')
+
+                    normalized_records_unloader.unload(
+                        spark, runner, df, 'part_mth', date_input, FEED_ID, provider_partition_name='part_hvm_vdr_feed_id',
+                        date_partition_name='part_mth', columns=_columns,  staging_subdir=mdl,
+                        unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
+                    )
+            else:
+                logger.log('Processing for {}'.format(mdl))
+                normalized_output = runner.run_all_spark_scripts(variables, directory_path=sql_file_path)
                 df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
                                                   columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
                 unload_file_cnt = 100
                 if mdl == 'procedure':
                     unload_file_cnt = 40
-                elif mdl == 'encounter' or mdl == 'clinical_observation':
-                    unload_file_cnt = 400
                 _columns = df.columns
                 _columns.remove('part_hvm_vdr_feed_id')
                 _columns.remove('part_mth')
@@ -208,8 +389,7 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
                     unload_partition_count=unload_file_cnt,  distribution_key='row_id', substr_date_part=False
                 )
         else:
-            normalized_output = runner.run_all_spark_scripts(variables,
-                                                             directory_path=os.path.dirname(script_path) + '/' + mdl)
+            normalized_output = runner.run_all_spark_scripts(variables, directory_path=sql_file_path)
             df = schema_enforcer.apply_schema(normalized_output, MODEL_SCHEMA[mdl],
                                               columns_to_keep=['part_hvm_vdr_feed_id', 'part_mth'])
             df.collect()
@@ -232,18 +412,19 @@ def main(args):
     else:
         output_path = OUTPUT_PATH_PRODUCTION
 
-    # # init
+    # # init 52428800
     conf_parameters = {
-        'spark.default.parallelism': 1000,
-        'spark.sql.shuffle.partitions': 1000,
+        'spark.default.parallelism': 4000,
+        'spark.sql.shuffle.partitions': 4000,
         'spark.executor.memoryOverhead': 1024,
         'spark.driver.memoryOverhead': 1024,
         'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
         'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
-        'spark.sql.autoBroadcastJoinThreshold': 104857600,
+        'spark.sql.autoBroadcastJoinThreshold': 26214400,
         'spark.shuffle.sasl.timeout': 60000,
         'spark.task.maxFailures': 8,
-        'spark.max.executor.failures': 800
+        'spark.max.executor.failures': 800,
+        'spark.sql.broadcastTimeout': '36000'
     }
 
     for model in models:
@@ -285,6 +466,7 @@ def main(args):
         )
 
         RunRecorder().record_run_details(total_spark_time, total_hadoop_time)
+    logger.log('All Done')
 
 
 if __name__ == '__main__':
