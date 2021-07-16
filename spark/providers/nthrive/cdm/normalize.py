@@ -49,18 +49,16 @@ if __name__ == "__main__":
         end_to_end_test,
         use_ref_gen_values=True,
         vdr_feed_id=provider_partition_name,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     conf_parameters = {
         'spark.default.parallelism': 600,
         'spark.sql.shuffle.partitions': 600,
-        'spark.sql.autoBroadcastJoinThreshold': -1,
+        'spark.sql.autoBroadcastJoinThreshold': 10485760,
         'spark.executor.cores': 5,
         'spark.buffer.pageSize': '2m',
-        'spark.network.timeout': '600s',
-        'spark.sql.crossJoin.enabled': 'true',
-        'spark.sql.broadcastTimeout' : 9000
+        'spark.network.timeout': '600s'
     }
 
     driver.run(conf_parameters=conf_parameters)
