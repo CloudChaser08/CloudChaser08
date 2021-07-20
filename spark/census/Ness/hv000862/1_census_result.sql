@@ -1,7 +1,7 @@
 SELECT
     LOWER(obfuscate_hvid(matching_payload.hvid, {salt}))             AS HVID,
     matching_payload.personId                                        AS GUID,
-    matching_payload.claimId                                         AS UniqueRecordNumber,
+    matching_payload.claimId                                         AS UniqueRecordNumberFoo,
     transactions.UBCApp                                              AS UBCApp,
     transactions.UBCDB                                               AS UBCDB,
     transactions.UBCProgram                                          AS UBCProgram
