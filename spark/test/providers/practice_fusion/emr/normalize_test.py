@@ -12,7 +12,7 @@ def test_init(spark):
     spark['spark'].sparkContext.parallelize([
         Row(
             gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
-            hvm_vdr_feed_id='136',
+            hvm_vdr_feed_id=practice_fusion.FEED_ID,
             gen_ref_cd='',
             gen_ref_itm_nm='',
             gen_ref_itm_desc='',
@@ -27,5 +27,12 @@ def test_init(spark):
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
-    practice_fusion.run(date_input='2019-04-17',
-                        end_to_end_test=False, test=True, spark=spark['spark'], runner=spark['runner'])
+    spark['spark'].sparkContext.parallelize([
+        Row(
+            gen_ref_nm='HOME VISIT',
+            gen_ref_domn_nm='emr_enc.enc_typ_nm',
+            gen_ref_whtlst_flg='Y'
+        )
+    ]).toDF().createOrReplaceTempView('gen_ref_whtlst')
+
+    practice_fusion.run(spark['spark'], spark['runner'], '2019-04-17', test=True)
