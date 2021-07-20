@@ -5,7 +5,7 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.era.detail import schemas as detail_schemas
 from spark.common.era.summary import schemas as summary_schemas
 
-hasDeliveryPath = True
+has_delivery_path = True
 if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change_835'
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         unload_partition_count=50,
         vdr_feed_id=186,
         use_ref_gen_values=True,
-        output_to_delivery_path=hasDeliveryPath,
+        output_to_delivery_path=has_delivery_path,
         output_to_transform_path=True
     )
 

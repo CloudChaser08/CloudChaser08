@@ -8,7 +8,7 @@ from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
 
 _passthrough_cutoff = '2020-03-31'
-hasDeliveryPath = True
+has_delivery_path = True
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         use_ref_gen_values=True,
         unload_partition_count=40,
         load_date_explode=False,
-        output_to_delivery_path=hasDeliveryPath,
+        output_to_delivery_path=has_delivery_path,
         output_to_transform_path=True,
     )
 
