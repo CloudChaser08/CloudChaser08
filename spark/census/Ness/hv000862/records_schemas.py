@@ -9,7 +9,7 @@ TABLE_CONF = {
         separator='|',
         columns=[
             'GUID',
-            'UniqueRecordNumebr',
+            'UniqueRecordNumber',
             'First_Name',
             'Last_Name',
             'Gender',
