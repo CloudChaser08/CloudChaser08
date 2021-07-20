@@ -29,7 +29,6 @@ TABLE_CONF = {
             'UBCApp',
             'UBCDB',
             'UBCProgram',
-            'DateOfSMAConfirmation',
             'hvjoinkey'
         ]
     )

@@ -4,8 +4,7 @@ SELECT
     matching_payload.claimId                                         AS UniqueRecordNumebr,
     transactions.UBCApp                                              AS UBCApp,
     transactions.UBCDB                                               AS UBCDB,
-    transactions.UBCProgram                                          AS UBCProgram,
-    transactions.DateOfSMAConfirmation                               AS DateOfSMAConfirmation
+    transactions.UBCProgram                                          AS UBCProgram
 FROM transactions
     INNER JOIN matching_payload
         USING (hvjoinkey)
