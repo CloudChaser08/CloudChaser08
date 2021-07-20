@@ -58,7 +58,7 @@ def test_run(driver, spark):
     assert len(rows_for_table(spark, 'census_result')) > 0
 
     # ~ Then verify output schema
-    assert ["HVID", "GUID", "UniqueRecordNumebr", "UBCApp", "UBCDB", "UBCProgram"] == columns_for_table(spark, 'census_result')
+    assert ["HVID", "GUID", "UniqueRecordNumber", "UBCApp", "UBCDB", "UBCProgram"] == columns_for_table(spark, 'census_result')
 
     # ~ Verify table contents
     rows = rows_for_table(spark, 'census_result')
