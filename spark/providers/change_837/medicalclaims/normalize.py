@@ -1,3 +1,4 @@
+import os
 import argparse
 from datetime import datetime
 import spark.providers.change_837.medicalclaims.transactional_schemas as historic_source_table_schemas
@@ -7,7 +8,7 @@ from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
 
 _passthrough_cutoff = '2020-03-31'
-
+has_delivery_path = True
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
@@ -44,11 +45,12 @@ if __name__ == "__main__":
         output_table_names_to_schemas,
         date_input,
         end_to_end_test,
-        output_to_transform_path=True,
         vdr_feed_id=185,
         use_ref_gen_values=True,
         unload_partition_count=40,
-        load_date_explode=False
+        load_date_explode=False,
+        output_to_delivery_path=has_delivery_path,
+        output_to_transform_path=True,
     )
 
     conf_parameters = {
@@ -62,6 +64,7 @@ if __name__ == "__main__":
         'spark.shuffle.sasl.timeout': 60000
     }
 
+    driver.output_path = os.path.join(driver.output_path, 'accolade_hv001894/')
     driver.init_spark_context(conf_parameters=conf_parameters)
     driver.load(extra_payload_cols=['PCN', 'claimId'])
 

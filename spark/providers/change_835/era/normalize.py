@@ -1,10 +1,11 @@
+import os
 import argparse
 import spark.providers.change_835.era.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.era.detail import schemas as detail_schemas
 from spark.common.era.summary import schemas as summary_schemas
 
-
+has_delivery_path = True
 if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change_835'
@@ -37,6 +38,7 @@ if __name__ == "__main__":
         unload_partition_count=50,
         vdr_feed_id=186,
         use_ref_gen_values=True,
+        output_to_delivery_path=has_delivery_path,
         output_to_transform_path=True
     )
 
@@ -50,6 +52,7 @@ if __name__ == "__main__":
         'spark.sql.autoBroadcastJoinThreshold': 10485760
     }
 
+    driver.output_path = os.path.join(driver.output_path, 'accolade_hv001894/')
     driver.init_spark_context(conf_parameters=conf_parameters)
     driver.load(cache_tables=False, payloads=False)
     driver.transform()
