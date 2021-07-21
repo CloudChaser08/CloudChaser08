@@ -38,7 +38,7 @@ from spark.common.utility import logger
 FEED_ID = '5'
 VENDOR_ID = '5'
 
-OUTPUT_PATH = 's3://salusv/warehouse/transformed/emr/2017-08-23/'
+OUTPUT_PATH = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 
 
 def run(spark, runner, date_input, test=False, airflow_test=False):
@@ -100,7 +100,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     import spark.providers.amazingcharts.emr.load_transactions as load_transactions
     load_transactions.load(spark, runner, input_paths, date_input, test=test)
-    spark.read.parquet("s3://salusv/incoming/emr/amazingcharts/2020/ndc/parquet/").createOrReplaceTempView("d_multum_to_ndc")
 
     payload_loader.load(runner, matching_path, ['personId'])
     # De-duplicate the payloads so that there is only one
@@ -185,92 +184,92 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('medctn_last_rfll_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
             ],
-            'partition_date_col': 'medctn_ord_dt' }]
-    #     }, {
-    #         'name': 'lab_result',
-    #         'data': normalized_lab_result,
-    #         'privacy': lab_result_priv,
-    #         'schema': lab_result_schema,
-    #         'model_version': '07',
-    #         'join_key': 'hv_lab_result_id',
-    #         'date_caps': [
-    #             ('lab_test_smpl_collctn_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-    #             ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-    #             ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-    #         ],
-    #         'partition_date_col': 'lab_result_dt'
-    #     }, {
-    #         'name': 'encounter',
-    #         'data': normalized_encounter,
-    #         'privacy': encounter_priv,
-    #         'schema': encounter_schema,
-    #         'model_version': '07',
-    #         'join_key': 'hv_enc_id',
-    #         'date_caps': [
-    #             ('enc_start_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-    #             ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-    #         ],
-    #         'partition_date_col': 'enc_start_dt'
-    #     }, {
-    #         'name': 'diagnosis',
-    #         'data': normalized_diagnosis,
-    #         'privacy': diagnosis_priv,
-    #         'schema': diagnosis_schema,
-    #         'model_version': '07',
-    #         'join_key': 'hv_diag_id',
-    #         'date_caps': [
-    #             ('diag_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
-    #             ('diag_onset_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
-    #             ('diag_resltn_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
-    #             ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-    #         ],
-    #         'partition_date_col': 'diag_dt',
-    #         'update_whitelists': lambda whitelists: whitelists + [{
-    #             'column_name': 'diag_snomed_cd',
-    #             'domain_name': 'SNOMED',
-    #             'whitelist_col_name': 'gen_ref_cd'
-    #         }]
-    #     }, {
-    #         'name': 'procedure',
-    #         'data': normalized_procedure,
-    #         'privacy': procedure_priv,
-    #         'schema': procedure_schema,
-    #         'model_version': '08',
-    #         'join_key': 'hv_proc_id',
-    #         'date_caps': [
-    #             ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-    #             ('proc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-    #             ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-    #         ],
-    #         'partition_date_col': 'proc_dt'
-    #     }, {
-    #         'name': 'clinical_observation',
-    #         'data': normalized_clinical_observation,
-    #         'privacy': clinical_observation_priv,
-    #         'schema': clinical_observation_schema,
-    #         'model_version': '07',
-    #         'join_key': 'hv_clin_obsn_id',
-    #         'date_caps': [
-    #             ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-    #             ('clin_obsn_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-    #             ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-    #         ],
-    #         'partition_date_col': 'clin_obsn_dt'
-    #     }, {
-    #         'name': 'vital_sign',
-    #         'data': normalized_vital_sign,
-    #         'privacy': vital_sign_priv,
-    #         'schema': vital_sign_schema,
-    #         'model_version': '07',
-    #         'join_key': 'hv_vit_sign_id',
-    #         'date_caps': [
-    #             ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-    #             ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-    #             ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
-    #         ],
-    #         'partition_date_col': 'vit_sign_dt'
-    #     }
-    # ]
+            'partition_date_col': 'medctn_ord_dt'
+        }, {
+            'name': 'lab_result',
+            'data': normalized_lab_result,
+            'privacy': lab_result_priv,
+            'schema': lab_result_schema,
+            'model_version': '07',
+            'join_key': 'hv_lab_result_id',
+            'date_caps': [
+                ('lab_test_smpl_collctn_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ],
+            'partition_date_col': 'lab_result_dt'
+        }, {
+            'name': 'encounter',
+            'data': normalized_encounter,
+            'privacy': encounter_priv,
+            'schema': encounter_schema,
+            'model_version': '07',
+            'join_key': 'hv_enc_id',
+            'date_caps': [
+                ('enc_start_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ],
+            'partition_date_col': 'enc_start_dt'
+        }, {
+            'name': 'diagnosis',
+            'data': normalized_diagnosis,
+            'privacy': diagnosis_priv,
+            'schema': diagnosis_schema,
+            'model_version': '07',
+            'join_key': 'hv_diag_id',
+            'date_caps': [
+                ('diag_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
+                ('diag_onset_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
+                ('diag_resltn_dt', 'EARLIEST_VALID_DIAGNOSIS_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ],
+            'partition_date_col': 'diag_dt',
+            'update_whitelists': lambda whitelists: whitelists + [{
+                'column_name': 'diag_snomed_cd',
+                'domain_name': 'SNOMED',
+                'whitelist_col_name': 'gen_ref_cd'
+            }]
+        }, {
+            'name': 'procedure',
+            'data': normalized_procedure,
+            'privacy': procedure_priv,
+            'schema': procedure_schema,
+            'model_version': '08',
+            'join_key': 'hv_proc_id',
+            'date_caps': [
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('proc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ],
+            'partition_date_col': 'proc_dt'
+        }, {
+            'name': 'clinical_observation',
+            'data': normalized_clinical_observation,
+            'privacy': clinical_observation_priv,
+            'schema': clinical_observation_schema,
+            'model_version': '07',
+            'join_key': 'hv_clin_obsn_id',
+            'date_caps': [
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('clin_obsn_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ],
+            'partition_date_col': 'clin_obsn_dt'
+        }, {
+            'name': 'vital_sign',
+            'data': normalized_vital_sign,
+            'privacy': vital_sign_priv,
+            'schema': vital_sign_schema,
+            'model_version': '07',
+            'join_key': 'hv_vit_sign_id',
+            'date_caps': [
+                ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap)
+            ],
+            'partition_date_col': 'vit_sign_dt'
+        }
+    ]
     for table in normalized_tables:
         normalized_table = postprocessor.compose(
             postprocessor.trimmify, postprocessor.nullify,
@@ -314,7 +313,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             ), staging_subdir=table['name'], test_dir=(file_utils.get_abs_path(
                 script_path, '../../../test/providers/amazingcharts/emr/resources/output/'
-            ) if test else None), unload_partition_count=2, skip_rename=False,
+            ) if test else None), unload_partition_count=20, skip_rename=True,
             distribution_key='row_id'
         )
 
