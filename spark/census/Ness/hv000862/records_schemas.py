@@ -9,7 +9,7 @@ TABLE_CONF = {
         separator='|',
         columns=[
             'GUID',
-            'UniqueRecordNumebr',
+            'UniqueRecordNumber',
             'First_Name',
             'Last_Name',
             'Gender',
@@ -29,6 +29,9 @@ TABLE_CONF = {
             'UBCApp',
             'UBCDB',
             'UBCProgram',
+            'TruncatedDOB',
+            'DateOfSMAConfirmation',
+            'FirstSMATreatmentDate',
             'hvjoinkey'
         ]
     )
