@@ -5,6 +5,7 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.providers.pointclickcare.emr.transactional_schemas as historic_source_table_schemas
 import spark.providers.pointclickcare.emr.transactional_schemas_v1 as transactions_v1
 import spark.providers.pointclickcare.emr.transactional_schemas_v2 as transactions_v2
+import spark.providers.pointclickcare.emr.transactional_schemas_v3 as transactions_v3
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.emr.clinical_observation import schemas as clinical_observation_schemas
 from spark.common.emr.diagnosis import schemas as diagnosis_schemas
@@ -18,6 +19,7 @@ import spark.helpers.postprocessor as postprocessor
 v_cutoff_date = '2021-02-01'
 v_cutoff_trans_schema_refactor_sql = '2021-05-01'
 v_ref_hdfs_output_path = '/reference/'
+v_cutoff_factlabtest_date='2021-05-09'
 
 if __name__ == "__main__":
 
@@ -43,7 +45,8 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
-    b_transactions_v1 = datetime.strptime(v_cutoff_date, '%Y-%m-%d').date() <= datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_trans_schema_refactor_sql, '%Y-%m-%d').date()
+    b_transactions_v1 = v_cutoff_date <= date_input < v_cutoff_trans_schema_refactor_sql
+    b_transactions_v2 = v_cutoff_trans_schema_refactor_sql <= date_input < v_cutoff_factlabtest_date
 
     if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
         logger.log('Historic Load schema with ddid column')
@@ -51,9 +54,12 @@ if __name__ == "__main__":
     elif b_transactions_v1:
         logger.log('Load using new schema with drugid column, and new labtest schema')
         source_table_schemas = transactions_v1
-    else:
+    elif b_transactions_v2:
         logger.log('Load using new schema with new DimObservationMethod and FactObservation schema')
         source_table_schemas = transactions_v2
+    else:
+        logger.log('Load using new FactLabTest Schema')
+        source_table_schemas = transactions_v3
 
     # Create and run driver
     driver = MarketplaceDriver(
