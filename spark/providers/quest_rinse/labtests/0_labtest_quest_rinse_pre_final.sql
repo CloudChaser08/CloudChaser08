@@ -221,6 +221,7 @@ LEFT OUTER JOIN result_comments_hist histcomm ON rslt.dos_id = histcomm.dos_id
                           AND rslt.unique_accession_id = histcomm.unique_accession_id
                           AND rslt.ord_seq             = histcomm.ord_seq
                           AND rslt.res_seq             = histcomm.res_seq
+                          AND '{VDR_FILE_DT}' <= '2021-06-19'
 
 WHERE
  LOWER(COALESCE(rslt.unique_accession_id, '')) <> 'unique_accession_id'
