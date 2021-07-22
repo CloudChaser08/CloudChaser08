@@ -43,8 +43,8 @@ if __name__ == "__main__":
         end_to_end_test,
         vdr_feed_id=187,
         use_ref_gen_values=True,
-        unload_partition_count=20,
-        output_to_transform_path=True
+        unload_partition_count=10,
+        output_to_transform_path=False
     )
 
     # init
