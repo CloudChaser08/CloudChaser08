@@ -46,7 +46,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         'spark.sql.shuffle.partitions': 600,
         'spark.executor.memoryOverhead': 1024,
         'spark.driver.memoryOverhead': 1024,
-        'spark.sql.autoBroadcastJoinThreshold': 26214400
+        'spark.sql.autoBroadcastJoinThreshold': 10485760
     }
 
 
