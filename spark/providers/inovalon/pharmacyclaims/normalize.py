@@ -69,7 +69,7 @@ def run(date_input, end_to_end_test):
         unload_partition_count=40,
         vdr_feed_id=177,
         use_ref_gen_values=True,
-        output_to_transform_path=False
+        output_to_transform_path=True  # Inform James Barker when changing
     )
 
     conf_parameters = {
