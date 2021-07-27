@@ -2,10 +2,12 @@ import argparse
 from spark.helpers.normalized_records_unloader import distcp
 import subprocess
 from math import ceil
+import datetime
 from spark.common.utility import logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.enrollment import schemas as enrollment_schemas
-import spark.providers.express_scripts.enrollmentrecords.transactional_schemas as source_table_schemas
+import spark.providers.express_scripts.enrollmentrecords.transactional_schemas as transactional_schemas
+import spark.providers.express_scripts.enrollmentrecords.transactional_schemas_v1 as transactional_schemas_v1
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_utils as file_utils
@@ -21,7 +23,8 @@ PARQUET_FILE_SIZE = 1024 * 1024 * 250
 
 def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     logger.log(" -esi-enrollment: this normalization ")
-    data_set_filename = '10130X001_HV_RX_ENROLLMENT_D{}.txt'.format(date_input.replace('-', ''))
+    data_set_filename = 'HV_RX_ENROLLMENT_{}_PO.txt'.format(date_input.replace('-', ''))
+    v_cutoff_date = '2021-05-29'
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'express_scripts'
@@ -30,6 +33,14 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         'esi_norm_final': schema
     }
     provider_partition_name = 'express_scripts'
+
+    if date_input < v_cutoff_date:
+        logger.log('Historic Load schema')
+        source_table_schemas = transactional_schemas
+    else:
+        logger.log('Future Load using new schema with lob and last_update_ts columns')
+        source_table_schemas = transactional_schemas_v1
+
     # ------------------------ Common for all providers -----------------------
 
     # Create and run driver
