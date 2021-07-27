@@ -47,6 +47,8 @@ def clean_up_ndc_code(code):
 # These codes are specific enough that along with other public fields they pose a
 # re-identification risk, nullify them
 # ICD9
+#   V20.31 Health supervision for newborn under 8 days old
+#   V20.32 Health supervision for newborn 8 to 28 days old
 #   764*-779* Other conditions originating In the perinatal period (including birth trauma)
 #   V3* Liveborn infants according to type of birth
 #   798 Unknown cause of death
@@ -60,6 +62,8 @@ def clean_up_ndc_code(code):
 #   E913* Suffication
 #   E80*-E84* Vehicle accident
 # ICD10
+#   Z00.110 Health examination for newborn under 8 days old
+#   Z00.111 Health examination for newborn 8 to 28 days old
 #   P* Other conditions originating In the perinatal period (including birth trauma)
 #   Z38* Liveborn infants according to type of birth
 #   R99 Unknown cause of death
@@ -84,7 +88,9 @@ def clean_up_diagnosis_code(
     if diagnosis_code == None:
         return None
 
+    # Removes non-alphanumeric codes including '.'
     diagnosis_code = uppercase_code(clean_up_alphanumeric_code(diagnosis_code))
+
     # Is this an ICD-9 code based on qualifier, or not an ICD-10 code based on date
     if diagnosis_code_qual == '01' or (
             diagnosis_code_qual is None
@@ -94,7 +100,7 @@ def clean_up_diagnosis_code(
             )
     ):
         if re.search(
-                '^(76[4-9].*|77.*|V3.*|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$',
+                '^(76[4-9].*|77.*|V3.*|V203(1|2)|79[89]|7999|E9[5679].*|E9280|E910.*|E913.*|E8[0-4].*)$',
                 diagnosis_code
         ):
             return None
@@ -109,7 +115,7 @@ def clean_up_diagnosis_code(
             )
     ):
         if re.search(
-                '^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$',
+                '^(P.*|Z38.*|R99|Y3[5-8].*|X9[2-9].*|Z0011(0|1)|Y0.*|X52.*|W6[5-9].*|W7[0-4].*|V.*)$',
                 diagnosis_code
         ):
             return None

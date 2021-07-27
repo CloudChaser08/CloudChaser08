@@ -151,6 +151,14 @@ def test_clean_up_diagnosis_code():
         '7999', None, datetime.date(2015, 1, 1)
     ) is None
 
+    #ICD-10 that should be filtered out
+    assert cleanup.clean_up_diagnosis_code(
+        'Z00.111', '02', None
+    ) is None
+    assert cleanup.clean_up_diagnosis_code(
+        'Z00.110', None, datetime.date(2016, 1, 1)
+    ) is None
+    
     # no qualifier and no date
     # both filters are applied
     assert cleanup.clean_up_diagnosis_code(
@@ -164,6 +172,13 @@ def test_clean_up_diagnosis_code():
     assert cleanup.clean_up_diagnosis_code(
         '767.4', None, None
     ) is None
+    assert cleanup.clean_up_diagnosis_code(
+        'V20.32', '01', None
+    ) is None
+    assert cleanup.clean_up_diagnosis_code(
+        'V20.31', None, datetime.date(2014, 1, 1)
+    ) is None
+
 
     # good ICD-10 code, do nothing
     assert cleanup.clean_up_diagnosis_code(
