@@ -259,7 +259,6 @@ schema_v7 = StructType([
     StructField('ptnt_gender_cd', StringType(), True),
     StructField('ptnt_state_cd', StringType(), True),
     StructField('ptnt_zip3_cd', StringType(), True),
-    StructField('svc_ln_num', IntegerType(), True),
     StructField('svc_ln_start_dt', DateType(), True),
     StructField('svc_ln_end_dt', DateType(), True),
     StructField('rndrg_prov_npi', StringType(), True),
@@ -297,7 +296,8 @@ schema_v7 = StructType([
     StructField('svc_ln_suplmtl_amt_qual', StringType(), True),
     StructField('svc_ln_rmrk_cd_seq_num', IntegerType(), True),
     StructField('svc_ln_remrk_cd', StringType(), True),
-    StructField('svc_ln_remrk_cd_qual', StringType(), True)
+    StructField('svc_ln_remrk_cd_qual', StringType(), True),
+    StructField('svc_ln_num', IntegerType(), True)
 ])
 data_type = 'era'
 output_directory = data_type + '/2018-02-13/detail'

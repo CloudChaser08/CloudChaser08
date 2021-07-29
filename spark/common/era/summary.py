@@ -455,7 +455,6 @@ schema_v7 = StructType([
     StructField('ptnt_gender_cd', StringType(), True),
     StructField('ptnt_state_cd', StringType(), True),
     StructField('ptnt_zip3_cd', StringType(), True),
-    StructField('clm_typ_cd', StringType(), True),
     StructField('clm_stmt_perd_start_dt', DateType(), True),
     StructField('clm_stmt_perd_end_dt', DateType(), True),
     StructField('payr_clm_recpt_dt', DateType(), True),
@@ -544,7 +543,8 @@ schema_v7 = StructType([
     StructField('clm_adjmt_rsn_cd', StringType(), True),
     StructField('clm_adjmt_amt', FloatType(), True),
     StructField('clm_adjmt_qty', IntegerType(), True),
-    StructField('medcl_clm_lnk_txt', StringType(), True)
+    StructField('medcl_clm_lnk_txt', StringType(), True),
+    StructField('clm_typ_cd', StringType(), True)
 ])
 
 data_type = 'era'
