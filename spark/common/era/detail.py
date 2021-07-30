@@ -299,6 +299,7 @@ schema_v7 = StructType([
     StructField('svc_ln_remrk_cd_qual', StringType(), True),
     StructField('svc_ln_num', IntegerType(), True)
 ])
+
 data_type = 'era'
 output_directory = data_type + '/2018-02-13/detail'
 output_directory_daily = "daily/" + data_type + "/detail"

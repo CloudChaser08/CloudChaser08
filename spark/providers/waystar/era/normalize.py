@@ -10,8 +10,8 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'waystar'
     output_table_names_to_schemas = {
-        'waystar_835_normalized_detail': detail_schemas['schema_v6'],
-        'waystar_835_normalized_summary': summary_schemas['schema_v6']
+        'waystar_835_normalized_detail': detail_schemas['schema_v7'],
+        'waystar_835_normalized_summary': summary_schemas['schema_v7']
     }
     provider_partition_name = '145'
 

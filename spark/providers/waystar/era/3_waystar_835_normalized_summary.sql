@@ -2,7 +2,7 @@ SELECT
     MONOTONICALLY_INCREASING_ID()                                                           AS row_id,
     CONCAT('145_', clm.supplier_claim_payment_number)                                       AS hv_medcl_clm_pymt_sumry_id,   
     CURRENT_DATE()                                                                          AS crt_dt,
-	'06'                                                                                    AS mdl_vrsn_num,
+	'07'                                                                                    AS mdl_vrsn_num,
     SPLIT(clm.input_file_name, '/')[SIZE(SPLIT(clm.input_file_name, '/')) - 1]              AS data_set_nm,
 	'34'                                                                                    AS hvm_vdr_id,
 	'145'                                                                                   AS hvm_vdr_feed_id,
