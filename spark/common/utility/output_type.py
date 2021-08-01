@@ -18,3 +18,4 @@ class DataType(Enum):
     PHARMACY_CLAIMS = "pharmacyclaims"
     TEST_CLAIMS = "TEST_CLAIMS"
     ENROLLMENT_RECORDS = "enrollmentrecords"
+    CUSTOM_MART = "custom_mart"
