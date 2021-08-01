@@ -8,5 +8,5 @@ SELECT
     dispensed_ndc_number
 FROM
     pdx_rx_txn_alltime_dw
---GROUP by
---    1,2,3,4,5,6,7
+GROUP by
+    1,2,3,4,5,6,7
