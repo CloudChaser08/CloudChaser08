@@ -24,7 +24,7 @@ PARQUET_FILE_SIZE = 1024 * 1024 * 250
 def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     logger.log(" -esi-enrollment: this normalization ")
     data_set_filename = 'HV_RX_ENROLLMENT_{}_PO.txt'.format(date_input.replace('-', ''))
-    v_cutoff_date = '2021-05-29'
+    v_cutoff_date = '2021-04-17'
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'express_scripts'

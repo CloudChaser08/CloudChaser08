@@ -10,8 +10,8 @@ TABLE_CONF = {
             ('end_date', 8),
             ('operation_date', 8),
             ('status', 1),
-            ('lob',1),
-            ('last_update_ts',5),
+            ('lob', 1),
+            ('last_update_ts', 15),
             ('hvjoinkey', 36)
         ]
     )
