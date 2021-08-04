@@ -36,6 +36,7 @@ schema = Schema(
         StructField('emergencyind', StringType(), True),
         StructField('sourcefilename', StringType(), True),
         StructField('data_vendor', StringType(), True),
+        StructField('created', DateType(), True),
         StructField('dhcreceiveddate', StringType(), True),
         StructField('rownumber', LongType(), True),
         StructField('fileyear', IntegerType(), True),

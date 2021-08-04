@@ -396,6 +396,7 @@ SELECT DISTINCT
     CAST(NULL AS INT)                                                     AS filemonth,
     CAST(NULL AS INT)                                                     AS fileday,
     '26'                                                                  AS data_feed,
+    CURRENT_DATE()                                                        AS created,
     'allscripts'                                                          AS part_provider,
     CASE
         WHEN
