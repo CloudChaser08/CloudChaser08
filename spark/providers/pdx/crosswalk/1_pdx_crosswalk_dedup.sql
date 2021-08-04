@@ -1,3 +1,0 @@
-select concat_unique_fields,date_filled, date_delivered_fulfilled, rx_number, cob_count, pharmacy_ncpdp_number, claim_indicator, ndc_code, datavant_token1, datavant_token2, max(input_file_name) AS input_file_name
-from pdx_crosswalk_matched
-group by concat_unique_fields, date_filled, date_delivered_fulfilled, rx_number, cob_count, pharmacy_ncpdp_number, claim_indicator, ndc_code, datavant_token1, datavant_token2
