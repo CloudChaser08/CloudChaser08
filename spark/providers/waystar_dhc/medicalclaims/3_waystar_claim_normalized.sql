@@ -609,6 +609,7 @@ SELECT
     -- HV columns
     ---------------------------------------------------------------------------------------------------------------------- 
     '24'                                                                  AS data_feed,
+    CURRENT_DATE()                                                        AS created,
     'navicure'                                                            AS part_provider,
     CASE
         WHEN     

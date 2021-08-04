@@ -436,6 +436,7 @@ SELECT DISTINCT
     CAST(NULL AS INT)                                                                       AS filemonth,
     CAST(NULL AS INT)                                                                       AS fileday,
     '220'                                                                                   AS data_feed,
+    CURRENT_DATE()                                                                          AS created,
     'change_relay'                                                                          AS part_provider,
     CASE
         WHEN

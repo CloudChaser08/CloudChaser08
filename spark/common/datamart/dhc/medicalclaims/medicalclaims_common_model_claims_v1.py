@@ -120,6 +120,7 @@ schema = Schema(
         StructField('rownumber', LongType(), True),
         StructField('fileyear', IntegerType(), True),
         StructField('filemonth', IntegerType(), True),
-        StructField('fileday', IntegerType(), True)
+        StructField('fileday', IntegerType(), True),
+        StructField('created', DateType(), True)
     ])
 )

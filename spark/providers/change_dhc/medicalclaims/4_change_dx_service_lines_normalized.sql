@@ -53,6 +53,7 @@ SELECT DISTINCT
     CAST(NULL AS INT)                                                                       AS filemonth,
     CAST(NULL AS INT)                                                                       AS fileday,
     '219'                                                                                   AS data_feed,
+    CURRENT_DATE()                                                                          AS created,
     'change_dx'                                                                             AS part_provider,
     CASE
         WHEN
