@@ -21,6 +21,9 @@ schema = Schema(
         StructField('response_code_vendor', StringType(), True),
         StructField('ndc_code', StringType(), True),
         StructField('datavant_token1', StringType(), True),
-        StructField('datavant_token2', StringType(), True)
+        StructField('datavant_token2', StringType(), True),
+        StructField('hvid', StringType(), True)
     ])
 )
+
+
