@@ -9,14 +9,14 @@ schema = Schema(
     name='schema_v1',
     data_type='custom_mart',
     output_directory='dhc/custom_mart/2021-07-01/rx_token_bridge/',
-    distribution_key='concat_unique_fields',
+    distribution_key='token1',
     provider_partition_column='part_provider',
     date_partition_column='part_best_date',
     schema_structure=StructType([
         StructField('claim_id', StringType(), True),
         StructField('concat_unique_fields', StringType(), True),
-        StructField('datavant_token1', StringType(), True),
-        StructField('datavant_token2', StringType(), True),
+        StructField('token1', StringType(), True),
+        StructField('token2', StringType(), True),
         StructField('hvid', StringType(), True),
         StructField('date_service', DateType(), True),
         StructField('rx_number', StringType(), True),
@@ -28,5 +28,4 @@ schema = Schema(
         StructField('data_vendor', StringType(), True)
     ])
 )
-
 
