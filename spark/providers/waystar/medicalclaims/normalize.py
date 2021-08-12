@@ -18,19 +18,10 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'waystar'
     provider_partition_name = 'navicure'
-    opportunity_id = 'definitive_hv002886'
     schema = medicalclaims_schemas['schema_v8']
-
-    additional_schema = medicalclaims_schemas['schema_v8_daily']
-    additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
-    additional_output_path = additional_output_path.format(opportunity_id)
 
     output_table_names_to_schemas = {
         'waystar_norm03_norm_final': schema
-    }
-
-    additional_output_schemas = {
-        'waystar_norm03_norm_final': additional_schema
     }
 
     # ------------------------ Common for all providers -----------------------
@@ -47,9 +38,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         load_date_explode=False,
         vdr_feed_id=24,
         use_ref_gen_values=True,
-        output_to_transform_path=False,
-        additional_output_path=additional_output_path,
-        additional_output_schemas=additional_output_schemas
+        output_to_transform_path=False
     )
 
     conf_parameters = {
