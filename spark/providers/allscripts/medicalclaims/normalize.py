@@ -12,7 +12,7 @@ from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 
 def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
-    provider_name = 'allscripts'å
+    provider_name = 'allscripts'
     output_table_names_to_schemas = {
         'normalize_final': medicalclaims_schemas['schema_v6']
     }
