@@ -10,15 +10,10 @@ if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change_relay'
-    opportunity_id = 'definitive_hv002886'
     output_table_names_to_schemas = {
         'change_relay_05_norm_final': medicalclaims_schemas['schema_v10'],
     }
-    additional_output_schemas = {
-        'change_relay_05_norm_final': medicalclaims_schemas['schema_v10_daily']
-    }
     provider_partition_name = 'change_relay'
-    additional_output_start_date = "2021-02-28" # only write to DDE beginning on this date
 
     # ------------------------ Common for all providers -----------------------
 
@@ -29,13 +24,6 @@ if __name__ == "__main__":
     args = parser.parse_known_args()[0]
     date_input = args.date
     end_to_end_test = args.end_to_end_test
-
-    additional_output_path = DATAMART_PATH if not end_to_end_test else E2E_DATAMART_PATH
-    additional_output_path = additional_output_path.format(opportunity_id)
-
-    if datetime.strptime(date_input, '%Y-%m-%d') < datetime.strptime(additional_output_start_date, '%Y-%m-%d'):
-        additional_output_schemas = None
-        additional_output_path = None
 
     # Create and run driver
     driver = MarketplaceDriver(
@@ -50,9 +38,7 @@ if __name__ == "__main__":
         use_ref_gen_values=True,
         unload_partition_count=1,
         load_date_explode=False,
-        restricted_private_source=True,
-        additional_output_path=additional_output_path,
-        additional_output_schemas=additional_output_schemas
+        restricted_private_source=True
     )
 
     conf_parameters = {
