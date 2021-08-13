@@ -34,7 +34,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     }
     provider_partition_name = 'express_scripts'
 
-    if date_input <= v_cutoff_date:
+    if date_input < v_cutoff_date:
         logger.log('Historic Load schema')
         source_table_schemas = transactional_schemas
     else:
