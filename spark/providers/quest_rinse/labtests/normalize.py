@@ -12,6 +12,8 @@ import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.postprocessor as postprocessor
 
+# Ignore result_comments_hist on or after this date
+COMMENT_HIST_CUTOFF_DATE = '2021-06-20'
 
 result_comments_hist_path = "s3://salusv/incoming/labtests/quest_rinse/order_result_comments_hist2/"
 
@@ -71,13 +73,18 @@ if __name__ == "__main__":
     driver.spark.read.parquet(
         result_comments_hist_path).createOrReplaceTempView("result_comments_hist")
 
+    if date_input < COMMENT_HIST_CUTOFF_DATE:
+        v_sql = "SELECT * FROM result_comments_hist"
+    else:
+        v_sql = "SELECT * FROM result_comments_hist LIMIT 1"
+
     driver.load(cache_tables=False)
 
     accn_distinct = driver.spark.table('order_result').select('accn_id').distinct()
 
     # filter down the results comments history table by removing rows that are definitely
     # irrelevant
-    driver.spark.table("result_comments_hist") \
+    driver.spark.sql(v_sql) \
         .join(F.broadcast(accn_distinct), 'accn_id') \
         .createOrReplaceTempView("result_comments_hist")
 
