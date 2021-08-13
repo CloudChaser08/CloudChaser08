@@ -19,12 +19,12 @@ S3_REF_PHI = 's3://salusv/reference/express_scripts_phi/'
 S3_REF_PHI_BACKUP = 's3://salusv/backup/reference/express_scripts_phi/date_input={date_input}/'
 LOCAL_REF_PHI = '/local_phi/'
 PARQUET_FILE_SIZE = 1024 * 1024 * 250
+v_cutoff_date = '2021-07-17'
 
 
 def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     logger.log(" -esi-enrollment: this normalization ")
     data_set_filename = 'HV_RX_ENROLLMENT_{}_PO.txt'.format(date_input.replace('-', ''))
-    v_cutoff_date = '2021-04-17'
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'express_scripts'
@@ -34,7 +34,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     }
     provider_partition_name = 'express_scripts'
 
-    if date_input < v_cutoff_date:
+    if date_input <= v_cutoff_date:
         logger.log('Historic Load schema')
         source_table_schemas = transactional_schemas
     else:
