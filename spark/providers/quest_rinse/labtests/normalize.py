@@ -53,8 +53,8 @@ if __name__ == "__main__":
     conf_parameters = {
         'spark.default.parallelism': 600,
         'spark.sql.shuffle.partitions': 600,
-        'spark.executor.memoryOverhead': 10240,
-        'spark.driver.memoryOverhead': 10240,
+        'spark.executor.memoryOverhead': 1024,
+        'spark.driver.memoryOverhead': 1024,
         'spark.sql.autoBroadcastJoinThreshold': 26214400
     }
 
