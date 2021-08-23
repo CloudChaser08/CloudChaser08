@@ -1,5 +1,6 @@
 import argparse
-import spark.providers.change_rx_dhc.custom_mart.transactional_schemas as source_table_schemas
+import spark.providers.change_rx_dhc.custom_mart.transactional_schemas as source_table_schemas_v1
+import spark.providers.change_rx_dhc.custom_mart.transactional_schemas_v2 as source_table_schemas_v2
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.datamart.dhc.custom import schemas as dhc_custom_schemas
 import spark.common.utility.logger as logger
@@ -25,6 +26,13 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
+    if date_input >= '2021-01-01':
+        source_table_schemas = source_table_schemas_v2
+        logger.log('Using 2021-present source schema...')
+    else:
+        source_table_schemas = source_table_schemas_v1
+        logger.log('Using 2016-2020 source schema...')
+
     # Create and run driver
     driver = MarketplaceDriver(
         provider_name,
@@ -35,7 +43,7 @@ if __name__ == "__main__":
         end_to_end_test,
         vdr_feed_id=11,
         use_ref_gen_values=True,
-        unload_partition_count=5,
+        unload_partition_count=40,
         load_date_explode=False,
         output_to_delivery_path=hasDeliveryPath,
         output_to_transform_path=False
