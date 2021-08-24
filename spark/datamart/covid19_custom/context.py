@@ -35,7 +35,7 @@ LAB_PART_PROVIDER_LIST = ['quest', 'bioreference', 'ovation', 'luminate', 'labco
 LAB_PARTITIONS = ['part_mth', 'part_provider']
 LAB_FIRST_RUN_MONTH = '2018-01'
 LAB_REFRESH_NBR_OF_MONTHS = 6
-LAB_SKIP_ARCHIVE = False
+LAB_SKIP_ARCHIVE = True
 
 FULL_ARCHIVE_REQUESTED_DAYS = ['Sunday']
 FULL_ARCHIVE_SUFFIX_KEY = 'F'
