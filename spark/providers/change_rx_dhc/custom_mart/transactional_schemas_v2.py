@@ -25,8 +25,7 @@ TABLE_CONF = {
             'column17',
             'column18',
             'token_1',
-            'token_2',
-            'column21'
+            'token_2'
         ]
     )
 }

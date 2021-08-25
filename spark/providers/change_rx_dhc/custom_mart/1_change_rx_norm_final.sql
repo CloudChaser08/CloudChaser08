@@ -1,6 +1,6 @@
 SELECT
     norm.*,
-    'change' AS part_provider,
+    'emdeon' AS part_provider,
     /* part_best_date */
     CONCAT
 	            (
@@ -8,5 +8,5 @@ SELECT
                     SUBSTR('{VDR_FILE_DT}', 6, 2), '-01'
                 ) AS part_best_date
 FROM
-    changhe_rx_norm norm
+    change_rx_norm norm
 
