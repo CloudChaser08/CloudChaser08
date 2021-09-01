@@ -74,7 +74,7 @@ test-python3: build-container clean-test build-notest
 		$(eval SECRET_OPT=-e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}") \
 		:; \
 	fi
-	@docker run --rm --name ${CONTAINER_NAME}-${NOW} -v "${PWD}:/dewey/spark" \
+	@docker run --rm --name ${CONTAINER_NAME}-${NOW}-${BUILD_NUMBER} -v "${PWD}:/dewey/spark" \
 		$(ID_OPT) \
 		${SECRET_OPT} \
 		-e "AWS_DEFAULT_REGION=us-east-1" \
