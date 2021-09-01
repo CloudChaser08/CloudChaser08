@@ -21,4 +21,4 @@ SELECT
                 )
 	END                                                                                         AS part_best_date
 from
-    pdx_dhc_crosswalk_matched_norm norm
+    pdx_dhc_crosswalk_norm norm
