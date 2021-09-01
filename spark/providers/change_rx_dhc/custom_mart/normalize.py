@@ -14,7 +14,7 @@ if __name__ == "__main__":
     output_table_names_to_schemas = {
         'change_rx_norm_final': dhc_custom_schemas['rx_token_bridge_v1']
     }
-    provider_partition_name = 'change'
+    provider_partition_name = 'emdeon'
 
     # ------------------------ Common for all providers -----------------------
 
