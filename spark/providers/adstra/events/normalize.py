@@ -1,116 +1,55 @@
 import argparse
-from datetime import datetime, date
-from spark.runner import Runner
-from spark.spark_setup import init
-from spark.common.event_common_model_v4 import schema
-import spark.helpers.file_utils as file_utils
-import spark.helpers.hdfs_utils as hdfs_utils
+from spark.common.marketplace_driver import MarketplaceDriver
+from spark.common.consumer.events_common_model_v10 import schema
+import spark.common.utility.logger as logger
 import spark.helpers.payload_loader as payload_loader
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.external_table_loader as external_table_loader
-import spark.helpers.schema_enforcer as schema_enforcer
-import spark.helpers.postprocessor as postprocessor
-import spark.helpers.privacy.events as event_priv
 
-from spark.common.utility.output_type import DataType, RunType
-from spark.common.utility.run_recorder import RunRecorder
-from spark.common.utility import logger
+if __name__ == "__main__":
 
-FEED_ID = '214'
-VENDOR_ID = '665'
-PROVIDER_NAME = 'adstra'
+    # ------------------------ Provider specific configuration -----------------------
+    provider_name = 'adstra'
+    output_table_names_to_schemas = {
+        'adstra_norm_event': schema
+    }
+    provider_partition_name = 'adstra'
 
-OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/adstra/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/consumer/2017-08-02/'
+    source_table_schemas = None
+    # ------------------------ Common for all providers -----------------------
 
-
-def run(spark, runner, date_input, test=False, airflow_test=False):
-    script_path = __file__
-
-    transaction_path = ''
-    if test:
-        matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/adstra/events/resources/matching/'
-        )
-    elif airflow_test:
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/adstra/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
-    else:
-        matching_path = 's3://salusv/matching/payload/consumer/adstra/{}/'.format(
-            date_input.replace('-', '/')
-        )
-
-    if not test:
-        external_table_loader.load_ref_gen_ref(runner.sqlContext)
-
-    payload_loader.load(runner, matching_path, ['claimId'], load_file_name=True)
-
-    normalized_df = runner.run_spark_script(
-        'normalize.sql',
-        [['date_input', date_input]],
-        return_output=True
-    )
-
-    events_df = postprocessor.compose(
-        schema_enforcer.apply_schema_func(schema),
-        postprocessor.nullify,
-        event_priv.filter
-    )(
-        normalized_df
-    )
-
-    events_df.createOrReplaceTempView('event_common_model')
-
-    if not test:
-        hvm_historical = postprocessor.coalesce_dates(
-            runner.sqlContext,
-            FEED_ID,
-            date(1900, 1, 1),
-            'HVM_AVAILABLE_HISTORY_START_DATE',
-            'EARLIST_VALID_SERVICE_DATE'
-        )
-
-        hdfs_utils.clean_up_output_hdfs('/staging/')
-        normalized_records_unloader.partition_and_rename(
-            spark, runner, 'events', 'event_common_model_v4.sql',
-            PROVIDER_NAME, 'event_common_model',
-            'source_record_date', date_input,
-            partition_value=date_input,
-            hvm_historical_date=datetime(hvm_historical.year, hvm_historical.month, hvm_historical.day)
-        )
-
-    if not test and not airflow_test:
-        logger.log_run_details(
-            provider_name='Adstra',
-            data_type=DataType.CONSUMER,
-            data_source_transaction_path=transaction_path,
-            data_source_matching_path=matching_path,
-            output_path=OUTPUT_PATH_PRODUCTION,
-            run_type=RunType.MARKETPLACE,
-            input_date=date_input
-        )
-
-
-def main(args):
-    spark, sql_context = init('Adstra')
-
-    runner = Runner(sql_context)
-
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
-
-    spark.stop()
-
-    if args.airflow_test:
-        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
-    else:
-        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
-        RunRecorder().record_run_details(additional_time=hadoop_time)
-
-
-if __name__ == '__main__':
+    # Parse input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
-    parser.add_argument('--airflow_test', default=False, action='store_true')
+    parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
-    main(args)
+    date_input = args.date
+    end_to_end_test = args.end_to_end_test
+
+    # Create and run driver
+    driver = MarketplaceDriver(
+        provider_name,
+        provider_partition_name,
+        source_table_schemas,
+        output_table_names_to_schemas,
+        date_input,
+        end_to_end_test,
+        use_ref_gen_values=True,
+        vdr_feed_id=214,
+        unload_partition_count=20,
+        output_to_transform_path=True
+    )
+
+    conf_parameters = {
+        'spark.default.parallelism': 2000,
+        'spark.sql.shuffle.partitions': 2000,
+        'spark.executor.memoryOverhead': 512,
+        'spark.driver.memoryOverhead': 512
+    }
+
+    driver.init_spark_context(conf_parameters=conf_parameters)
+    payload_loader.load(driver.runner, driver.matching_path, ['claimId'], load_file_name=True)
+    driver.transform()
+    driver.save_to_disk()
+    driver.stop_spark()
+    driver.log_run()
+    driver.copy_to_output_path()
+    logger.log('Done')
