@@ -24,7 +24,8 @@ pharmacyclaims_schema = schema.schema_structure
 
 
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/8451/pharmacyclaims/spark-output/'
-OUTPUT_PATH_PRODUCTION = os.path.join('s3://salusv/warehouse/parquet/', schema.output_directory)
+OUTPUT_PATH_PRODUCTION = os.path.join('s3://salusv/warehouse/transformed/', schema.output_directory)
+# OUTPUT_PATH_PRODUCTION = os.path.join('s3://salusv/warehouse/parquet/', schema.output_directory)
 
 
 def run(spark, runner, date_input, test=False, end_to_end_test=False):
