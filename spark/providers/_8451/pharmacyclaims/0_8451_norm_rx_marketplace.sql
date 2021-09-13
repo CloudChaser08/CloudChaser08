@@ -1,7 +1,7 @@
 SELECT
     MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
     /* MD5 added on 5/16/19 */
-    MD5(txn.med_phm_fill_fid)                                                               AS claim_id,
+    MD5(txn.med_phm_fill_code)                                                              AS claim_id,
     pay.hvid                                                                                AS hvid,
     CURRENT_DATE()                                                                          AS created,
     '09'                                                                                    AS model_version,
