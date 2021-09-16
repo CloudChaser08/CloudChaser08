@@ -1,12 +1,12 @@
 import argparse
-import spark.providers.change_pdx_dhc.custom_mart.transactional_schemas as source_table_schemas
+from spark.providers.change_pdx_dhc.custom_mart import transactional_schemas, transactional_schemas_v1
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.datamart.dhc.custom import schemas as dhc_custom_schemas
-import spark.helpers.postprocessor as postprocessor
 import spark.common.utility.logger as logger
-import pyspark.sql.functions as F
+from datetime import datetime
 
 hasDeliveryPath = True
+v_cutoff_date = "2021-04-25"
 
 if __name__ == "__main__":
 
@@ -26,6 +26,13 @@ if __name__ == "__main__":
     args = parser.parse_known_args()[0]
     date_input = args.date
     end_to_end_test = args.end_to_end_test
+
+    if datetime.strptime(date_input, '%Y-%m-%d') < datetime.strptime(v_cutoff_date, '%Y-%m-%d'):
+        logger.log('Historic Load schema')
+        source_table_schemas = transactional_schemas
+    else:
+        logger.log('Load using new schema with claim_number column')
+        source_table_schemas = transactional_schemas_v1
 
     # Create and run driver
     driver = MarketplaceDriver(
