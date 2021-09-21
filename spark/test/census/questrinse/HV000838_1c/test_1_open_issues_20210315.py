@@ -1,3 +1,6 @@
+import pytest
+pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
+
 from spark.test.census.questrinse.HV000838_1c.questrinse_helper import eval_test
 
 
@@ -12,7 +15,7 @@ def test_03(spark):
     """
     22
     """
-    eval_test('<1:5000             <1:270', '', '', '', '<1:5000             <1:270', spark)
+    eval_test('<1:5000             <1:270', '', '', '', '<1:5000 <1:270', spark)
 
 
 def test_04(spark):
@@ -22,7 +25,7 @@ def test_04(spark):
     eval_test(
         '> 0% - < 10%   Positive  / Favorable   >= 10%   Positive  / Unfavorable     0   Negative / Favorable', '',
         '', '',
-        '> 0% - < 10%   Positive  / Favorable   >= 10%   Positive  / Unfavorable     0   Negative / Favorable', spark)
+        '> 0% - < 10% Positive / Favorable >= 10% Positive / Unfavorable 0 Negative / Favorable', spark)
 
 
 def test_05(spark):

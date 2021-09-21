@@ -15,18 +15,16 @@ def eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru
             expect_passthru=expect_passthru
         )]).toDF()
 
-    df_post: Row = df.withColumn(colName="result_arr", col=parse_value(F.col("result_value"))).head(1)[0]
+    df_post: Row = df.withColumn(colName="result_arr",
+                                 col=parse_value(F.col("result_value")))\
+        .head(1)[0]
     operator: str
     numeric: str
     alpha: str
     passthru: str
     operator, numeric, alpha, passthru = df_post["result_arr"]
 
-    print(f"Result Value: '{result_value}'")
-    print(f"Expect Parsing: ['{expect_op}'\t'{expect_num}'\t'{expect_alpha}'\t'{expect_passthru}']")
-
-    assert operator == expect_op
-    assert numeric == expect_num
-    assert alpha == expect_alpha
-    assert passthru == expect_passthru
-
+    assert expect_op == operator
+    assert expect_num == numeric
+    assert expect_alpha == alpha
+    assert expect_passthru == passthru

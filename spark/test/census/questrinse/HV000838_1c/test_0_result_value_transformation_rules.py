@@ -1,3 +1,6 @@
+import pytest
+pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
+
 from spark.test.census.questrinse.HV000838_1c.questrinse_helper import eval_test
 
 
