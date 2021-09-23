@@ -32,7 +32,7 @@ def test_run(driver, spark):
     results = spark["sqlContext"].sql("select * from census_result").collect()
     assert len(results) == 1
     assert results[0]["hvid"] == "999"
-    assert results[0]["claimId"] == "10"
+    assert results[0]["subject_number"] == "927"
     assert results[0]["study"] == "3001"
 
 
@@ -59,5 +59,5 @@ def test_run_study_id_not_found(driver, spark):
     results = spark["sqlContext"].sql("select * from census_result").collect()
     assert len(results) == 1
     assert results[0]["hvid"] == "999"
-    assert results[0]["claimId"] == "10"
+    assert results[0]["subject_number"] == "927"
     assert results[0]["study"] == ""
