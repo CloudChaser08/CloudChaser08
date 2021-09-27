@@ -1,6 +1,3 @@
-"""
-cardinal hvXXXXXX mpi api matching payloads
-"""
 from spark.helpers.source_table import PayloadTable
 
 TABLE_CONF = {
