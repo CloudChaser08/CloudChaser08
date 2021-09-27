@@ -40,7 +40,8 @@ class ComplexExampleCensusDriver(CensusDriver):
             batch_id_path=_batch_id_path
         )
 
-        records_loader.load_and_clean_all_v2(self._runner, records_path, records_schemas, load_file_name=True)
+        records_loader.load_and_clean_all_v2(self._runner, records_path, records_schemas
+                                             , load_file_name=True)
         payload_loader.load_all(self._runner, matching_path, matching_payloads_schemas)
 
     # Example of overwriting the default transform function
