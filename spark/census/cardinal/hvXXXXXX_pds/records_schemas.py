@@ -1,3 +1,6 @@
+"""
+cardinal hvXXXX pds records schemas
+"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
