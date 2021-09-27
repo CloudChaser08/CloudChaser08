@@ -1,5 +1,4 @@
 from pyspark.sql import functions as f
-from pyspark.sql import catalog as c
 from pyspark.sql import Window
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -49,8 +48,10 @@ tables = {
 
 # s3-dist-cp --s3ServerSideEncryption --deleteOnSuccess --src /staging/ --dest
 # s3://salusv/warehouse/transformed/allscripts_dedup/
-s3_path_template = "s3://salusv/warehouse/transformed/allscripts_restate/emr/2017-08-23/{table}/part_hvm_vdr_feed_id=25/"
-s3_path_template_out = "s3://salusv/warehouse/transformed/allscripts_dedup/emr/2017-08-23/{table}/part_hvm_vdr_feed_id=25/"
+s3_path_template = \
+    "s3://salusv/warehouse/transformed/allscripts_restate/emr/2017-08-23/{table}/part_hvm_vdr_feed_id=25/"
+s3_path_template_out = \
+    "s3://salusv/warehouse/transformed/allscripts_dedup/emr/2017-08-23/{table}/part_hvm_vdr_feed_id=25/"
 
 staging_location = '/staging/'
 copy_command_template = 's3-dist-cp --s3ServerSideEncryption --src {src} --dest {dest}'

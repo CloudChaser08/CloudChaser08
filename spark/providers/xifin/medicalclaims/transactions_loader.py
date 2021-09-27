@@ -1,3 +1,6 @@
+"""
+transactions loaders.py
+"""
 import pyspark.sql.functions as FN
 from pyspark.sql import Window
 
@@ -199,7 +202,8 @@ def reconstruct_records(runner, partitions, part1=None, part2=None):
         payload = runner.sqlContext.table(table + '_payload')
 
         combined = transactional.join(payload, 'hvJoinKey', 'inner')\
-            .withColumn('full_accn_id', FN.concat(transactional['client_id'], FN.lit('_'), payload['patientId'])) \
+            .withColumn('full_accn_id', FN.concat(transactional['client_id'], FN.lit('_'),
+                                                  payload['patientId'])) \
             .withColumn('accn_id', payload['patientId'])
 
         if part1 is not None:

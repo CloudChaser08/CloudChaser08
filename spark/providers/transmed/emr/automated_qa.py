@@ -17,11 +17,13 @@ payload_loader.load(spark_sql_runner, TRANSMED_MATCHING_PAYLOAD_LOCATION, extra_
 
 source_data = {
     "cancerepisode'": sqlContext.read.csv(
-        TRANSMED_SRC_DATA_LOCATION + 'cancerepisode/', schema=transaction_schemas.cancerepisode, sep='\t'
+        TRANSMED_SRC_DATA_LOCATION + 'cancerepisode/',
+        schema=transaction_schemas.cancerepisode, sep='\t'
     ),
 
     "treatmentsite'": sqlContext.read.csv(
-        TRANSMED_SRC_DATA_LOCATION + 'treatmentsite/', schema=transaction_schemas.treatmentsite, sep='\t'
+        TRANSMED_SRC_DATA_LOCATION + 'treatmentsite/',
+        schema=transaction_schemas.treatmentsite, sep='\t'
     ),
 
     "matching_payload": sqlContext.sql('select * from matching_payload')
@@ -30,9 +32,12 @@ source_data = {
 # load target data
 clinical_observation_target_data = \
     sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('clinical_observation'))
-diagnosis_target_data = sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('diagnosis'))
-procedure_target_data = sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('procedure'))
-lab_result_target_data = sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('lab_result'))
+diagnosis_target_data = \
+    sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('diagnosis'))
+procedure_target_data = \
+    sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('procedure'))
+lab_result_target_data = \
+    sqlContext.read.parquet(TRANSMED_TARGET_DATA_LOCATION_TEMPLATE.format('lab_result'))
 
 # create datafeed instances
 clinical_observation_datafeed = datafeed.emr_clinical_observation_datafeed(

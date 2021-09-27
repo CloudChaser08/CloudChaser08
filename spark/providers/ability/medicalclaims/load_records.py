@@ -9,7 +9,8 @@ CLAIM_AFFILIATION_FIX_FILE = \
 def load(runner, input_path_prefix, product, file_date, test=False):
 
     df = records_loader \
-        .load(runner, input_path_prefix + 'record.vwheader*', TABLES['transactional_header'], 'csv', '|')
+        .load(runner, input_path_prefix + 'record.vwheader*',
+              TABLES['transactional_header'], 'csv', '|')
 
     postprocessor \
         .compose(postprocessor.trimmify, lambda x: postprocessor.nullify(x, null_vals=['', 'NULL']))(df) \
