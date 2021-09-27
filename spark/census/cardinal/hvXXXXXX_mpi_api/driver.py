@@ -30,15 +30,11 @@ class CardinalAPICensusDriver(CensusDriver):
     <deid_payload>|<job_id>|<client_id>|<b64encode callback data>
 
 
-    Transform
-    ---
-    Execute 1_normalize.sql which transforms the data from the payload and creates a resulting dataframe.
-    The payload is joined with the records file where job_id = hvJoinKey.
+    Transform --- Execute 1_normalize.sql which transforms the data from the payload and creates
+    a resulting dataframe. The payload is joined with the records file where job_id = hvJoinKey.
 
-    Save
-    ---
-    Save the resulting dataframe from transformation to the hdfs, or to the local disk if in test mode.
-    The file saved contains rows of json, where an example is:
+    Save --- Save the resulting dataframe from transformation to the hdfs, or to the local disk
+    if in test mode. The file saved contains rows of json, where an example is:
 
     {
         "hvid": <obfuscated hvid>,

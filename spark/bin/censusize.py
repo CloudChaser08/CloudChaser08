@@ -1,3 +1,6 @@
+"""
+bin censusize
+"""
 import argparse
 from datetime import datetime
 import importlib

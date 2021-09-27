@@ -1,3 +1,6 @@
+"""
+compare
+"""
 import argparse
 import sys
 
