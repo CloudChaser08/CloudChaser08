@@ -66,7 +66,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         weight_lb=[
             TransformFunction(post_norm_cleanup.clean_up_vital_sign,
                               ['const_weight', 'weight_lb', 'const_weight_pounds', 'ptnt_gender_cd'
-                                  , 'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
+                               , 'ptnt_age_num', 'ptnt_birth_yr', 'const_null', 'enc_date'])
         ],
         height_in=[
             TransformFunction(post_norm_cleanup.clean_up_vital_sign,

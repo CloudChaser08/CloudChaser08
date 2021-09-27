@@ -151,7 +151,7 @@ def partition_and_rename(
     runner.run_spark_script(common_dirpath + common_model_script, [
         ['table_name', 'final_unload', False],
         ['properties'
-            , constants.unload_properties_template.format(provider_partition, date_partition, staging_dir), False],
+         , constants.unload_properties_template.format(provider_partition, date_partition, staging_dir), False],
         ['external', '', False],
         ['additional_columns', '', False]
     ])

@@ -10,37 +10,37 @@ import pyspark.sql.functions as FN
 
 TABLES = \
     ['address', 'clinicpreference', 'dialysistraining', 'dialysistreatment',
-        'facilityadmitdischarge', 'hospitalization', 'immunization', 'insurance',
-        'labidlist', 'labpanelsdrawn', 'labresult', 'medication', 'medicationgroup',
-        'modalitychangehistorycrownweb', 'nursinghomehistory', 'patientaccess',
-        'patientaccess_examproc', 'patientaccess_otheraccessevent',
-        'patientaccess_placedrecorded', 'patientaccess_removed', 'patientallergy',
-        'patientcms2728', 'patientcomorbidityandtransplantstate', 'patientdata',
-        'patientdiagcodes', 'patientdialysisprescription', 'patientdialysisrxhemo',
-        'patientdialysisrxpd', 'patientdialysisrxpdexchanges', 'patientevent',
-        'patientfluidweightmanagement', 'patientheighthistory', 'patientinfection',
-        'patientinfection_laborganism', 'patientinfection_laborganismdrug',
-        'patientinfection_labresultculture', 'patientinfection_medication',
-        'patientinstabilityhistory', 'patientmasterscheduleheader',
-        'patientmedadministered', 'patientmednotgiven', 'patientmedprescription',
-        'patientstatushistory', 'problemlist', 'sodiumufprofile', 'stategeo',
-        'zipgeo'
+     'facilityadmitdischarge', 'hospitalization', 'immunization', 'insurance',
+     'labidlist', 'labpanelsdrawn', 'labresult', 'medication', 'medicationgroup',
+     'modalitychangehistorycrownweb', 'nursinghomehistory', 'patientaccess',
+     'patientaccess_examproc', 'patientaccess_otheraccessevent',
+     'patientaccess_placedrecorded', 'patientaccess_removed', 'patientallergy',
+     'patientcms2728', 'patientcomorbidityandtransplantstate', 'patientdata',
+     'patientdiagcodes', 'patientdialysisprescription', 'patientdialysisrxhemo',
+     'patientdialysisrxpd', 'patientdialysisrxpdexchanges', 'patientevent',
+     'patientfluidweightmanagement', 'patientheighthistory', 'patientinfection',
+     'patientinfection_laborganism', 'patientinfection_laborganismdrug',
+     'patientinfection_labresultculture', 'patientinfection_medication',
+     'patientinstabilityhistory', 'patientmasterscheduleheader',
+     'patientmedadministered', 'patientmednotgiven', 'patientmedprescription',
+     'patientstatushistory', 'problemlist', 'sodiumufprofile', 'stategeo',
+     'zipgeo'
      ]
 
 JOIN_TO_PATIENT_DATA = \
     ['address', 'dialysistraining', 'dialysistreatment',
-        'facilityadmitdischarge', 'hospitalization', 'immunization', 'insurance',
-        'labpanelsdrawn', 'labresult', 'nursinghomehistory',
-        'patientaccess', 'patientaccess_examproc', 'patientaccess_otheraccessevent',
-        'patientaccess_placedrecorded', 'patientaccess_removed', 'patientallergy',
-        'patientcms2728', 'patientcomorbidityandtransplantstate',
-        'patientdiagcodes', 'patientdialysisprescription',
-        'patientevent', 'patientfluidweightmanagement', 'patientheighthistory',
-        'patientinfection', 'patientinfection_laborganism', 'patientinfection_laborganismdrug',
-        'patientinfection_labresultculture', 'patientinfection_medication',
-        'patientinstabilityhistory', 'patientmasterscheduleheader',
-        'patientmedadministered', 'patientmednotgiven', 'patientmedprescription',
-        'patientstatushistory', 'problemlist'
+     'facilityadmitdischarge', 'hospitalization', 'immunization', 'insurance',
+     'labpanelsdrawn', 'labresult', 'nursinghomehistory',
+     'patientaccess', 'patientaccess_examproc', 'patientaccess_otheraccessevent',
+     'patientaccess_placedrecorded', 'patientaccess_removed', 'patientallergy',
+     'patientcms2728', 'patientcomorbidityandtransplantstate',
+     'patientdiagcodes', 'patientdialysisprescription',
+     'patientevent', 'patientfluidweightmanagement', 'patientheighthistory',
+     'patientinfection', 'patientinfection_laborganism', 'patientinfection_laborganismdrug',
+     'patientinfection_labresultculture', 'patientinfection_medication',
+     'patientinstabilityhistory', 'patientmasterscheduleheader',
+     'patientmedadministered', 'patientmednotgiven', 'patientmedprescription',
+     'patientstatushistory', 'problemlist'
      ]
 
 ADVANCE_DIRECTIVE_TABLE = 'advancedirective'

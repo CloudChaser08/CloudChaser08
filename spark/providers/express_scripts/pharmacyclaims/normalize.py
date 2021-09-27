@@ -186,7 +186,7 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
             for month in list_of_months.values():
                 subprocess.check_call(
                     ['aws', 's3', 'mv', '--recursive', normalized_output_provider_path + date_part.format(month)
-                        , tmp_path + date_part.format(month)]
+                     , tmp_path + date_part.format(month)]
                 )
         driver.copy_to_output_path()
         if not first_run:
