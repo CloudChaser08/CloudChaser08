@@ -1,6 +1,3 @@
-"""
-update reference db
-"""
 import argparse
 import os
 import re
@@ -129,15 +126,14 @@ def perform_db_updates(_mapping):
 def write_to_s3(_mapping):
     """ Write entries to a file daglist.prod.txt and upload to S3.
 
-    The reason for writing to s3 is because I have not figured out how to get Jenkins to connect
-    to postgres from the groovy script box which is in an sanboxed environment, however,
-    I was able to get jenkins to read content from s3.
+    The reason for writing to s3 is because I have not figured out how to
+    get Jenkins to connect to postgres from the groovy script box which is in an sanboxed environment,
+    however, I was able to get jenkins to read content from s3.
 
     The file is a list of dags in dewey, along with paramaters attached. This data will pre-populate
     the jenkins job with dags as choices in a dropdown box.
 
-    NOTE: although the Jenkins user has access to write to this S3 bucket, you may not on your
-    laptop.
+    NOTE: although the Jenkins user has access to write to this S3 bucket, you may not on your laptop.
 
     """
     s3_client = boto3.resource('s3')
