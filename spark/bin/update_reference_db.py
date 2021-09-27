@@ -163,7 +163,7 @@ if __name__ == '__main__':
 
     spark_routines = extract_routine_files('spark/providers/',
                                            file_matching_pattern='sparkNormalize*')
-    census_routines = extract_routine_files('spark/census/', 
+    census_routines = extract_routine_files('spark/census/',
                                             file_matching_pattern='driver*')
     standard_routines = extract_routine_files('spark/delivery/',
                                               file_matching_pattern='sparkExtract*')
