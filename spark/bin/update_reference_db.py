@@ -1,3 +1,6 @@
+"""
+update reference DB
+"""
 import argparse
 import os
 import re
@@ -14,9 +17,9 @@ def extract_routine_files(root_dir='.', file_matching_pattern='sparkNormalize*')
 
     Crawl the dewey package finding all files that match the specified pattern.
 
-    Args:
-        root_dir (string): the root directory to begin crawling. this should either be spark/providers or spark/census
-        file_matching_pattern (string): the regex to find our routine files
+    Args: root_dir (string): the root directory to begin crawling. this should either be
+    spark/providers or spark/census file_matching_pattern (string): the regex to find our routine
+    files
 
     Returns:
         list: the list of file names
@@ -158,9 +161,12 @@ if __name__ == '__main__':
                         action='store_true',
                         default=True)
 
-    spark_routines = extract_routine_files('spark/providers/', file_matching_pattern='sparkNormalize*')
-    census_routines = extract_routine_files('spark/census/', file_matching_pattern='driver*')
-    standard_routines = extract_routine_files('spark/delivery/', file_matching_pattern='sparkExtract*')
+    spark_routines = extract_routine_files('spark/providers/',
+                                           file_matching_pattern='sparkNormalize*')
+    census_routines = extract_routine_files('spark/census/', 
+                                            file_matching_pattern='driver*')
+    standard_routines = extract_routine_files('spark/delivery/',
+                                              file_matching_pattern='sparkExtract*')
     mapping = create_mapping(spark_routines, census_routines, standard_routines)
     write_to_s3(mapping)
     perform_db_updates(mapping)
