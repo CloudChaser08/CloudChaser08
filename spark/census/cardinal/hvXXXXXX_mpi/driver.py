@@ -27,7 +27,8 @@ class CardinalMPICensusDriver(CensusDriver):
         # column of all nulls so the routine doesn't break
         if self._spark.table('matching_payload').where('topcandidates IS NOT NULL').count() == 0:
             # pylint: disable=not-callable
-            null_array_column = udf(lambda x: None, ArrayType(ArrayType(StringType(), True), True))(lit(None))
+            null_array_column = udf(lambda x: None, ArrayType(ArrayType(StringType(), True), True))(
+                lit(None))
             self._spark.table('matching_payload') \
                 .withColumn('topcandidates', null_array_column) \
                 .createOrReplaceTempView('matching_payload')
