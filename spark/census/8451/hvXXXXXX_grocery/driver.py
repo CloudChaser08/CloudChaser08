@@ -1,6 +1,3 @@
-"""
-8451 driver
-"""
 import importlib
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.records_loader as records_loader
@@ -113,7 +110,8 @@ class Grocery8451CensusDriver(CensusDriver):
         )
         self._clean_up_output(output_path)
         log("Repartition and write files to hdfs")
-        dataframe.repartition(self.NUM_PARTITIONS).write.csv(output_path, sep="|", header=True, compression="gzip")
+        dataframe.repartition(self.NUM_PARTITIONS).write.csv(output_path, sep="|", header=True,
+                                                             compression="gzip")
 
         # rename output files to desired name this step removes the spark hash added to the name
         # by default e.g. part-00081-35b44b47-2b52-4430-a12a-c4ed31c7bfd5-c000.psv.gz becomes

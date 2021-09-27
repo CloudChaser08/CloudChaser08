@@ -1,6 +1,3 @@
-"""
-cardinal hvXXXXX driver
-"""
 import subprocess
 
 from pyspark.sql.types import ArrayType, StringType
@@ -37,7 +34,8 @@ class CardinalMPICensusDriver(CensusDriver):
         # by quotes (spark.write.csv behavior in Spark 2.3 or lower)
         self._spark.sql('SET hive.exec.compress.output=true')
         self._spark.sql('SET mapreduce.output.fileoutputformat.compress=true')
-        self._spark.sql('SET mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec')
+        self._spark.sql(
+            'SET mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec')
         self._spark.sql('DROP TABLE IF EXISTS cardinal_mpi_model')
 
     def save(self, dataframe, batch_date, batch_id, chunk_idx=None, header=True):
