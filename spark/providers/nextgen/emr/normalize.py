@@ -195,7 +195,7 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
     logging.debug("Normalized lab order")
 
     normalized['lab_result'] = schema_enforcer.apply_schema(
-            runner.run_spark_script('normalize_lab_result_1.sql', [
+        runner.run_spark_script('normalize_lab_result_1.sql', [
                 ['min_date', min_date],
                 ['max_date', max_date]
             ], return_output=True), lab_result_schema, columns_to_keep=['part_mth']) \

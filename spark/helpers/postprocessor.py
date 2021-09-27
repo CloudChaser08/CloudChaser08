@@ -156,8 +156,8 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None,
         logging.error(("Error occurred while loading whitelist results for domain_name = '{}', "
                        "check to make sure ref_gen_ref was loaded before calling this "
                        "function.").format(
-            domain_name
-        ))
+                          domain_name
+                      ))
         raise
 
     if not values:
