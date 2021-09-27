@@ -12,7 +12,6 @@ def split_into_chunks(input_list, number_of_chunks):
     for i in range(0, len(input_list), number_of_chunks):
         yield input_list[i:i + number_of_chunks]
 
-
 def create_driver(census_module, driver_kwargs):
     """Create a CensusDriver-derived instance from a custom census module"""
     mod = importlib.import_module(census_module)
@@ -28,7 +27,6 @@ def create_driver(census_module, driver_kwargs):
 
     return None
 
-
 def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=None,
          census_module=None, end_to_end_test=False, test=False, no_row_id=False,
          no_header=False, num_input_files=-1):
@@ -42,8 +40,7 @@ def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=
         driver = create_driver(census_module, locals())
 
         if not driver:
-            raise AttributeError(
-                "Module {} does not contain a CensusDriver subclass".format(census_module))
+            raise AttributeError("Module {} does not contain a CensusDriver subclass".format(census_module))
     else:
         census_module = 'spark.census.{}.{}.driver'.format(client_name, opportunity_id)
         try:
@@ -55,16 +52,14 @@ def main(batch_date, batch_id=None, client_name=None, opportunity_id=None, salt=
             driver = create_driver(census_module, locals())
         else:
             driver = CensusDriver(client_name, opportunity_id, salt=salt, no_row_id=no_row_id,
-                                  end_to_end_test=end_to_end_test, test=test,
-                                  base_package=census_module.replace('.driver', ''))
+                                end_to_end_test=end_to_end_test, test=test, base_package=census_module.replace('.driver', ''))
 
     batch_date = datetime.strptime(batch_date, '%Y-%m-%d').date()
     header = not no_header
 
     if num_input_files > 0:
         all_batch_files = driver.get_batch_records_files(batch_date, batch_id)
-        for chunk_idx, chunk_files in enumerate(
-                split_into_chunks(all_batch_files, num_input_files)):
+        for chunk_idx, chunk_files in enumerate(split_into_chunks(all_batch_files, num_input_files)):
             driver.load(batch_date, batch_id, chunk_records_files=chunk_files)
             df = driver.transform()
             driver.save(df, batch_date, batch_id, chunk_idx, header=header)
@@ -92,8 +87,7 @@ if __name__ == "__main__":
     parser.add_argument('--no-header', default=False, action='store_true',
                         help="If provided, will omit the header row from the output")
     parser.add_argument('--num_input_files', type=int, default=-1
-                        ,
-                        help="Number of input files in each chunk of census data we will process in a loop")
+                        , help="Number of input files in each chunk of census data we will process in a loop")
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     parser.add_argument('--test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
