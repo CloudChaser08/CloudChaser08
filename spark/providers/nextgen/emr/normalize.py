@@ -59,8 +59,7 @@ OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/emr/2017-08-23/'
 def run(spark, runner, date_input, input_file_path, payload_path, normalize_encounter=True,
         demo_ref=S3_DEMOGRAPHICS_REFERENCE, enc_ref=S3_ENCOUNTER_REFERENCE,
         test=False, airflow_test=False):
-    runner.sqlContext.sql(
-        'SET mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec')
+    runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec')
     runner.sqlContext.sql('SET hive.exec.compress.output=true')
     runner.sqlContext.sql('SET mapreduce.output.fileoutputformat.compress=true')
 
@@ -227,7 +226,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
     # script in order to ensure that when we run a distinct to remove
     # duplicates, we maintain at least 1 normalized row per source row
     normalized['medication'] = p1.union(p2).distinct().drop('row_num') \
-        .withColumn('medctn_diag_dt', FN.coalesce(FN.col('medctn_ord_dt'), FN.col('enc_dt')))  # For whitelisting purposes
+        .withColumn('medctn_diag_dt', FN.coalesce(FN.col('medctn_ord_dt'), FN.col('enc_dt')))
+    # For whitelisting purposes
     logging.debug("Normalized medication")
 
     runner.run_spark_script('normalize_provider_order_prenorm.sql', [
@@ -238,7 +238,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
         ['min_date', min_date],
         ['max_date', max_date]
     ], return_output=True) \
-        .withColumn('prov_ord_diag_dt', FN.coalesce(FN.col('prov_ord_dt'), FN.col('enc_dt')))  # For whitelisting purposes
+        .withColumn('prov_ord_diag_dt', FN.coalesce(FN.col('prov_ord_dt'), FN.col('enc_dt')))
+    # For whitelisting purposes
     logging.debug("Normalized provider order")
 
     cln_obs1 = runner.run_spark_script('normalize_clinical_observation_1.sql', [
