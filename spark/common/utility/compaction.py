@@ -175,7 +175,7 @@ class Compaction:
         """
         logging.info("...calculating number of partitions for %s", compaction_plan['backup_path'])
         repartition_count = get_optimal_s3_partition_count(compaction_plan['backup_path'],
-                                                        PARQUET_FILE_SIZE)
+                                                           PARQUET_FILE_SIZE)
 
         logging.info("...will partition into %s files", repartition_count)
         spark_session.read.parquet(compaction_plan['backup_path']).repartition(repartition_count).write \
@@ -376,7 +376,7 @@ class Compaction:
                         ends_with=f"-{file_uuid}.c000.gz.parquet")
 
                     files_already_moved_full_paths = [os.path.join(plan['source_path'], f) for f in
-                                                    files_already_moved]
+                                                      files_already_moved]
 
                     self._s3_bulk_delete(files_already_moved_full_paths)
 

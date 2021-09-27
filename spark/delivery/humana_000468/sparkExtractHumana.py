@@ -99,7 +99,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     group_dfs = [
         payload_loader.load(runner, matching_path_template.format(group_id),
                             ['matchStatus', 'invalidReason'], return_output=True, partitions=10).select(
-            'hvid', 'matchStatus', 'invalidReason').withColumn('humana_group_id', F.lit(group_id))
+                                'hvid', 'matchStatus', 'invalidReason').withColumn('humana_group_id', F.lit(group_id))
         for group_id in group_ids
     ]
 
@@ -108,7 +108,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     all_patient_dfs = [
         payload_loader.load(runner, matching_path_template.format(group_id),
                             ['matchStatus'], return_output=True, partitions=10).select(
-            'hvid', 'matchStatus').withColumn('humana_group_id', F.lit(group_id))
+                                'hvid', 'matchStatus').withColumn('humana_group_id', F.lit(group_id))
         for group_id in group_ids
     ]
 

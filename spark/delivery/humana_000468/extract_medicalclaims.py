@@ -19,14 +19,14 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
 
     ext = ext \
         .where((claims['date_service'] <= end_dt.isoformat()) & (
-                claims['date_service'] >= start_dt.isoformat())) \
+            claims['date_service'] >= start_dt.isoformat())) \
         .select(*[claims[c] for c in claims.columns] +
-                 [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
+                [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
 
     # Hashing
     ext = ext \
         .withColumn('hvid', F.md5(
-        F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(repr(timestamp))
+            F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(repr(timestamp))
                  , F.col('humana_group_id')))) \
         .withColumn('prov_rendering_npi', F.md5(F.concat(F.col('prov_rendering_npi'), F.lit('npi')
                                                          , F.lit('hv000468'), F.lit(repr(timestamp))

@@ -1,4 +1,5 @@
-from pyspark.sql.types import StructType, StructField, LongType, FloatType, IntegerType, StringType, DateType
+from pyspark.sql.types import StructType, StructField, LongType, FloatType, IntegerType, StringType, \
+    DateType
 from spark.common.schema import Schema
 
 schema_v1 = StructType([
@@ -559,11 +560,11 @@ schemas = {
                         output_directory=output_directory,
                         distribution_key=distribution_key),
     'schema_v5_daily': Schema(name='schema_v5_daily',
-                        data_type=data_type,
-                        schema_structure=schema_v5_daily,
-                        output_directory=output_directory_daily,
-                        distribution_key=distribution_key,
-                        date_partition_column='crt_dt'),
+                              data_type=data_type,
+                              schema_structure=schema_v5_daily,
+                              output_directory=output_directory_daily,
+                              distribution_key=distribution_key,
+                              date_partition_column='crt_dt'),
     'schema_v6': Schema(name='schema_v6',
                         data_type=data_type,
                         schema_structure=schema_v6,
@@ -575,4 +576,3 @@ schemas = {
                         output_directory=data_type + '/2021-07-21/summary',
                         distribution_key=distribution_key)
 }
-

@@ -152,7 +152,7 @@ class Covid19LabBuilder:
                                 ['list_of_part_mth', list_of_part_mth],
                                 ['nbr_of_buckets', str(nbr_of_buckets)]
                             ], source_file_path=self.sql_path, return_output=True).repartition(
-                            'part_mth', 'claim_bucket_id').createOrReplaceTempView('lab_collect_tests')
+                                'part_mth', 'claim_bucket_id').createOrReplaceTempView('lab_collect_tests')
 
                         self.runner.run_spark_script(
                             '2_lab_collect_results2575.sql', [
@@ -160,7 +160,7 @@ class Covid19LabBuilder:
                                 ['list_of_part_mth', list_of_part_mth],
                                 ['nbr_of_buckets', str(nbr_of_buckets)]
                             ], source_file_path=self.sql_path, return_output=True).repartition(
-                            'part_mth', 'claim_bucket_id').cache().createOrReplaceTempView('lab_collect_results2575')
+                                'part_mth', 'claim_bucket_id').cache().createOrReplaceTempView('lab_collect_results2575')
 
                     if self.b_run_lab_build_all_tests:
                         lab_build_all_tests_view = 'lab_build_all_tests'
@@ -184,13 +184,13 @@ class Covid19LabBuilder:
                         lab_collect_tests_custom_view = 'lab_collect_tests_custom'
                         self.runner.run_spark_script(collect_custom_script, source_file_path=self.sql_path,
                                                      return_output=True).createOrReplaceTempView(
-                            lab_collect_tests_custom_view)
+                                                         lab_collect_tests_custom_view)
                         output_table = self.spark.table(lab_collect_tests_custom_view)
 
                         output_table.repartition(
                             'part_mth', 'claim_bucket_id').write.parquet(
-                            self._lab_fact_all_tests_custom_interim, compression='gzip', mode='append'
-                            , partitionBy=self._lab_partitions)
+                                self._lab_fact_all_tests_custom_interim, compression='gzip', mode='append'
+                                , partitionBy=self._lab_partitions)
                         self.b_custom_interim = True
                         self.runner.run_spark_query('drop view {}'.format(lab_collect_tests_custom_view))
                     # --------------------interim table end------------------------------------
@@ -205,15 +205,15 @@ class Covid19LabBuilder:
                 self.runner.run_spark_script('4_lab_build_all_tests_custom.sql'
                                              , source_file_path=self.sql_path
                                              , return_output=True).createOrReplaceTempView(
-                    lab_build_all_tests_custom_view)
+                                                 lab_build_all_tests_custom_view)
                 if dmutil.has_data(self.spark, lab_build_all_tests_custom_view):
                     output_table = self.spark.table(lab_build_all_tests_custom_view)
                     logger.log("        -loading: writing all_tests_custom")
 
                     output_table.repartition(
                         'part_mth', 'claim_bucket_id').write.parquet(
-                        self._lab_fact_all_tests_custom, compression='gzip', mode='append'
-                        , partitionBy=self._lab_partitions)
+                            self._lab_fact_all_tests_custom, compression='gzip', mode='append'
+                            , partitionBy=self._lab_partitions)
                     self.runner.run_spark_query('drop view {}'.format(lab_build_all_tests_custom_view))
                     self.runner.run_spark_query('drop view {}'.format(lab_collect_all_tests_custom_view))
                     hdfs_utils.clean_up_output_hdfs(self._lab_fact_all_tests_custom_interim)
@@ -293,7 +293,7 @@ class Covid19LabBuilder:
                             ['claim_bucket_id_low_10', '41'], ['claim_bucket_id_up_10', '50'],
                             ['claim_bucket_id_low_11', '51'], ['claim_bucket_id_up_11', str(last_bucket_id)]
                         ], source_file_path=self.sql_path, return_output=True).createOrReplaceTempView(
-                        lab_build_covid_tests_custom_view)
+                            lab_build_covid_tests_custom_view)
 
                     output_table = self.spark.table(lab_build_covid_tests_custom_view)
 
@@ -372,7 +372,7 @@ class Covid19LabBuilder:
                             '6a_lab_cleanse_covid_tests_custom_hist.sql', [
                                 ['list_of_part_mth', list_of_part_mth]
                             ], source_file_path=self.sql_path, return_output=True).repartition(
-                            'part_mth', 'part_provider'), lab_cleanse_covid_tests_delta_custom_df)
+                                'part_mth', 'part_provider'), lab_cleanse_covid_tests_delta_custom_df)
 
                     lab_cleanse_covid_tests_all_custom_df\
                         .createOrReplaceTempView(lab_cleanse_covid_tests_all_custom_view)

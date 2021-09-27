@@ -75,8 +75,8 @@ def get_external_table_location(spark, db, table):
     """
     location_df_list = spark.sql(
         "desc formatted {}.{}".format(db, table)).filter(
-        f.col("col_name") == "Location").select(
-        f.col("data_type")).collect()
+            f.col("col_name") == "Location").select(
+            f.col("data_type")).collect()
 
     location = str([x.data_type for x in location_df_list][0])
     return location
