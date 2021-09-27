@@ -166,8 +166,7 @@ if __name__ == "__main__":
             ['VDR_FILE_DT', str(driver.date_input), False],
             ['AVAILABLE_START_DATE', driver.available_start_date, False],
             ['EARLIEST_SERVICE_DATE', driver.earliest_service_date, False],
-            ['CHUNK', chunk, False]],
-            directory_path=driver.provider_directory_path
+            ['CHUNK', chunk, False]], directory_path=driver.provider_directory_path
         )
 
         driver.save_to_disk()

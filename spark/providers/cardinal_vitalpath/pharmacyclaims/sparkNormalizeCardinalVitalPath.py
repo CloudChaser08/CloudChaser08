@@ -61,7 +61,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         patient_matching_path = \
             's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/patient_passthrough/'.format(
-            date_input.replace('-', '/')[:-3]
+                date_input.replace('-', '/')[:-3]
         )
         medical_input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/med/'.format(
             date_input.replace('-', '/')[:-3]

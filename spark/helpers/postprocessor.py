@@ -82,7 +82,7 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
                 "Error occurred while loading min_cap data for hvm_vdr_feed_id='{}' AND "
                 "gen_ref_domn_nm = '{}', "
                 "check to make sure ref_gen_ref was loaded before calling this function.").format(
-                vdr_feed_id, domain_name
+                    vdr_feed_id, domain_name
             ))
             raise
 

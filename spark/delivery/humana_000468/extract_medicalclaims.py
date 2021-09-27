@@ -27,7 +27,7 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
     ext = ext \
         .withColumn('hvid', F.md5(
             F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(repr(timestamp))
-                 , F.col('humana_group_id')))) \
+                    , F.col('humana_group_id')))) \
         .withColumn('prov_rendering_npi', F.md5(F.concat(F.col('prov_rendering_npi'), F.lit('npi')
                                                          , F.lit('hv000468'), F.lit(repr(timestamp))
                                                          , F.col('humana_group_id')))) \
