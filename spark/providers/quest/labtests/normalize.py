@@ -1,3 +1,6 @@
+"""
+quest normalize
+"""
 #! /usr/bin/python
 import argparse
 import time
@@ -71,9 +74,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     hvm_available_history_date = \
-        postprocessor.get_gen_ref_date(runner.sqlContext, vendor_feed_id, "HVM_AVAILABLE_HISTORY_START_DATE")
+        postprocessor.get_gen_ref_date(runner.sqlContext, vendor_feed_id,
+                                       "HVM_AVAILABLE_HISTORY_START_DATE")
     earliest_valid_service_date = \
-        postprocessor.get_gen_ref_date(runner.sqlContext, vendor_feed_id, "EARLIEST_VALID_SERVICE_DATE")
+        postprocessor.get_gen_ref_date(runner.sqlContext, vendor_feed_id,
+                                       "EARLIEST_VALID_SERVICE_DATE")
     hvm_historical_date = hvm_available_history_date if hvm_available_history_date else \
         earliest_valid_service_date if earliest_valid_service_date else datetime.date(1901, 1, 1)
     max_date = date_input
@@ -91,7 +96,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # not all dates have an augmented payload - create an empty one if
     # no payload can be found
     try:
-        payload_loader.load(runner, prov_matching_path, ['claimId'], table_name='augmented_with_prov_attrs_mp')
+        payload_loader.load(runner, prov_matching_path, ['claimId'],
+                            table_name='augmented_with_prov_attrs_mp')
     except:
         logging.warn("No augmented payload file found!")
 
@@ -139,10 +145,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ),
         lab_priv.filter,
         postprocessor.apply_date_cap(
-            runner.sqlContext, 'date_service', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'
+            runner.sqlContext, 'date_service', max_date, vendor_feed_id,
+            'EARLIEST_VALID_SERVICE_DATE'
         ),
         postprocessor.apply_date_cap(
-            runner.sqlContext, 'date_specimen', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'
+            runner.sqlContext, 'date_specimen', max_date, vendor_feed_id,
+            'EARLIEST_VALID_SERVICE_DATE'
         )
     )(
         runner.sqlContext.sql('select * from lab_common_model')

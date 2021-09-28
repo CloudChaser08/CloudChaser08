@@ -1,3 +1,6 @@
+"""
+normalize
+"""
 import argparse
 from datetime import datetime
 import spark.helpers.hdfs_utils as hdfs_utils
@@ -48,7 +51,8 @@ if __name__ == "__main__":
     b_transactions_v1 = v_cutoff_date <= date_input < v_cutoff_trans_schema_refactor_sql
     b_transactions_v2 = v_cutoff_trans_schema_refactor_sql <= date_input < v_cutoff_factlabtest_date
 
-    if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
+    if datetime.strptime(date_input, '%Y-%m-%d').date()\
+            < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
         logger.log('Historic Load schema with ddid column')
         source_table_schemas = historic_source_table_schemas
     elif b_transactions_v1:
@@ -92,10 +96,12 @@ if __name__ == "__main__":
 
     logger.log('Apply custom nullify trimmify')
     for table in driver.source_table_schema.TABLE_CONF:
-        cleaned_df = postprocessor.nullify(postprocessor.trimmify(driver.spark.table(table)), ['NULL', 'Null', 'null', 'unknown', 'Unknown', 'UNKNOWN', '19000101', ''])
+        cleaned_df = postprocessor.nullify(postprocessor.trimmify(driver.spark.table(table)),
+                                           ['NULL', 'Null', 'null', 'unknown', 'Unknown', 'UNKNOWN', '19000101', ''])
         cleaned_df.createOrReplaceTempView(table)
 
-    if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date() or b_transactions_v1:
+    if datetime.strptime(date_input, '%Y-%m-%d').date()\
+            < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date() or b_transactions_v1:
         logger.log('Loading external table: ref_ndc_ddid')
         external_table_loader.load_analytics_db_table(
             driver.sql_context, 'dw', 'ref_ndc_ddid', 'ref_ndc_ddid'
@@ -106,7 +112,8 @@ if __name__ == "__main__":
         hdfs_utils.clean_up_output_hdfs(v_ref_hdfs_output_path + table_name)
         driver.spark.table(table_name).repartition(1).write.parquet(
             v_ref_hdfs_output_path + table_name, compression='gzip', mode='append')
-        driver.spark.read.parquet(v_ref_hdfs_output_path + table_name).cache().createOrReplaceTempView(table_name)
+        driver.spark.read.parquet(v_ref_hdfs_output_path + table_name).cache()\
+            .createOrReplaceTempView(table_name)
     else:
         logger.log('Loading external table: ref_ndc_code')
         external_table_loader.load_analytics_db_table(
@@ -118,7 +125,8 @@ if __name__ == "__main__":
         hdfs_utils.clean_up_output_hdfs(v_ref_hdfs_output_path + table_name)
         driver.spark.table(table_name).repartition(1).write.parquet(
             v_ref_hdfs_output_path + table_name, compression='gzip', mode='append')
-        driver.spark.read.parquet(v_ref_hdfs_output_path + table_name).cache().createOrReplaceTempView(table_name)
+        driver.spark.read.parquet(v_ref_hdfs_output_path + table_name).cache()\
+            .createOrReplaceTempView(table_name)
 
     driver.transform()
     driver.save_to_disk()

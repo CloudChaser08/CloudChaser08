@@ -1,3 +1,6 @@
+"""
+dedup
+"""
 import pyspark.sql.functions as FN
 from pyspark.sql import Window
 
@@ -21,10 +24,12 @@ def deduplicate(runner, test=False):
     # on which the file was sent to us
     cols1 = demographics_union.columns
     cols1.remove('referencedatetime')
-    demographics_union = demographics_union.groupBy(*cols1).agg(FN.max('referencedatetime').alias('referencedatetime'))
+    demographics_union = demographics_union.\
+        groupBy(*cols1).agg(FN.max('referencedatetime').alias('referencedatetime'))
     cols1.remove('recorddate')
     cols1.remove('dataset')
-    wnd = Window.orderBy('recorddate').partitionBy('nextgengroupid', 'reportingenterpriseid')
+    wnd = Window.orderBy('recorddate')\
+        .partitionBy('nextgengroupid', 'reportingenterpriseid')
     demographics_union = demographics_union\
         .withColumn('md5', FN.md5(FN.concat_ws('|', *[FN.coalesce(FN.col(c), FN.lit('')) for c in cols1]))) \
         .withColumn('prevmd5', FN.lag(FN.col('md5')).over(wnd)) \

@@ -1,3 +1,6 @@
+"""
+sparkscrub
+"""
 import argparse
 import csv
 import io
