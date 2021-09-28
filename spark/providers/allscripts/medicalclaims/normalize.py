@@ -1,3 +1,6 @@
+"""
+allscripts normalize
+"""
 import argparse
 import spark.providers.allscripts.medicalclaims.transactions_v1 as transactions_v1
 import spark.providers.allscripts.medicalclaims.transactions_v2 as transactions_v2

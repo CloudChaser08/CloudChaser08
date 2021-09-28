@@ -1,3 +1,6 @@
+"""
+8451 dhc normalize
+"""
 import argparse
 import spark.providers._8451_dhc.custom_mart.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver

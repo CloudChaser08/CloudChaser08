@@ -1,3 +1,6 @@
+"""
+ambry schema
+"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime, date
@@ -107,8 +110,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             filename='plain.txt',   # NOTE: will need to change once known
             model_version_number='04'
         ),
-        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '43', None, min_date),
-        postprocessor.apply_date_cap(runner.sqlContext, 'date_report', max_date, '43', None, min_date),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date,
+                                     '43', None, min_date),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_report', max_date,
+                                     '43', None, min_date),
         labtests_priv.filter
     )(
         runner.sqlContext.sql('select * from labtests_common_model')

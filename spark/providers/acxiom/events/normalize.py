@@ -1,3 +1,6 @@
+"""
+acxiom normalize
+"""
 import argparse
 from datetime import datetime, date
 from pyspark.sql.functions import lit
@@ -89,13 +92,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     # Remove any source ids that are not in the acxiom ids table
     if test:
-        acxiom_ids = runner.sqlContext.read.csv(ids_path, StructType([StructField('aid', StringType(), True)]), sep='|')
+        acxiom_ids = runner.sqlContext.read.csv(ids_path,
+                                                StructType([StructField('aid', StringType(), True)]), sep='|')
     else:
         acxiom_ids = runner.sqlContext.read.parquet(ids_path)
-
     valid_aid = events_df.join(acxiom_ids, events_df.source_record_id == acxiom_ids.aid, 'leftsemi')
-    non_valid_aid = events_df.join(acxiom_ids, events_df.source_record_id == acxiom_ids.aid, 'leftanti') \
-                             .withColumn('logical_delete_reason', lit('DELETE'))
+    non_valid_aid = \
+        events_df.join(acxiom_ids, events_df.source_record_id == acxiom_ids.aid, 'leftanti') \
+        .withColumn('logical_delete_reason', lit('DELETE'))
 
     validated_data = valid_aid.union(non_valid_aid).createOrReplaceTempView('event_common_model')
 
@@ -152,4 +156,3 @@ if __name__ == '__main__':
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
     main(args)
-

@@ -1,3 +1,6 @@
+"""
+amazingcharts normalize
+"""
 import argparse
 from datetime import date, datetime
 from spark.runner import Runner
@@ -34,7 +37,6 @@ from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
-
 FEED_ID = '5'
 VENDOR_ID = '5'
 
@@ -46,7 +48,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     max_cap = date_input
     max_cap_obj = datetime.strptime(max_cap, '%Y-%m-%d')
     month_input = date_input.replace('-', '/')[:-3]
-    #  amazingcharts match payload is delivered to a monthly location, so strip the day off date_input
+    # amazingcharts match payload is delivered to a monthly location, so strip the day off
+    # date_input
 
     input_tables = [
         'd_costar',
@@ -70,16 +73,18 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if test:
         for t in input_tables:
             input_paths[t] = file_utils.get_abs_path(
-                script_path, '../../../test/providers/amazingcharts/emr/resources/input/{}/'.format(t)
+                script_path,
+                '../../../test/providers/amazingcharts/emr/resources/input/{}/'.format(t)
             )
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/amazingcharts/emr/resources/payload/'
         )
     elif airflow_test:
         for t in input_tables:
-            input_paths[t] = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/input/{}/{}/'.format(
-                date_input.replace('-', '/'), t
-            )
+            input_paths[t] = \
+                's3://salusv/testing/dewey/airflow/e2e/amazingcharts/input/{}/{}/'.format(
+                    date_input.replace('-', '/'), t
+                )
         matching_path = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/payload/{}/'.format(
             month_input
         )
@@ -105,12 +110,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # De-duplicate the payloads so that there is only one
     # personid (we use personid as our join key, not hvJoinKey)
     window = Window.partitionBy(col('personId')).orderBy(col('age'))
-    runner.sqlContext.sql('select * from matching_payload')     \
-          .withColumn('row_num', row_number().over(window))     \
-          .where(col('row_num') == lit(1))                      \
-          .drop('row_num')                                      \
-          .cache_and_track('matching_payload_deduped')          \
-          .createOrReplaceTempView('matching_payload_deduped')
+    runner.sqlContext.sql('select * from matching_payload') \
+        .withColumn('row_num', row_number().over(window)) \
+        .where(col('row_num') == lit(1)) \
+        .drop('row_num') \
+        .cache_and_track('matching_payload_deduped') \
+        .createOrReplaceTempView('matching_payload_deduped')
 
     spark.table('matching_payload_deduped').count()
 
@@ -155,8 +160,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         [], return_output=True
     )
 
-    normalized_procedure_1 = normalized_procedure_1.withColumn('proc_cd', explode(split(col('proc_cd'), '\s+')))\
-        .where("length(proc_cd) != 0").cache()
+    normalized_procedure_1 = \
+        normalized_procedure_1.withColumn('proc_cd', explode(split(col('proc_cd'), '\s+'))) \
+            .where("length(proc_cd) != 0").cache()
 
     join_keys = [
         normalized_procedure_1.proc_dt == normalized_procedure_3.proc_dt,
@@ -289,13 +295,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 additional_transformer=table.get('additional_transformer')
             ),
             *(
-                [
-                    postprocessor.apply_date_cap(
-                        runner.sqlContext, date_col, max_cap_date, FEED_ID, domain_name
-                    ) for (date_col, domain_name, max_cap_date) in table['date_caps']
-                ] + [
-                    schema_enforcer.apply_schema_func(table['schema'])
-                ]
+                    [
+                        postprocessor.apply_date_cap(
+                            runner.sqlContext, date_col, max_cap_date, FEED_ID, domain_name
+                        ) for (date_col, domain_name, max_cap_date) in table['date_caps']
+                    ] + [
+                        schema_enforcer.apply_schema_func(table['schema'])
+                    ]
             )
         )(table['data'])
         normalized_table.createOrReplaceTempView('normalized_{}'.format(table['name']))
@@ -349,4 +355,3 @@ if __name__ == '__main__':
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
     main(args)
-

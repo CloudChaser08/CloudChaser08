@@ -1,3 +1,6 @@
+"""
+allscripts dhc normalize
+"""
 import argparse
 import spark.providers.allscripts_dhc.medicalclaims.transactional_schemas_v1 as transactions_v1
 import spark.providers.allscripts_dhc.medicalclaims.transactional_schemas_v2 as transactions_v2
@@ -12,7 +15,8 @@ if __name__ == "__main__":
     provider_name = 'allscripts_dhc'
     output_table_names_to_schemas = {
         'allscripts_veradigm_claim_normalized': dhc_medicalclaims_schemas['claims_schema_v1'],
-        'allscripts_veradigm_serviceline_normalized': dhc_medicalclaims_schemas['service_lines_schema_v1']
+        'allscripts_veradigm_serviceline_normalized':
+            dhc_medicalclaims_schemas['service_lines_schema_v1']
     }
     provider_partition_name = 'allscripts'
 
@@ -74,10 +78,12 @@ if __name__ == "__main__":
     cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
     logger.log(' -trimmify-nullify transactions data')
-    cleaned_header_df = postprocessor.nullify(postprocessor.trimmify(driver.spark.table('header')), ['NULL', 'Null', 'null', 'N/A', ''])
+    cleaned_header_df = postprocessor.\
+        nullify(postprocessor.trimmify(driver.spark.table('header')), ['NULL', 'Null', 'null', 'N/A', ''])
     cleaned_header_df.cache().createOrReplaceTempView("claim")
 
-    cleaned_serviceline_df = postprocessor.nullify(postprocessor.trimmify(driver.spark.table('serviceline')), ['NULL', 'Null', 'null', 'N/A', ''])
+    cleaned_serviceline_df = postprocessor.\
+        nullify(postprocessor.trimmify(driver.spark.table('serviceline')), ['NULL', 'Null', 'null', 'N/A', ''])
     cleaned_serviceline_df.cache().createOrReplaceTempView("serviceline")
 
     logger.log('Start transform')

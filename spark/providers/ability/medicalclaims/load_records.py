@@ -1,3 +1,6 @@
+"""
+ability medicalclaims records loader
+"""
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
 
@@ -13,7 +16,8 @@ def load(runner, input_path_prefix, product, file_date, test=False):
               TABLES['transactional_header'], 'csv', '|')
 
     postprocessor \
-        .compose(postprocessor.trimmify, lambda x: postprocessor.nullify(x, null_vals=['', 'NULL']))(df) \
+        .compose(postprocessor.trimmify,
+                 lambda x: postprocessor.nullify(x, null_vals=['', 'NULL']))(df) \
         .drop('claimid2', 'hvjoinkey') \
         .distinct() \
         .repartition(1 if test else 500, 'claimid').cache_and_track('transactional_header') \
@@ -40,7 +44,8 @@ def load(runner, input_path_prefix, product, file_date, test=False):
             .load(runner, c['input_path'], TABLES[c['table']], 'csv', '|', header=True)
 
         postprocessor \
-            .compose(postprocessor.trimmify, lambda x: postprocessor.nullify(x, null_vals=['', 'NULL']))(df) \
+            .compose(postprocessor.trimmify, lambda x: postprocessor.nullify(x,
+                                                                             null_vals=['', 'NULL']))(df) \
             .distinct() \
             .repartition(1 if test else 500, 'claimid').cache_and_track(c['table']) \
             .createOrReplaceTempView(c['table'])

@@ -1,3 +1,6 @@
+"""
+allscripts custom era load transactions
+"""
 from pyspark.sql.types import StructType, StructField, StringType
 from spark.helpers.source_table import SourceTable
 import pyspark.sql.functions as FN

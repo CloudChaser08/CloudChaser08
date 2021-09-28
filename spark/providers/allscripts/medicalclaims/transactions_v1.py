@@ -1,5 +1,5 @@
 """
-transactions v1.py
+allscripts schema v1
 """
 from spark.helpers.source_table import SourceTable
 

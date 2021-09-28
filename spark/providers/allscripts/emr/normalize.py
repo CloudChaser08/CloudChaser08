@@ -1,3 +1,6 @@
+"""
+allscripts emr normalize
+"""
 #! /usr/bin/python
 import argparse
 import datetime
@@ -71,9 +74,9 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
 
     max_cap = (date_obj + relativedelta(months=1) - relativedelta(days=1)).strftime('%Y-%m-%d')
     """
-    HV will remove the MAX CAP scrubbing for the “data_captr_dt”  and remove the transformation 
-    for “rec_stat_cd” from all the EMR tables.  This way the table will have the original source 
-    data. These changes are reflected in the latest mapping document.  These changes are applicable 
+    HV will remove the MAX CAP scrubbing for the “data_captr_dt”  and remove the transformation
+    for “rec_stat_cd” from all the EMR tables.  This way the table will have the original source
+    data. These changes are reflected in the latest mapping document.  These changes are applicable
     to Veradigm(Allscripts) EMR only
     """
     max_of_max_cap = '9999-12-31'
@@ -161,7 +164,8 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             )(raw_table)
 
             # deduplicate based on natural key
-            raw_table = raw_table.withColumn('row_num', FN.row_number().over(window)).where(FN.col('row_num') == 1)
+            raw_table = raw_table.withColumn('row_num',
+                                             FN.row_number().over(window)).where(FN.col('row_num') == 1)
 
             # add non-skewed provider columns
             for column in table.skewed_columns:
@@ -297,7 +301,8 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_test_execd_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('lab_result_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)  # Max cap is applied in SQL
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)
+                # Max cap is applied in SQL
             ]
         }, {
             'name': 'encounter',
@@ -405,7 +410,8 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
             'date_caps': [
                 ('enc_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
                 ('vit_sign_dt', 'EARLIEST_VALID_SERVICE_DATE', max_cap),
-                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)  # Max cap is applied in SQL
+                ('data_captr_dt', 'EARLIEST_VALID_SERVICE_DATE', max_of_max_cap)
+                # Max cap is applied in SQL
             ]
         }
     ]
@@ -433,7 +439,8 @@ def run(spark, runner, date_input, explicit_input_path=None, explicit_matching_p
                         runner.sqlContext, date_col, max_cap_date, FEED_ID, domain_name
                     ) for (date_col, domain_name, max_cap_date) in table['date_caps']
                 ] + [
-                    schema_enforcer.apply_schema_func(table['schema'], cols_to_keep=['allscripts_date_partition'])
+                    schema_enforcer.apply_schema_func(table['schema'],
+                                                      cols_to_keep=['allscripts_date_partition'])
                 ]
             )
         )(table['data']).createOrReplaceTempView('normalized_{}'.format(table['name']))
