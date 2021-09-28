@@ -1,3 +1,6 @@
+"""
+emdeon Reorgnize RX
+"""
 #! /usr/bin/python
 import os
 import argparse
@@ -51,7 +54,8 @@ runner.run_spark_script(get_rel_path('../../../common/pharmacyclaims_unload_tabl
 ])
 runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'), [
     ['select_statement',
-     "SELECT *, 'NULL' as part_best_date FROM pharmacyclaims_common_model WHERE date_service is NULL", False]
+     "SELECT *,'NULL' as part_best_date FROM pharmacyclaims_common_model WHERE date_service is NULL"
+        , False]
 ])
 runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'), [
     ['select_statement',
@@ -65,7 +69,9 @@ dirs = subprocess.check_output(['ls', 'emdeon']).strip().split("\n")
 for d in dirs:
     files = subprocess.check_output(['ls', 'emdeon/{}'.format(d)]).strip().split("\n")
     for f in files:
-        subprocess.check_call(['mv', 'emdeon/{}/{}'.format(d, f), 'emdeon/{}/{}_{}'.format(d, args.date, f)])
-subprocess.check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive', 'emdeon', S3_EMDEON_WAREHOUSE])
+        subprocess.check_call(['mv', 'emdeon/{}/{}'.format(d, f),
+                               'emdeon/{}/{}_{}'.format(d, args.date, f)])
+subprocess.check_call(['aws', 's3', 'cp', '--sse', 'AES256', '--recursive',
+                       'emdeon', S3_EMDEON_WAREHOUSE])
 subprocess.check_call(['rm', '-r', 'emdeon'])
 subprocess.check_call(['hadoop', 'fs', '-rm', '-r', '/text'])

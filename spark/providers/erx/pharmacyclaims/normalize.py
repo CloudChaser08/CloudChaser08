@@ -1,3 +1,6 @@
+"""
+erx normalize
+"""
 import os
 import argparse
 import spark.common.utility.logger as logger
@@ -59,7 +62,7 @@ if __name__ == "__main__":
 
     output_path = os.path.join(driver.output_path, schema.output_directory, 'part_provider=erx/')
     driver.spark.read.parquet(output_path).createOrReplaceTempView('_temp_pharmacyclaims_nb')
-    
+
     driver.transform()
     driver.save_to_disk()
     driver.stop_spark()

@@ -1,3 +1,6 @@
+"""
+genoa normalize
+"""
 from datetime import datetime, date
 import argparse
 import subprocess
@@ -56,7 +59,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Load in the matching payload
     payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
-    records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
+    records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas,
+                                         load_file_name=True)
 
     # Genoa sent historical data (before 2017-11-01) in one schema, and then
     # added 3 new columns later on. We load everything as though it's in the
@@ -73,7 +77,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         .withColumnRenamed(old_col_name, 'tmp')
         .withColumnRenamed(historical.columns[-2], old_col_name)
         .withColumnRenamed('tmp', new_col_name)
-        .select(*not_historical.columns) 
+        .select(*not_historical.columns)
     )
 
     get_set_id = func.udf(lambda x: gen_helpers.remove_split_suffix(x).replace('Genoa_', ''))
@@ -81,7 +85,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # On 2017-11-01, Genoa gave us a restatement of all the data from
     # 2015-05-31 on. If any batches before 2017-11-01 contain data from the
     # restated time period, remove it
-    historical_adjusted = historical_adjusted.where(historical_adjusted['date_of_service'] < '2015-05-31')
+    historical_adjusted = \
+        historical_adjusted.where(historical_adjusted['date_of_service'] < '2015-05-31')
 
     (
         historical_adjusted
@@ -119,8 +124,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     # Apply clean up and privacy filtering
     postprocessor.compose(
         postprocessor.nullify,
-        postprocessor.add_universal_columns(feed_id='21', vendor_id='20', filename=None, model_version_number='06'),
-        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '21', 'EARLIEST_VALID_SERVICE_DATE'),
+        postprocessor.add_universal_columns(feed_id='21', vendor_id='20',
+                                            filename=None, model_version_number='06'),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service',
+                                     max_date, '21', 'EARLIEST_VALID_SERVICE_DATE'),
         pharm_priv.filter
     )(
         runner.sqlContext.sql('select * from pharmacyclaims_common_model')
@@ -136,7 +143,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
+            spark, runner, 'pharmacyclaims',
+            'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
             'genoa', 'pharmacyclaims_common_model',
             'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,

@@ -1,3 +1,6 @@
+"""
+genomind normalize
+"""
 import argparse
 from datetime import datetime, date
 
@@ -45,7 +48,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     if test:
         for t in input_tables:
             input_paths[t] = file_utils.get_abs_path(
-                script_path, '../../../test/providers/genomind/labtests/resources/input/{}'.format(t)
+                script_path,
+                '../../../test/providers/genomind/labtests/resources/input/{}'.format(t)
             )
         matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/genomind/labtests/resources/payload/'

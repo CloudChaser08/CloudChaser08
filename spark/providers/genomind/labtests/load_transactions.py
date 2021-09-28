@@ -1,3 +1,6 @@
+"""
+genomind normalize source schema
+"""
 from pyspark.sql.types import StructType, StructField, StringType, ArrayType
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader

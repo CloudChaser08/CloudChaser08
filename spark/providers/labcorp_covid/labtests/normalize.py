@@ -1,3 +1,6 @@
+"""
+labcorp covid normalize
+"""
 import argparse
 from datetime import datetime
 import spark.providers.labcorp_covid.labtests.transactional_schemas as historic_source_table_schemas
@@ -31,7 +34,8 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
-    b_history_load = datetime.strptime(date_input, '%Y-%m-%d') < datetime.strptime(v_cutoff_date, '%Y-%m-%d')
+    b_history_load = datetime.strptime(date_input, '%Y-%m-%d') < \
+                     datetime.strptime(v_cutoff_date, '%Y-%m-%d')
     if b_history_load:
         logger.log('Historic Load schema')
         source_table_schemas = historic_source_table_schemas

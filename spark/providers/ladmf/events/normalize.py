@@ -1,3 +1,6 @@
+"""
+ladmf event normalize
+"""
 import argparse
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.consumer.events_common_model_v10 import schema

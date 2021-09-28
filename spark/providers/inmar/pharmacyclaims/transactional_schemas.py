@@ -1,3 +1,6 @@
+"""
+inmar pharmacyclaims source schema
+"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
@@ -143,8 +146,3 @@ TABLE_CONF = {
         ]
     )
 }
-
-
-
-
-

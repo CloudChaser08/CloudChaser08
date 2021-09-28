@@ -1,5 +1,10 @@
+"""
+inovalon medicalclaims normalize
+"""
 import argparse
-import spark.providers.inovalon.medicalclaims.transactional_schemas_v1 as historic_source_table_schemas
+from dateutil.relativedelta import relativedelta
+import spark.providers.inovalon.medicalclaims.transactional_schemas_v1 as \
+    historic_source_table_schemas
 import spark.providers.inovalon.medicalclaims.transactional_schemas_v2 as jan_feb_2020_schemas
 import spark.providers.inovalon.medicalclaims.transactional_schemas_v3 as mar_2020_schemas
 import spark.providers.inovalon.medicalclaims.transactional_schemas_v4 as full_hist_restate_schemas
@@ -12,7 +17,7 @@ import subprocess
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+
 
 from pyspark.sql.functions import lit
 
@@ -56,7 +61,8 @@ if __name__ == "__main__":
     is_schema_v3 = date_input == '2020-03-25'
     is_schema_v1 = \
         not is_schema_v2 and not is_schema_v3 \
-        and datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date()
+        and datetime.strptime(date_input, '%Y-%m-%d').date() < \
+        datetime.strptime(v_cutoff_date, '%Y-%m-%d').date()
 
     if is_schema_v2:
         logger.log('Using the Jan/Feb 2020 refresh schema (v2)')
@@ -141,8 +147,8 @@ if __name__ == "__main__":
             ccd.createOrReplaceTempView('ccd')
             filter_query = '''SELECT {tbl}.* FROM {tbl} 
                 LEFT JOIN ref 
-                ON RIGHT({tbl}.claimuid, 2) = ref.last_char_claim_id and {tbl}.claimuid = ref.claimuid
-                WHERE ref.claimuid is NULL'''
+                ON RIGHT({tbl}.claimuid, 2) = ref.last_char_claim_id 
+                and {tbl}.claimuid = ref.claimuid WHERE ref.claimuid is NULL'''
             clm = driver.spark.sql(filter_query.format(tbl='clm'))
             ccd = driver.spark.sql(filter_query.format(tbl='ccd'))
 
@@ -174,7 +180,8 @@ if __name__ == "__main__":
         # save transactions to disk. They will be added to the s3 reference location
         logger.log('Saving filtered input tables to hdfs')
         query = "SELECT distinct " \
-                "clm.claimuid, RIGHT(clm.claimuid, 2) as last_char_claim_id, '{}' as date_input FROM clm" \
+                "clm.claimuid, RIGHT(clm.claimuid, 2) as last_char_claim_id, '{}' as date_input " \
+                "FROM clm" \
             .format(date_input)
 
         partition = ['date_input', 'last_char_claim_id']

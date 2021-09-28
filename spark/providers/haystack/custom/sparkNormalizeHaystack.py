@@ -1,3 +1,6 @@
+"""
+haystack normalize
+"""
 #! /usr/bin/python
 import argparse
 from spark.runner import Runner
@@ -33,23 +36,31 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
     elif airflow_test:
         if date:
             matching_path = \
-                's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/{}/'.format(date.replace('-', '/'))
+                's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/{}/'\
+                    .format(date.replace('-', '/'))
             incoming_path = \
-                's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'.format(date.replace('-', '/'))
+                's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'\
+                    .format(date.replace('-', '/'))
             output_dir = '/tmp/staging/' + date.replace('-', '/') + '/'
         else:
-            matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/{}/'.format(group_id)
-            incoming_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'.format(group_id)
+            matching_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/payload/{}/'\
+                .format(group_id)
+            incoming_path = 's3a://salusv/testing/dewey/airflow/e2e/haystack/custom/incoming/{}/'\
+                .format(group_id)
             output_dir = '/tmp/staging/' + group_id + '/'
     else:
         if date:
-            incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
+            incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.\
+                format(channel, date.replace('-', '/'))
             matching_path = \
-                's3a://salusv/matching/payload/custom/haystack/{}/{}/'.format(channel, date.replace('-', '/'))
+                's3a://salusv/matching/payload/custom/haystack/{}/{}/'.\
+                    format(channel, date.replace('-', '/'))
             output_dir = constants.hdfs_staging_dir + date.replace('-', '/') + '/'
         else:
-            incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.format(channel, group_id)
-            matching_path = 's3a://salusv/matching/payload/custom/haystack/{}/{}/'.format(channel, group_id)
+            incoming_path = 's3a://salusv/incoming/custom/haystack/{}/{}/'.\
+                format(channel, group_id)
+            matching_path = 's3a://salusv/matching/payload/custom/haystack/{}/{}/'.\
+                format(channel, group_id)
             output_dir = constants.hdfs_staging_dir + group_id + '/'
 
     runner.sqlContext.registerFunction(
@@ -89,7 +100,8 @@ def run(spark, runner, channel, group_id, date=None, test=False, airflow_test=Fa
         'Payer Plan ID', 'Payer Plan Name', 'Data Source', 'CRM ID 1',
         'CRM ID 2', 'Activity Date'
     ]
-    deliverable = content.select(*[content[content.columns[i]].alias(header[i]) for i in range(len(header))])
+    deliverable = \
+        content.select(*[content[content.columns[i]].alias(header[i]) for i in range(len(header))])
 
     deliverable.createOrReplaceTempView('haystack_deliverable')
 

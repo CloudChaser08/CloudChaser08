@@ -1,10 +1,11 @@
+
 import argparse
+import pyspark.sql.functions as F
 import spark.providers.inovalon_dhc.custom_mart.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.datamart.dhc.custom import schemas as dhc_custom_schemas
 import spark.helpers.postprocessor as postprocessor
 import spark.common.utility.logger as logger
-import pyspark.sql.functions as F
 
 hasDeliveryPath = True
 
@@ -52,7 +53,8 @@ if __name__ == "__main__":
     driver.load()
 
     logger.log(' -filter down, distinct - trimmify-nullify matching_payload data')
-    matching_payload_df = driver.spark.table('matching_payload').select('hvid', 'claimId').distinct()
+    matching_payload_df = driver.spark.table('matching_payload').\
+        select('hvid', 'claimId').distinct()
 
     cleaned_matching_payload_df = (
         postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df)) \

@@ -1,3 +1,6 @@
+"""
+labcorp covid source schema va
+"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {

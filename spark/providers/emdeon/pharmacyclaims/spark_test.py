@@ -1,3 +1,6 @@
+"""
+emdeon Test RX normalize
+"""
 #! /usr/bin/python
 import os
 import argparse
@@ -52,7 +55,8 @@ sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DE
 sqlContext.sql('DROP TABLE IF EXISTS java_udf')
 sqlContext.sql('CREATE TABLE java_udf (d date)')
 print(time.time())
-sqlContext.sql("INSERT INTO java_udf SELECT extract_date(date_service, '%Y-%m-%d', cast('2012-01-01' as date), "
+sqlContext.sql("INSERT INTO java_udf "
+               "SELECT extract_date(date_service, '%Y-%m-%d', cast('2012-01-01' as date), "
                "cast('2013-02-01' as date)) FROM normalized_claims")
 print(time.time())
 sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DESC LIMIT 10').show()
@@ -68,7 +72,8 @@ sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DE
 sqlContext.sql('DROP TABLE IF EXISTS java_udf')
 sqlContext.sql('CREATE TABLE java_udf (d date)')
 print(time.time())
-sqlContext.sql("INSERT INTO java_udf SELECT extract_date2(date_service, 'yyyy-MM-dd', cast('2012-01-01' as date)"
+sqlContext.sql("INSERT INTO java_udf "
+               "SELECT extract_date2(date_service, 'yyyy-MM-dd', cast('2012-01-01' as date)"
                ", cast('2013-02-01' as date)) FROM normalized_claims")
 print(time.time())
 sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DESC LIMIT 10').show()
@@ -76,7 +81,8 @@ sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DE
 sqlContext.sql('DROP TABLE IF EXISTS java_udf')
 sqlContext.sql('CREATE TABLE java_udf (d date)')
 print(time.time())
-sqlContext.sql("INSERT INTO java_udf SELECT extract_date2(date_service, 'yyyy-MM-dd', cast('2012-01-01' as date)"
+sqlContext.sql("INSERT INTO java_udf "
+               "SELECT extract_date2(date_service, 'yyyy-MM-dd', cast('2012-01-01' as date)"
                ", cast('2013-02-01' as date)) FROM normalized_claims")
 print(time.time())
 sqlContext.sql('SELECT d, count(*) FROM java_udf GROUP BY d ORDER BY count(*) DESC LIMIT 10').show()
