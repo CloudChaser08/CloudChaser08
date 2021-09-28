@@ -1,3 +1,4 @@
+"""all pharmacy claims schemas import"""
 from spark.common.pharmacyclaims import pharmacyclaims_common_model_v3
 from spark.common.pharmacyclaims import pharmacyclaims_common_model_v4
 from spark.common.pharmacyclaims import pharmacyclaims_common_model_v6

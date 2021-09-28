@@ -1,3 +1,4 @@
+"""schemaq definition"""
 from collections import namedtuple
 Schema = namedtuple('Schema', 'name, '
                               'data_type, '

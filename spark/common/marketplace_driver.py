@@ -86,7 +86,8 @@ class MarketplaceDriver(object):
         provider_directory_path = os.path.dirname(
             inspect.getframeinfo(previous_stack_frame).filename)
 
-        provider_directory_path = provider_directory_path.replace('spark/target/dewey.zip/', "") + '/'
+        provider_directory_path = \
+            provider_directory_path.replace('spark/target/dewey.zip/', "") + '/'
 
         self.first_schema_name = list(output_table_names_to_schemas.keys())[0]
         self.first_schema_obj = output_table_names_to_schemas[self.first_schema_name]
@@ -328,10 +329,12 @@ class MarketplaceDriver(object):
             additional_dest = self.additional_output_path + additional_schema_obj.output_directory
 
             if not self.test and not self.end_to_end_test:
-                hadoop_time = normalized_records_unloader.timed_distcp(dest=default_dest, src=default_src)
+                hadoop_time = \
+                    normalized_records_unloader.timed_distcp(dest=default_dest, src=default_src)
                 RunRecorder().record_run_details(additional_time=hadoop_time)
 
-                hadoop_time = normalized_records_unloader.timed_distcp(dest=additional_dest, src=additional_src)
+                hadoop_time = \
+                    normalized_records_unloader.timed_distcp(dest=additional_dest, src=additional_src)
                 RunRecorder().record_run_details(additional_time=hadoop_time)          
             
             elif self.end_to_end_test:
@@ -361,7 +364,8 @@ class MarketplaceDriver(object):
     def move_output_to_backup(self, output_location, backup_location=None):
         """
         Moves existing data on S3 to a backup location, usually before driver.copy_to_output_path()
-        NOTE: This function clears out the backup location before moving data there, so make sure backup_path isn't an important location!
+        NOTE: This function clears out the backup location before moving data there,
+        so make sure backup_path isn't an important location!
         """
         if not backup_location:
             backup_location = output_location.replace('salusv', 'salusv/backup')

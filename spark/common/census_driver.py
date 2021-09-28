@@ -1,3 +1,4 @@
+"""census driver"""
 import datetime
 import importlib
 import inspect
@@ -108,7 +109,8 @@ class CensusDriver(object):
         else:
             mode = PRODUCTION
 
-        self._spark, self._sqlContext = init("{} {} Census".format(self._client_name, self._opportunity_id))
+        self._spark, self._sqlContext = \
+            init("{} {} Census".format(self._client_name, self._opportunity_id))
         self._runner = Runner(self._sqlContext)
 
         self._records_path_template = MODE_RECORDS_PATH_TEMPLATE[mode].format(
@@ -245,7 +247,8 @@ class CensusDriver(object):
         # Since this module is in the package, its file path will contain the
         # package path. Remove that in order to find the location of the
         # transformation scripts
-        scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
+        scripts_directory = \
+            '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
         content = self._runner.run_all_spark_scripts(variables=[['salt', self._salt]],
                                                      directory_path=scripts_directory)
         if self._no_row_id:

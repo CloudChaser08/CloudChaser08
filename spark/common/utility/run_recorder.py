@@ -1,3 +1,4 @@
+"""run recorder"""
 import subprocess
 from csv import DictWriter
 from datetime import datetime

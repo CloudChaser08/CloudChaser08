@@ -1,3 +1,4 @@
+"""emr common model"""
 from pyspark.sql.types import StructType, StructField, StringType, LongType, DateType
 
 schema = StructType([

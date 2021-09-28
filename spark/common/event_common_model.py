@@ -1,3 +1,4 @@
+"""event common model"""
 from pyspark.sql.types import *
 
 schema_v8 = StructType([

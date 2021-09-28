@@ -30,7 +30,8 @@ from math import ceil
 from urllib.parse import urlparse
 import logging
 import boto3
-from spark.helpers.s3_utils import list_folders, has_s3_subdirectories, list_files, get_file_path_size, parse_s3_path, list_path_pages
+from spark.helpers.s3_utils import list_folders, has_s3_subdirectories, \
+    list_files, get_file_path_size, parse_s3_path, list_path_pages
 from spark.helpers.file_utils import get_optimal_s3_partition_count
 
 PARQUET_FILE_SIZE = 1024 * 1024 * 250
@@ -41,7 +42,8 @@ SIZE_30 = 1024 * 1024 * 30      #30 MB
 
 class Compaction:
 
-    def __init__(self, spark_session, path, test_dir = '', file_limit = 2, continue_to_source = False) -> None:
+    def __init__(self, spark_session, path, test_dir = '', file_limit = 2,
+                 continue_to_source = False) -> None:
         """ Compaction initialization
 
         Args:
@@ -108,7 +110,8 @@ class Compaction:
         """
         list= list_files(self.current_path)
 
-        list_new=[(l.split("/")[-1].split("_")[0],re.search('part-\d{5}-(.+?)\.', l).group(1)) for l in list]
+        list_new = \
+            [(l.split("/")[-1].split("_")[0],re.search('part-\d{5}-(.+?)\.', l).group(1)) for l in list]
         list_new.sort(key = lambda y:y[0],reverse=True)
 
         return (list_new[0][1])
@@ -178,7 +181,8 @@ class Compaction:
                                                            PARQUET_FILE_SIZE)
 
         logging.info("...will partition into %s files", repartition_count)
-        spark_session.read.parquet(compaction_plan['backup_path']).repartition(repartition_count).write \
+        spark_session.read\
+            .parquet(compaction_plan['backup_path']).repartition(repartition_count).write \
             .parquet(compaction_plan['compact_path'], mode='append', compression='gzip')
         logging.info("...compaction written to %s", compaction_plan['compact_path'])
 

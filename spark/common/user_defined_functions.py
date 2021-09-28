@@ -1,3 +1,4 @@
+"""user defined functions"""
 #! /usr/bin/python
 # Create a function for generating an serialized string of diagnosis-priority pairs
 

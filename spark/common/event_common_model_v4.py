@@ -1,3 +1,4 @@
+"""event common model v4"""
 from pyspark.sql.types import *
 
 schema = StructType([

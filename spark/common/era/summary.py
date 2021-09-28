@@ -1,5 +1,6 @@
-from pyspark.sql.types import StructType, StructField, LongType, FloatType, IntegerType, StringType, \
-    DateType
+"""era summary"""
+from pyspark.sql.types import StructType, StructField, \
+    LongType, FloatType, IntegerType, StringType, DateType
 from spark.common.schema import Schema
 
 schema_v1 = StructType([
