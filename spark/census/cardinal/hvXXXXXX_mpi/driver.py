@@ -1,6 +1,3 @@
-"""
-cardinal mpi driver
-"""
 import subprocess
 
 from pyspark.sql.types import ArrayType, StringType
@@ -24,11 +21,8 @@ class CardinalMPICensusDriver(CensusDriver):
         # topCandidates is suppose to be a column of array type. If all the values
         # are NULL it ends up being a string type. Replace it with an array type
         # column of all nulls so the routine doesn't break
-        if self._spark.table('matching_payload')\
-                .where('topcandidates IS NOT NULL').count() == 0:
-            # pylint: disable=not-callable
-            null_array_column = udf(lambda x: None,
-                                    ArrayType(ArrayType(StringType(), True), True))(lit(None))
+        if self._spark.table('matching_payload').where('topcandidates IS NOT NULL').count() == 0: # pylint: disable=not-callable
+            null_array_column = udf(lambda x: None, ArrayType(ArrayType(StringType(), True), True))(lit(None))
             self._spark.table('matching_payload') \
                 .withColumn('topcandidates', null_array_column) \
                 .createOrReplaceTempView('matching_payload')

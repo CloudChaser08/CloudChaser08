@@ -1,6 +1,3 @@
-"""
-cardinal pds records schema v2
-"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
