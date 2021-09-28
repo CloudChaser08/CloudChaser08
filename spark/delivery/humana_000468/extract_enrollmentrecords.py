@@ -1,3 +1,4 @@
+"""extract enrollment records"""
 import pyspark.sql.functions as FN
 from datetime import timedelta
 

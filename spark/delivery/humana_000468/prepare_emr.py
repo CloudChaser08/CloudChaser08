@@ -1,3 +1,4 @@
+"""prepare emr"""
 import spark.helpers.schema_enforcer as schema_enforcer
 from spark.common.medicalclaims import schemas as med_schemas
 from spark.common.pharmacyclaims import schemas as pharma_schemas

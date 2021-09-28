@@ -1,3 +1,4 @@
+"""extract medical claims"""
 import pyspark.sql.functions as F
 
 
@@ -9,7 +10,8 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
     ref_vdr_feed = ref_vdr_feed[ref_vdr_feed.hvm_vdr_feed_id.isin(*SUPPLIER_FEED_IDS)]
 
     # Extract conditions
-    ext = claims.join(ref_vdr_feed, claims['data_feed'] == ref_vdr_feed['hvm_vdr_feed_id'], 'inner') \
+    ext = \
+        claims.join(ref_vdr_feed, claims['data_feed'] == ref_vdr_feed['hvm_vdr_feed_id'], 'inner') \
         .join(hvids, claims['hvid'] == hvids['hvid'], 'left') \
         .where(hvids['hvid'].isNotNull())
 
@@ -57,7 +59,8 @@ def extract(runner, hvids, timestamp, start_dt, end_dt):
     return extract_from_table(runner, hvids, timestamp, start_dt, end_dt,
                               'dw.hvm_medicalclaims_v08', True)
     # NOTE: 2019-11-04 - Removing synthetic claims until told to turn back on.
-    # .union(extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_medicalclaims', False))
+    # .union(extract_from_table(runner, hvids, timestamp,
+    # start_dt, end_dt, 'synthetic_medicalclaims', False))
 
 
 EXTRACT_COLUMNS = [
