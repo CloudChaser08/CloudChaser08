@@ -1,3 +1,6 @@
+"""
+cardinal mpi api driver
+"""
 from spark.common.census_driver import CensusDriver  # --, DRIVER_MODULE_NAME
 from spark.helpers.file_utils import FileSystemType, util_functions_factory
 
@@ -32,12 +35,14 @@ class CardinalAPICensusDriver(CensusDriver):
 
     Transform
     ---
-    Execute 1_normalize.sql which transforms the data from the payload and creates a resulting dataframe.
+    Execute 1_normalize.sql which transforms the data from the payload and creates
+    a resulting dataframe.
     The payload is joined with the records file where job_id = hvJoinKey.
 
     Save
     ---
-    Save the resulting dataframe from transformation to the hdfs, or to the local disk if in test mode.
+    Save the resulting dataframe from transformation to the hdfs,
+    or to the local disk if in test mode.
     The file saved contains rows of json, where an example is:
 
     {
