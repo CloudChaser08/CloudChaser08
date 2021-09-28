@@ -1,3 +1,6 @@
+"""
+change relay dhc source schema
+"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {

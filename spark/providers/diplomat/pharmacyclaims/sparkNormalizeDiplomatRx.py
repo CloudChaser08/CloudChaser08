@@ -1,3 +1,6 @@
+"""
+doplomat pharmacy claims normalize
+"""
 import argparse
 import time
 from datetime import datetime
@@ -13,7 +16,6 @@ from spark.common.pharmacyclaims import schemas as pharma_schemas
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
-
 
 TODAY = time.strftime('%Y-%m-%d', time.localtime())
 schema = pharma_schemas['schema_v3']
@@ -39,9 +41,9 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         input_path = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/out/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        matching_path = \
+            's3://salusv/testing/dewey/airflow/e2e/diplomat/pharmacyclaims/payload/{}/' \
+                .format(date_input.replace('-', '/'))
     else:
         input_path = 's3a://salusv/incoming/pharmacyclaims/diplomat/{}/'.format(
             date_input.replace('-', '/')
@@ -54,11 +56,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     min_date_written = '2004-01-01'
     max_date = date_input
 
-    runner.run_spark_script('../../../common/pharmacyclaims/sql/pharmacyclaims_common_model_v3.sql', [
-        ['table_name', 'pharmacyclaims_common_model', False],
-        ['external', '', False],
-        ['properties', '', False]
-    ])
+    runner.run_spark_script('../../../common/pharmacyclaims/sql/pharmacyclaims_common_model_v3.sql',
+                            [
+                                ['table_name', 'pharmacyclaims_common_model', False],
+                                ['external', '', False],
+                                ['properties', '', False]
+                            ])
 
     payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'])
 
@@ -75,7 +78,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             ['input_path', input_path],
             ['serde_props', serde_props, False]
         ])
-    postprocessor.trimmify(runner.sqlContext.sql('select * from transactions')).createTempView('transactions')
+    postprocessor.trimmify(runner.sqlContext.sql('select * from transactions')) \
+        .createTempView('transactions')
 
     runner.run_spark_script('normalize.sql', [
         ['min_date', min_date],
@@ -93,7 +97,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v3.sql', 'diplomat',
+            spark, runner, 'pharmacyclaims',
+            'pharmacyclaims/sql/pharmacyclaims_common_model_v3.sql', 'diplomat',
             'pharmacyclaims_common_model', 'date_service', date_input
         )
 

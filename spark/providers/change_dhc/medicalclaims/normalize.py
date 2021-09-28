@@ -1,3 +1,6 @@
+"""
+change dhc normalize
+"""
 import argparse
 import spark.providers.change_dhc.medicalclaims.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
@@ -63,8 +66,8 @@ if __name__ == "__main__":
     # only 2 columns are needed from the following 2 tables.
     # Select only the columns we need, then broadcast in the sql
     logger.log('Build plainout refernce tables')
-    driver.spark.sql('select patient_gender, UPPER(claim_number) as claim_number from plainout group by 1, 2')\
-        .createOrReplaceTempView('change_dx_plainout')
+    V_SQL = "select patient_gender, UPPER(claim_number) as claim_number from plainout group by 1, 2"
+    driver.spark.sql(V_SQL).createOrReplaceTempView('change_dx_plainout')
 
     logger.log('Start transform')
     driver.transform()

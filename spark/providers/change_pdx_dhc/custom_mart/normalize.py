@@ -1,5 +1,9 @@
+"""
+change pdx dhc normalize
+"""
 import argparse
-from spark.providers.change_pdx_dhc.custom_mart import transactional_schemas, transactional_schemas_v1
+from spark.providers.change_pdx_dhc.custom_mart import \
+    transactional_schemas, transactional_schemas_v1
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.datamart.dhc.custom import schemas as dhc_custom_schemas
 import spark.common.utility.logger as logger

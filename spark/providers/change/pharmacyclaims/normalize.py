@@ -1,11 +1,14 @@
+"""
+change  normalize
+"""
 import os
-import spark.providers.change.pharmacyclaims.transactional_schemas as source_table_schemas
 import subprocess
 import argparse
+from datetime import datetime
+import spark.providers.change.pharmacyclaims.transactional_schemas as source_table_schemas
 import spark.common.utility.logger as logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from spark.helpers.s3_constants import RESTRICTED_PATH, DATAMART_PATH, E2E_DATAMART_PATH
 
@@ -57,7 +60,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     driver.init_spark_context(conf_parameters=conf_parameters)
 
     logger.log('Loading previous history')
-    driver.spark.read.parquet(os.path.join(existing_output, schema.output_directory, 'part_provider=emdeon/'))\
+    driver.spark.read.parquet(os.path.join(existing_output,
+                                           schema.output_directory, 'part_provider=emdeon/'))\
         .createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
     driver.load()
@@ -74,8 +78,10 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     date_part = 'part_provider=emdeon/part_best_date={}/'
 
     current_year_month = args.date[:7] + '-01'
-    one_month_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m-01')
-    two_months_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m-01')
+    one_month_prior = \
+        (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m-01')
+    two_months_prior = \
+        (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m-01')
 
     for month in [current_year_month, one_month_prior, two_months_prior]:
         subprocess.check_call(
@@ -84,8 +90,10 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
              tmp_path + date_part.format(month)]
         )
 
-    existing_delivery_location = additional_output_path + "daily/pharmacyclaims/part_provider=emdeon/"
-    driver.move_output_to_backup(existing_delivery_location) # daily delivery location should only have data from most recent run
+    existing_delivery_location = \
+        additional_output_path + "daily/pharmacyclaims/part_provider=emdeon/"
+    driver.move_output_to_backup(existing_delivery_location)
+    # daily delivery location should only have data from most recent run
     driver.copy_to_output_path()
     logger.log('Done')
 

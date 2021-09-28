@@ -1,5 +1,8 @@
-from spark.helpers.source_table import SourceTable
+"""
+change 837 schema
+"""
 from pyspark.sql.types import StructType, StructField, StringType
+from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
     'plainout': SourceTable(
