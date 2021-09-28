@@ -1,9 +1,13 @@
+"""
+Janssen HV003628 driver
+"""
 import re
 
 from spark.common.census_driver import CensusDriver
 from spark.common.utility.logger import log
 
 VALID_STUDY_IDS = {"3001", "3009"}
+
 
 class JanssenInternalCensusDriver(CensusDriver):
     CLIENT_NAME = "janssen_delivery"
@@ -14,10 +18,10 @@ class JanssenInternalCensusDriver(CensusDriver):
             self.CLIENT_NAME, self.OPPORTUNITY_ID, salt=salt,
             test=test, end_to_end_test=end_to_end_test
         )
-    
+
     def transform(self, batch_date, batch_id):
         log("Transforming records")
-        
+
         # Parse study_id from batch_id to include in output
         log("Attempting to pull study_id from batch ID: {}".format(batch_id))
         pattern = r"^VAC\d{5}\w{3}(?P<study_id>\d{4})_\d+$"

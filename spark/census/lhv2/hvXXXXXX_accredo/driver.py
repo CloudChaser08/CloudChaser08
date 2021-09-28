@@ -1,4 +1,6 @@
+"""lhv2.hvXXXXXX.driver"""
 from spark.census.lhv2.hvXXXXXX.driver import LiquidhubCensusDriver
+
 
 # Multiple feeds share the same Liquidhub transformation logic
 class LiquidhubAccredoCensusDriver(LiquidhubCensusDriver):

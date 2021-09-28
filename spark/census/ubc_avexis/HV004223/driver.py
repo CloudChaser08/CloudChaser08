@@ -1,3 +1,4 @@
+"""driver ubc avexis"""
 import importlib
 import inspect
 
@@ -19,12 +20,14 @@ class UbcAvexisCensusDriver(CensusDriver):
             self._spark.read.parquet(MPL_URL).createOrReplaceTempView('historically_assigned_ids')
         except:
             schema = StructType([StructField(col, StringType(), True) for col in MPL_COLUMNS])
-            self._spark.createDataFrame([], schema).createOrReplaceTempView('historically_assigned_ids')
+            self._spark.createDataFrame([], schema)\
+                .createOrReplaceTempView('historically_assigned_ids')
 
     def transform(self, batch_date, batch_id):
         log("Transforming records")
 
-        res = self._spark.sql("SELECT max(cast(hvid as int)) FROM historically_assigned_ids").collect()
+        res = self._spark.\
+            sql("SELECT max(cast(hvid as int)) FROM historically_assigned_ids").collect()
         max_id = str(res[0][0] or MPL_START)
 
         census_module = importlib.import_module(self._base_package)

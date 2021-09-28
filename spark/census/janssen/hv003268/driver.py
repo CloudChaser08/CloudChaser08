@@ -1,3 +1,6 @@
+"""
+Janssen HV003628 driver
+"""
 from spark.common.census_driver import CensusDriver
 from spark.common.utility.logger import log
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -42,5 +45,6 @@ class JanssenCensusDriver(CensusDriver):
     def copy_to_s3(self, batch_date=None, batch_id=None):
         log("Copying files to: " + self._output_path)
         normalized_records_unloader.distcp(self._output_path)
-        normalized_records_unloader.distcp('s3://salusv/incoming/cohort/janssen/hv003268/', '/staging2/')
+        normalized_records_unloader.distcp('s3://salusv/incoming/cohort/janssen/hv003268/',
+                                           '/staging2/')
 

@@ -1,3 +1,4 @@
+"""lhv.hvXXXXXX. driver"""
 from datetime import datetime
 import dateutil.tz as tz
 import json
@@ -60,11 +61,13 @@ class LiquidhubCensusDriver(CensusDriver):
         if 'accredo' == source_name.lower() and no_transactional:
             # This version of the feed doesn't have an hvJoinKey, so create one to reduce
             # downstream burden
-            df = self._spark.table('matching_payload').withColumn('hvJoinKey', FN.monotonically_increasing_id()).cache()
+            df = self._spark.table('matching_payload')\
+                .withColumn('hvJoinKey', FN.monotonically_increasing_id()).cache()
             df.createOrReplaceTempView('matching_payload')
             df.count()
 
-            df = self._spark.table('matching_payload').select(FN.col('hvJoinKey').alias('hvjoinkey')) \
+            df = self._spark.table('matching_payload')\
+                .select(FN.col('hvJoinKey').alias('hvjoinkey')) \
                 .withColumn('manufacturer', FN.lit(manufacturer)) \
                 .withColumn('source_name', FN.lit(source_name)) \
 
@@ -93,30 +96,35 @@ class LiquidhubCensusDriver(CensusDriver):
         )
         deliverable = content.select(*[content[content.columns[i]].alias(header[i]) for i in range(len(header))])
 
-        content.select('source_name', 'manufacturer').distinct().createOrReplaceTempView('liquidhub_summary')
+        content.select('source_name', 'manufacturer')\
+            .distinct().createOrReplaceTempView('liquidhub_summary')
 
         # Identify data from unexpected manufacturers
         bad_content = content.select('source_patient_id', 'source_name'
-                                     , FN.coalesce(FN.col('manufacturer'), FN.lit('UNKNOWN')).alias('manufacturer'))\
+                                     , FN.coalesce(FN.col('manufacturer'),
+                                                   FN.lit('UNKNOWN')).alias('manufacturer'))\
             .where((FN.lower(FN.col('manufacturer')).isin(self.VALID_MANUFACTURERS) == False)
                    | FN.isnull(FN.col('manufacturer')))
 
         small_bad_manus = bad_content\
-            .groupBy(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'), FN.lower(FN.col('manufacturer')))
+            .groupBy(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'),
+                               FN.lower(FN.col('manufacturer')))
                      .alias('manu'))\
             .count().where('count <= 5').collect()
 
         small_bad_manus = [r.manu for r in small_bad_manus]
 
         few_bad_rows = bad_content\
-            .where(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'), FN.lower(FN.col('manufacturer')))
+            .where(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'),
+                             FN.lower(FN.col('manufacturer')))
                    .alias('manu').isin(small_bad_manus))\
             .groupBy('source_name', 'manufacturer')\
             .agg(FN.collect_set('source_patient_id')
                  .alias('bad_patient_ids'), FN.count('manufacturer').alias('bad_patient_count'))
 
         lots_bad_rows = bad_content\
-            .where(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'), FN.lower(FN.col('manufacturer')))
+            .where(FN.concat(FN.lower(FN.col('source_name')), FN.lit('|'),
+                             FN.lower(FN.col('manufacturer')))
                    .alias('manu').isin(small_bad_manus) == False)\
             .groupBy('source_name', 'manufacturer')\
             .agg(FN.count('manufacturer').alias('bad_patient_count'))\
@@ -140,7 +148,8 @@ class LiquidhubCensusDriver(CensusDriver):
         if len(err) != 0:
             with open('/tmp/error_report_' + batch_id + '.txt', 'w') as fout:
                 fout.write('\n'.join([
-                    '{}|{}|{}|{}'.format(r.source_name, r.manufacturer, r.bad_patient_count, json.dumps(r.bad_patient_ids))
+                    '{}|{}|{}|{}'.format(r.source_name, r.manufacturer,
+                                         r.bad_patient_count, json.dumps(r.bad_patient_ids))
                     for r in err
                 ]))
             subprocess.check_call([

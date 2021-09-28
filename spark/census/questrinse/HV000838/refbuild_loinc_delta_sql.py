@@ -1,4 +1,4 @@
-
+"""rebuild questrince hv000838"""
 TABLE_CONF = [
     {
         "table_name": "lqrc_order_result_trans"
