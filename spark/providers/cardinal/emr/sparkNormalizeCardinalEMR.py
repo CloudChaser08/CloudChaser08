@@ -1,3 +1,6 @@
+"""
+cardinal normalize
+"""
 import argparse
 from datetime import datetime, date
 from spark.runner import Runner
@@ -126,9 +129,11 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
     """).createOrReplaceTempView('transactions_demographics')
 
     normalized_encounter = \
-        runner.run_spark_script('normalize_encounter.sql', return_output=True, source_file_path=script_path)
+        runner.run_spark_script('normalize_encounter.sql', return_output=True,
+                                source_file_path=script_path)
     normalized_diagnosis = \
-        runner.run_spark_script('normalize_diagnosis.sql', return_output=True, source_file_path=script_path)
+        runner.run_spark_script('normalize_diagnosis.sql', return_output=True,
+                                source_file_path=script_path)
     normalized_procedure = schema_enforcer.apply_schema(
         runner.run_spark_script(
             'normalize_procedure_enc.sql', return_output=True, source_file_path=script_path
@@ -364,7 +369,8 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
                 update_whitelists=table.get('custom_whitelist_additions', lambda x: x)
             ),
             *[
-                postprocessor.apply_date_cap(runner.sqlContext, date_col, max_date, FEED_ID, domain_name)
+                postprocessor.apply_date_cap(runner.sqlContext, date_col, max_date, FEED_ID,
+                                             domain_name)
                 for (date_col, domain_name) in table['date_caps']
             ]
         )(
@@ -373,7 +379,8 @@ def run(spark, runner, date_input, num_output_files=1, batch_id=None,
 
         # unload delivery file for cardinal
         normalized_records_unloader.unload_delimited_file(
-            spark, runner, '{}{}/'.format(DELIVERABLE_LOC, table['data_type']), table['table_name'], test=test,
+            spark, runner, '{}{}/'.format(DELIVERABLE_LOC, table['data_type']), table['table_name'],
+            test=test,
             num_files=num_output_files
         )
 

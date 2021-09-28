@@ -1,3 +1,6 @@
+"""
+cardinal rhm normalize
+"""
 import argparse
 import re
 import pyspark.sql.functions as FN
@@ -48,11 +51,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     encounter_transformer = Transformer(
         ptnt_birth_yr=[
-            TransformFunction(post_norm_cleanup.cap_year_of_birth, ['ptnt_age_num', 'enc_date', 'ptnt_birth_yr'])
+            TransformFunction(post_norm_cleanup.cap_year_of_birth,
+                              ['ptnt_age_num', 'enc_date', 'ptnt_birth_yr'])
         ],
         ptnt_age_num=[
             TransformFunction(post_norm_cleanup.cap_age, ['ptnt_age_num']),
-            TransformFunction(post_norm_cleanup.validate_age, ['ptnt_age_num', 'enc_date', 'ptnt_birth_yr'])
+            TransformFunction(post_norm_cleanup.validate_age,
+                              ['ptnt_age_num', 'enc_date', 'ptnt_birth_yr'])
         ],
         ptnt_gender_cd=[
             TransformFunction(post_norm_cleanup.clean_up_gender, ['ptnt_gender_cd'])
@@ -75,7 +80,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ],
         bmi_calc=[
             TransformFunction(post_norm_cleanup.clean_up_vital_sign,
-                              ['const_bmi', 'bmi_calc', 'const_bmi_index', 'ptnt_gender_cd', 'ptnt_age_num',
+                              ['const_bmi', 'bmi_calc', 'const_bmi_index',
+                               'ptnt_gender_cd', 'ptnt_age_num',
                                'ptnt_birth_yr', 'const_null', 'enc_date'])
         ],
         primary_diagnosis_code_id=[
@@ -95,11 +101,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     lab_transformer = Transformer(
         ptnt_birth_yr=[
-            TransformFunction(post_norm_cleanup.cap_year_of_birth, ['ptnt_age_num', 'enc_date', 'ptnt_birth_yr'])
+            TransformFunction(post_norm_cleanup.cap_year_of_birth,
+                              ['ptnt_age_num', 'enc_date', 'ptnt_birth_yr'])
         ],
         ptnt_age_num=[
             TransformFunction(post_norm_cleanup.cap_age, ['ptnt_age_num']),
-            TransformFunction(post_norm_cleanup.validate_age, ['ptnt_age_num', 'enc_date', 'ptnt_birth_yr'])
+            TransformFunction(post_norm_cleanup.validate_age,
+                              ['ptnt_age_num', 'enc_date', 'ptnt_birth_yr'])
         ],
         ptnt_gender_cd=[
             TransformFunction(post_norm_cleanup.clean_up_gender, ['ptnt_gender_cd'])
@@ -118,8 +126,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     enc3 = schema_enforcer.apply_schema(enc2, encounter_schema)
     lab3 = schema_enforcer.apply_schema(lab2, lab_schema)
 
-    enc3.repartition(10).write.parquet('s3a://salusv/tmp/cardinal_rhm/processed/encounter/', compression='gzip')
-    lab3.repartition(10).write.parquet('s3a://salusv/tmp/cardinal_rhm/processed/lab/', compression='gzip')
+    enc3.repartition(10).write.\
+        parquet('s3a://salusv/tmp/cardinal_rhm/processed/encounter/', compression='gzip')
+    lab3.repartition(10).write.\
+        parquet('s3a://salusv/tmp/cardinal_rhm/processed/lab/', compression='gzip')
 
     output_paths = ','.join(
         [

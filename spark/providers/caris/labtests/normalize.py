@@ -1,3 +1,6 @@
+"""
+caris normalize
+"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime
@@ -54,8 +57,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         addon_path = 's3a://salusv/incoming/labtests/caris/hist_additional_columns/'
 
     else:
-        input_path = 's3a://salusv/incoming/labtests/caris/{}/{:02d}/'.format(date_obj.year, date_obj.month)
-        matching_path = 's3a://salusv/matching/payload/labtests/caris/{}/{:02d}/'.format(date_obj.year, date_obj.month)
+        input_path = \
+            's3a://salusv/incoming/labtests/caris/{}/{:02d}/'.format(date_obj.year, date_obj.month)
+        matching_path = 's3a://salusv/matching/payload/labtests/caris/{}/{:02d}/'\
+            .format(date_obj.year, date_obj.month)
         addon_path = 's3a://salusv/incoming/labtests/caris/hist_additional_columns/'
 
     setid = 'Data_7_29' if date_input == '2016-08-01' \

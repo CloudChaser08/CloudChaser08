@@ -1,3 +1,6 @@
+"""
+cardinal pms normalize
+"""
 import argparse
 
 

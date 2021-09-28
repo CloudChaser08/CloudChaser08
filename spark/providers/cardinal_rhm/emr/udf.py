@@ -29,7 +29,7 @@ def linked_and_unlinked_diagnoses(diags, pointers):
         res = [(None, None)]
 
     # Identify any unique diagnosis not linked to the procedure. Make sure they
-    # are not duplicates of a linked diagnosis 
+    # are not duplicates of a linked diagnosis
     for d in diags:
         if d is not None and d not in diag_priority:
             diag_priority[d] = None  # diagnoses without priority

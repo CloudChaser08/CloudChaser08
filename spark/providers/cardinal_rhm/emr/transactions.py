@@ -1,3 +1,6 @@
+"""
+cardinal rhm schema
+"""
 TABLES = ['header', 'serviceline']
 
 TABLE_COLUMNS = {

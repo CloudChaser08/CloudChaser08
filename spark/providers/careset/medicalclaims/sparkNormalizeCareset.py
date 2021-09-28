@@ -1,3 +1,6 @@
+"""
+careset normalize
+"""
 from datetime import datetime, date
 import argparse
 
@@ -13,6 +16,7 @@ import spark.helpers.privacy.medicalclaims as medical_priv
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
+from spark.providers.careset.medicalclaims import load_transactions
 
 
 FEED_ID = '57'
@@ -55,7 +59,6 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     max_date = date_input
 
-    from spark.providers.careset.medicalclaims import load_transactions
     load_transactions.load(runner, input_path)
 
     normalized_df = runner.run_spark_script(

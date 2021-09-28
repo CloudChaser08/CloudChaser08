@@ -1,3 +1,6 @@
+"""
+cardinal medicalclaims census schema
+"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime
@@ -39,13 +42,16 @@ def run(spark, runner, date_input, batch_id, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal_pms/medicalclaims_census/resources/input/'
+            script_path,
+            '../../../test/providers/cardinal_pms/medicalclaims_census/resources/input/'
         ) + '/'
         matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal_pms/medicalclaims_census/resources/payload/'
+            script_path,
+            '../../../test/providers/cardinal_pms/medicalclaims_census/resources/payload/'
         ) + '/'
         DELIVERABLE_LOC = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal_pms/medicalclaims_census/resources/delivery/'
+            script_path,
+            '../../../test/providers/cardinal_pms/medicalclaims_census/resources/delivery/'
         ) + '/'
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/out/{}/'\
@@ -220,9 +226,9 @@ def main(args):
 
     if args.airflow_test:
         output_path = OUTPUT_PATH_TEST
-        deliverable_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/medicalclaims/delivery/{}/'.format(
-            args.batch_id if args.batch_id else args.date.replace('-', '/')
-        )
+        deliverable_path = \
+            's3://salusv/testing/dewey/airflow/e2e/cardinal_pms/medicalclaims/delivery/{}/'\
+            .format(args.batch_id if args.batch_id else args.date.replace('-', '/'))
     else:
         output_path = OUTPUT_PATH_PRODUCTION
         deliverable_path = 's3://salusv/deliverable/cardinal_pms-0/{}/'.format(

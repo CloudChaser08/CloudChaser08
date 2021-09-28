@@ -1,3 +1,6 @@
+"""
+cardinal pds
+"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime, timedelta
@@ -59,7 +62,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         matching_path = 's3a://salusv/matching/payload/pharmacyclaims/cardinal_pds/{}/'.format(
             date_input.replace('-', '/')
         )
-        normalized_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/normalized/'
+        normalized_path = \
+            's3://salusv/testing/dewey/airflow/e2e/cardinal_pds/pharmacyclaims/normalized/'
         table_format = TEXT_FORMAT
     else:
         input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_pds/{}/'.format(
@@ -146,7 +150,8 @@ LOCATION '{}'
     for mo in [curr_mo, prev_mo]:
         runner.run_spark_query(
             "ALTER TABLE normalized_claims "
-            "ADD PARTITION (part_best_date='{0}') LOCATION '{1}part_best_date={0}/'".format(mo, normalized_path))
+            "ADD PARTITION (part_best_date='{0}') "
+            "LOCATION '{1}part_best_date={0}/'".format(mo, normalized_path))
 
     runner.run_spark_script('clean_out_reversed_claims.sql')
 
@@ -169,7 +174,8 @@ LOCATION '{}'
 
     if not test:
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql', 'cardinal_pds',
+            spark, runner, 'pharmacyclaims',
+            'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql', 'cardinal_pds',
             'pharmacyclaims_common_model_final', 'date_service', date_input
         )
 
@@ -205,7 +211,8 @@ def main(args):
     curr_mo = args.date[:7]
     prev_mo = (datetime.strptime(curr_mo + '-01', '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m')
     for mo in [curr_mo, prev_mo]:
-        subprocess.check_call(['aws', 's3', 'rm', '--recursive', '{}part_best_date={}/'.format(normalized_path, mo)])
+        subprocess.check_call(['aws', 's3', 'rm', '--recursive',
+                               '{}part_best_date={}/'.format(normalized_path, mo)])
 
     logger.log("Moving files to s3")
     if args.airflow_test:

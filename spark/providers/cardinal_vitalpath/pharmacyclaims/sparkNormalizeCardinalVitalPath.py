@@ -1,4 +1,7 @@
-#! /usr/bin/python
+"""
+cardinal vitalpath normalize
+"""
+# ! /usr/bin/python
 import argparse
 from datetime import datetime, date
 from spark.runner import Runner
@@ -17,7 +20,8 @@ from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
 
 schema = pharma_schemas['schema_v6']
-OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/pharmacyclaims/spark-output/'
+OUTPUT_PATH_TEST = \
+    's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/pharmacyclaims/spark-output/'
 OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + schema.output_directory
 
 
@@ -31,44 +35,47 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         patient_input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal_vitalpath/pharmacyclaims/resources/input/patient/'
+            script_path,
+            '../../../test/providers/cardinal_vitalpath/pharmacyclaims/resources/input/patient/'
         ) + '/'
         patient_matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal_vitalpath/pharmacyclaims/resources/matching/patient/'
+            script_path,
+            '../../../test/providers/cardinal_vitalpath/pharmacyclaims/resources/matching/patient/'
         ) + '/'
         medical_input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal_vitalpath/pharmacyclaims/resources/input/medical/'
+            script_path,
+            '../../../test/providers/cardinal_vitalpath/pharmacyclaims/resources/input/medical/'
         ) + '/'
         medical_matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/cardinal_vitalpath/pharmacyclaims/resources/matching/medical/'
+            script_path,
+            '../../../test/providers/cardinal_vitalpath/pharmacyclaims/resources/matching/medical/'
         ) + '/'
     elif airflow_test:
-        patient_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/out/{}/patient/'.format(
-            date_input.replace('-', '/')[:-3]
-        )
-        patient_matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/payload/{}/patient/'.format(
-            date_input.replace('-', '/')[:-3]
-        )
-        medical_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/out/{}/medical/'.format(
-            date_input.replace('-', '/')[:-3]
-        )
-        medical_matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/payload/{}/medical/'.format(
-            date_input.replace('-', '/')[:-3]
-        )
-    else:
-        patient_input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/patient/'.format(
-            date_input.replace('-', '/')[:-3]
-        )
-        patient_matching_path = \
-            's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/patient_passthrough/'.format(
+        patient_input_path = \
+            's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/out/{}/patient/'.format(
                 date_input.replace('-', '/')[:-3]
-        )
-        medical_input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/med/'.format(
-            date_input.replace('-', '/')[:-3]
-        )
-        medical_matching_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/med_passthrough/'.format(
-            date_input.replace('-', '/')[:-3]
-        )
+            )
+        patient_matching_path = \
+            's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/payload/{}/patient/'.format(
+                date_input.replace('-', '/')[:-3]
+            )
+        medical_input_path = \
+            's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/out/{}/medical/'.format(
+                date_input.replace('-', '/')[:-3])
+        medical_matching_path = \
+            's3://salusv/testing/dewey/airflow/e2e/cardinal_vitalpath/payload/{}/medical/'.format(
+                date_input.replace('-', '/')[:-3])
+    else:
+        patient_input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/patient/' \
+            .format(date_input.replace('-', '/')[:-3])
+        patient_matching_path = \
+            's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/patient_passthrough/' \
+                .format(date_input.replace('-', '/')[:-3])
+        medical_input_path = 's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/med/' \
+            .format(date_input.replace('-', '/')[:-3])
+        medical_matching_path = \
+            's3a://salusv/incoming/pharmacyclaims/cardinal_vitalpath/{}/med_passthrough/' \
+                .format(date_input.replace('-', '/')[:-3])
 
     if test:
         min_date = '1901-01-01'
@@ -83,8 +90,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     max_date = date_input
 
-    payload_loader.load(runner, medical_matching_path, ['hvJoinKey', 'patientId'], 'cardinal_vitalpath_med_deid')
-    payload_loader.load(runner, patient_matching_path, ['hvJoinKey', 'patientId'], 'cardinal_vitalpath_patient_deid')
+    payload_loader.load(runner, medical_matching_path, ['hvJoinKey', 'patientId'],
+                        'cardinal_vitalpath_med_deid')
+    payload_loader.load(runner, patient_matching_path, ['hvJoinKey', 'patientId'],
+                        'cardinal_vitalpath_patient_deid')
 
     runner.run_spark_script('load_transactions.sql', [
         ['med_input_path', medical_input_path],
@@ -127,7 +136,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             hvm_historical = date('1901', '1', '1')
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
+            spark, runner, 'pharmacyclaims',
+            'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
             'cardinal_vitalpath', 'pharmacyclaims_common_model', 'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,
                                          hvm_historical.month,

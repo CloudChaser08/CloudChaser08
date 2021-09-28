@@ -1,3 +1,6 @@
+"""
+cardinal pms normalize
+"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime, date
