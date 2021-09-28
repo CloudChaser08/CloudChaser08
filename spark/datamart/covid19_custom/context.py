@@ -40,7 +40,8 @@ LAB_SKIP_ARCHIVE = True
 FULL_ARCHIVE_REQUESTED_DAYS = ['Sunday']
 FULL_ARCHIVE_SUFFIX_KEY = 'F'
 INCREMENTAL_ARCHIVE_SUFFIX_KEY = 'I'
-LAB_BYPASS_STAGE_TRANS_HDFS_TO_PROD = False  # do not enable this option for incremental; risk for data duplicates
+LAB_BYPASS_STAGE_TRANS_HDFS_TO_PROD = False
+# do not enable this option for incremental; risk for data duplicates
 
 """
 Identify providers to balance 

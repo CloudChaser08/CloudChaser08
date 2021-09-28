@@ -1,3 +1,4 @@
+"""covid 19 labtest trasnformer"""
 import spark.common.utility.logger as logger
 import spark.datamart.covid19.context as context
 import spark.datamart.datamart_util as dmutil
@@ -57,7 +58,8 @@ class Covid19LabTransformer:
         try:
             if len(src_path) > 0 and len(target_path) > 0:
                 if action in ['sync', 'cp', 'mv']:
-                    subprocess.check_call(['aws', 's3', action, '--recursive', src_path, target_path])
+                    subprocess.\
+                        check_call(['aws', 's3', action, '--recursive', src_path, target_path])
                 elif action == 'sw':
                     subprocess.check_call(['aws', 's3', 'rm', '--recursive', target_path])
                     subprocess.check_call(['aws', 's3', 'mv', '--recursive', src_path, target_path])
@@ -239,7 +241,7 @@ class Covid19LabTransformer:
             runner.run_spark_script('prodsql/xt_{}_{}.sql'.format(db, table), kv_list, return_output=False)
             logger.log(' -table_switch: table does not exist and re-created')
         else:
-            runner.run_spark_query("alter table {}.{} set location '{}'".format(db, table, new_table_location))
+            runner.run_spark_query("alter table {}.{} set location '{}'".format(db,table, new_table_location))
 
         runner.run_spark_query('msck repair table {}.{}'.format(db, table))
         logger.log('           -table_location_switch: Completed')

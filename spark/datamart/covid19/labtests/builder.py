@@ -1,3 +1,4 @@
+"""covid 19 builder"""
 import spark.common.utility.logger as logger
 import spark.helpers.hdfs_utils as hdfs_utils
 import spark.datamart.covid19.context as context
@@ -44,7 +45,8 @@ class Covid19LabBuilder:
 
     _lab_datamart_db = context.LAB_DW_SCHEMA
     _lab_fact_covid_cleansed_table = context.LAB_DW_COVID_CLEANSED_TABLE_NAME
-    _lab_fact_covid_cleansed_is_partitioned_table = context.LAB_DW_COVID_CLEANSED_TABLE_IS_PARTITIONED
+    _lab_fact_covid_cleansed_is_partitioned_table = \
+        context.LAB_DW_COVID_CLEANSED_TABLE_IS_PARTITIONED
 
     def __init__(self,
                  spark,
@@ -138,7 +140,8 @@ class Covid19LabBuilder:
                                 ['list_of_part_mth', list_of_part_mth],
                                 ['nbr_of_buckets', str(nbr_of_buckets)]
                             ], source_file_path=self.sql_path, return_output=True).repartition(
-                                'part_mth', 'claim_bucket_id').createOrReplaceTempView('lab_collect_tests')
+                                'part_mth', 'claim_bucket_id')\
+                            .createOrReplaceTempView('lab_collect_tests')
 
                         self.runner.run_spark_script(
                             '2_lab_collect_results2575.sql', [
@@ -146,13 +149,15 @@ class Covid19LabBuilder:
                                 ['list_of_part_mth', list_of_part_mth],
                                 ['nbr_of_buckets', str(nbr_of_buckets)]
                             ], source_file_path=self.sql_path, return_output=True).repartition(
-                                'part_mth', 'claim_bucket_id').cache().createOrReplaceTempView('lab_collect_results2575')
+                                'part_mth', 'claim_bucket_id').cache()\
+                            .createOrReplaceTempView('lab_collect_results2575')
 
                     lab_build_all_tests_view = 'lab_build_all_tests'
 
                     self.runner.run_spark_script('3_lab_build_all_tests.sql'
                                                  , source_file_path=self.sql_path
-                                                 , return_output=True).createOrReplaceTempView(lab_build_all_tests_view)
+                                                 , return_output=True)\
+                        .createOrReplaceTempView(lab_build_all_tests_view)
 
                     output_table = self.spark.table(lab_build_all_tests_view)
                     logger.log("        -loading: writing provider = {} part months ['{}']".format(
@@ -160,7 +165,8 @@ class Covid19LabBuilder:
 
                     output_table.repartition(
                         'part_mth', 'claim_bucket_id').write.parquet(
-                            self._lab_fact_all_tests, compression='gzip', mode='append', partitionBy=self._lab_partitions)
+                            self._lab_fact_all_tests, compression='gzip', mode='append',
+                        partitionBy=self._lab_partitions)
 
                     self.runner.run_spark_query('drop view {}'.format(lab_build_all_tests_view))
 
@@ -198,14 +204,17 @@ class Covid19LabBuilder:
                 100 buckets * 7 months refresh * 6 providers = set 4160 partitions/parallelism
         """
         nbr_of_part_parallel = \
-            self.requested_list_of_months * self.get_nbr_of_buckets() * len(self._lab_part_provider_list)
+            self.requested_list_of_months \
+            * self.get_nbr_of_buckets() \
+            * len(self._lab_part_provider_list)
         self.spark.sql("SET spark.default.parallelism={}".format(nbr_of_part_parallel))
         self.spark.sql("SET spark.shuffle.partitions={}".format(nbr_of_part_parallel))
 
         lab_build_all_tests_view = 'lab_build_all_tests'
         lab_build_covid_tests_view = 'lab_build_covid_tests'
         self.spark.read.parquet(self._lab_fact_all_tests).repartition(
-            'part_mth', 'part_provider', 'covid19_ind').createOrReplaceTempView(lab_build_all_tests_view)
+            'part_mth', 'part_provider', 'covid19_ind')\
+            .createOrReplaceTempView(lab_build_all_tests_view)
 
         current_part_mth = []
         for part_mth in self.requested_list_of_months:
@@ -273,7 +282,8 @@ class Covid19LabBuilder:
         hdfs_utils.clean_up_output_hdfs(self._lab_fact_covid_cleansed)
 
         logger.log('        -loading: lab covid tests cleansed - reading DELTA')
-        self.spark.read.parquet(self._lab_fact_covid_tests).createOrReplaceTempView(lab_build_covid_tests_view)
+        self.spark.read.parquet(self._lab_fact_covid_tests)\
+            .createOrReplaceTempView(lab_build_covid_tests_view)
 
         lab_cleanse_covid_tests_delta_df = self.runner.run_spark_script(
             '5_lab_cleanse_covid_tests.sql', source_file_path=self.sql_path, return_output=True)
@@ -286,8 +296,9 @@ class Covid19LabBuilder:
                                                                              , self._lab_fact_covid_cleansed_table
                                                                              , list_of_part_mth))
 
-            dmutil.table_repair(self.spark, self.runner, self._lab_datamart_db, self._lab_fact_covid_cleansed_table
-                                , self._lab_fact_covid_cleansed_is_partitioned_table)
+            dmutil.table_repair(self.spark, self.runner, self._lab_datamart_db,
+                                self._lab_fact_covid_cleansed_table,
+                                self._lab_fact_covid_cleansed_is_partitioned_table)
 
             lab_cleanse_covid_tests_all_df = dmutil.df_union_all(
                 self.runner.run_spark_script(
@@ -307,7 +318,8 @@ class Covid19LabBuilder:
         logger.log('        -loading: lab covid tests cleansed - writing DELTA')
 
         output_table.repartition(2).write.parquet(
-            self._lab_fact_covid_cleansed, compression='gzip', mode='append', partitionBy=self._lab_partitions)
+            self._lab_fact_covid_cleansed, compression='gzip', mode='append',
+            partitionBy=self._lab_partitions)
 
         self.runner.run_spark_query('drop view {}'.format(lab_build_covid_tests_view))
         self.runner.run_spark_query('drop view {}'.format(lab_cleanse_covid_tests_all_view))
@@ -339,7 +351,8 @@ class Covid19LabBuilder:
         lab_cleanse_covid_tests_all_df.createOrReplaceTempView(lab_cleanse_covid_tests_all_view)
 
         self.runner.run_spark_script('6_lab_build_covid_ref.sql', source_file_path=self.sql_path
-                                     , return_output=True).createOrReplaceTempView(lab_build_covid_ref_view)
+                                     , return_output=True).\
+            createOrReplaceTempView(lab_build_covid_ref_view)
 
         output_table = self.spark.table(lab_build_covid_ref_view)
 
@@ -378,7 +391,8 @@ class Covid19LabBuilder:
         covid_ref_df = self.spark.read.parquet(self._lab_ref_covid)
 
         covid_ref_df.repartition(
-            'part_provider', 'test_ordered_name', 'result_name', 'hv_method_flag', 'result_comments', 'result')
+            'part_provider', 'test_ordered_name', 'result_name', 'hv_method_flag',
+            'result_comments', 'result')
         covid_ref_df.cache().createOrReplaceTempView(lab_build_covid_ref_view)
 
         logger.log('        -loading: lab covid snapshot - reading covid tests cleansed')
@@ -386,7 +400,8 @@ class Covid19LabBuilder:
         lab_cleanse_covid_tests_all_df.repartition(
             'claim_bucket_id', 'date_service', 'part_provider', 'test_ordered_name', 'result_name'
             , 'hv_method_flag', 'result_comments', 'result')
-        lab_cleanse_covid_tests_all_df.cache().createOrReplaceTempView(lab_cleanse_covid_tests_all_view)
+        lab_cleanse_covid_tests_all_df.cache()\
+            .createOrReplaceTempView(lab_cleanse_covid_tests_all_view)
 
         last_bucket_id = self.get_nbr_of_buckets() - 1
         self.runner.run_spark_script(
@@ -412,7 +427,8 @@ class Covid19LabBuilder:
 
         output_table = self.spark.table(lab_build_covid_snapshot_view)
 
-        output_table.repartition(5).write.parquet(self._lab_covid_snapshot, compression='gzip', mode='append')
+        output_table.repartition(5).write.parquet(self._lab_covid_snapshot,
+                                                  compression='gzip', mode='append')
 
         lab_cleanse_covid_tests_all_df.unpersist()
         covid_ref_df.unpersist()
@@ -450,11 +466,13 @@ class Covid19LabBuilder:
         covid_snapshot_df.cache().createOrReplaceTempView(lab_build_covid_snapshot_view)
 
         self.runner.run_spark_script('8_lab_build_covid_sum.sql', source_file_path=self.sql_path
-                                     , return_output=True).createOrReplaceTempView(lab_build_covid_sum_view)
+                                     , return_output=True)\
+            .createOrReplaceTempView(lab_build_covid_sum_view)
 
         output_table = self.spark.table(lab_build_covid_sum_view)
 
-        output_table.repartition(1).write.parquet(self._lab_covid_sum, compression='gzip', mode='append')
+        output_table.repartition(1).write.parquet(self._lab_covid_sum, compression='gzip',
+                                                  mode='append')
 
         covid_snapshot_df.unpersist()
         self.runner.run_spark_query('drop view {}'.format(lab_build_covid_snapshot_view))
