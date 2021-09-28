@@ -1,3 +1,6 @@
+"""
+mckesson res source schema v1
+"""
 from spark.helpers.source_table import SourceTable
 
 # old schema with 119 columns
@@ -7,12 +10,12 @@ TABLE_CONF = {
         separator='|',
         confirm_schema=True,
         columns=[
-            'FillerRecordID', 
-            'PrescriptionKey', 
-            'PatientID', 
-            'PatientFirstName', 
+            'FillerRecordID',
+            'PrescriptionKey',
+            'PatientID',
+            'PatientFirstName',
             'PatientLastName',
-            'PatientGenderCode', 
+            'PatientGenderCode',
             'PatientAge',
             'PatientDateofBirth',
             'PatientAddress',

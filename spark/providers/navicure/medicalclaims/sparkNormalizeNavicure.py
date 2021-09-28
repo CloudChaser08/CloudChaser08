@@ -37,8 +37,10 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
             SCRIPT_PATH, '../../../test/providers/navicure/medicalclaims/resources/matching/'
         ) + '/'
     elif end_to_end_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/navicure/medicalclaims/out/2019/02/26/'
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/navicure/medicalclaims/payload/2019/02/26/'
+        input_path = \
+            's3://salusv/testing/dewey/airflow/e2e/navicure/medicalclaims/out/2019/02/26/'
+        matching_path = \
+            's3://salusv/testing/dewey/airflow/e2e/navicure/medicalclaims/payload/2019/02/26/'
     else:
         input_path = 's3://salusv/incoming/medicalclaims/navicure/{}/'.format(
             date_input.replace('-', '/')
@@ -55,8 +57,10 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
         spark.table('date_explode_indices').cache().createOrReplaceTempView('date_explode_indices')
         spark.table('date_explode_indices').count()
 
-    records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
-    payload_loader.load(runner, matching_path, table_name='matching_payload', load_file_name=True)
+    records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas,
+                                         load_file_name=True)
+    payload_loader.load(runner, matching_path, table_name='matching_payload',
+                        load_file_name=True)
 
     runner.run_all_spark_scripts([
         ['VDR_FILE_DT', date_input, False]

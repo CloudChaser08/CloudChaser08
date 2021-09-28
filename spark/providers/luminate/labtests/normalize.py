@@ -1,3 +1,6 @@
+"""
+Luminate normalize
+"""
 import argparse
 import spark.providers.luminate.labtests.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver

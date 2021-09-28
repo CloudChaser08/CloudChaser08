@@ -1,3 +1,6 @@
+"""
+mckesson Transactional Normalize
+"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime
@@ -23,7 +26,7 @@ spark = None
 pharma_schema = pharma_schemas['schema_v6']
 
 OUTPUT_PATH_PRODUCTION = 's3a://salusv/warehouse/parquet/' + pharma_schema.output_directory
-OUTPUT_PATH_TRANSFORMED = 's3://salusv/warehouse/transformed/'+ pharma_schema.output_directory
+OUTPUT_PATH_TRANSFORMED = 's3://salusv/warehouse/transformed/' + pharma_schema.output_directory
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson/pharmacyclaims/spark-output/'
 
 
@@ -48,7 +51,8 @@ def load(input_path, restriction_level, runner):
             'FillerTransactionTime', col('ClaimTransactionTime')
         )
     elif len(unlabeled_input.columns) == 119:
-        labeled_input = runner.sqlContext.createDataFrame(unlabeled_input.rdd, transaction_schemas.old_schema)
+        labeled_input = runner.sqlContext.createDataFrame(unlabeled_input.rdd,
+                                                          transaction_schemas.old_schema)
     else:
         raise ValueError('Unexpected column length in transaction data: {}'.format(str(len(unlabeled_input.columns))))
 
@@ -79,9 +83,9 @@ def postprocess_and_unload(date_input, test_dir, runner):
     ).createOrReplaceTempView('{}_pharmacyclaims_common_model'.format(restriction_level))
 
     normalized_records_unloader.partition_and_rename(
-        spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql', provider,
-        '{}_pharmacyclaims_common_model'.format(restriction_level), 'date_service', date_input,
-        test_dir=test_dir
+        spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql'
+        , provider, '{}_pharmacyclaims_common_model'.format(restriction_level), 'date_service',
+        date_input,test_dir=test_dir
     )
 
 

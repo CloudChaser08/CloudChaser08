@@ -1,3 +1,6 @@
+"""
+mckesson macro helix normalize
+"""
 from datetime import datetime, date
 import argparse
 
@@ -13,12 +16,12 @@ import spark.helpers.explode as explode
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.privacy.pharmacyclaims as pharm_priv
 from spark.providers.mckesson_macro_helix.pharmacyclaims import load_transactions
-from spark.providers.mckesson_macro_helix.pharmacyclaims.load_transactions import Schema as TransactionsSchema
+from spark.providers.mckesson_macro_helix.pharmacyclaims.load_transactions \
+    import Schema as TransactionsSchema
 
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
-
 
 FEED_ID = '51'
 VENDOR_ID = '86'
@@ -34,25 +37,29 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/mckesson_macro_helix/pharmacyclaims/resources/input/'
+            script_path,
+            '../../../test/providers/mckesson_macro_helix/pharmacyclaims/resources/input/'
         )
         matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/mckesson_macro_helix/pharmacyclaims/resources/matching/'
+            script_path,
+            '../../../test/providers/mckesson_macro_helix/pharmacyclaims/resources/matching/'
         )
     elif airflow_test:
         input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/out/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        matching_path = \
+            's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/payload/{}/'.format(
+                date_input.replace('-', '/')
+            )
     else:
         input_path = 's3://salusv/incoming/pharmacyclaims/mckesson_macro_helix/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/matching/payload/pharmacyclaims/mckesson_macro_helix/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        matching_path = \
+            's3://salusv/matching/payload/pharmacyclaims/mckesson_macro_helix/{}/'.format(
+                date_input.replace('-', '/')
+            )
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -117,7 +124,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
+            spark, runner, 'pharmacyclaims',
+            'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
             'mckesson_macro_helix', 'pharmacyclaims_common_model',
             'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,

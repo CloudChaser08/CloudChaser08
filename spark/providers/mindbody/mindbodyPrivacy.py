@@ -1,3 +1,4 @@
+"""MindbodyPrivacy"""
 from pyspark.sql.functions import col, udf
 # from spark.helpers.udf.general_helpers import extract_date
 # from datetime import datetime
@@ -21,4 +22,3 @@ def map_whitelist(df):
 
     return df.withColumn('event_val', map_udf(col('event_val')))          \
              .withColumn('event_val_uom', map_udf(col('event_val_uom')))
-

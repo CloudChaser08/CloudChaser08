@@ -1,3 +1,6 @@
+"""
+mckesson macro helix Tables
+"""
 TABLES = {
     'mckesson_macro_helix_transactions': [
         'row_id',
