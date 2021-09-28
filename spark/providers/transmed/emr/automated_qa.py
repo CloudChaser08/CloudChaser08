@@ -1,3 +1,6 @@
+"""
+automated QA
+"""
 from spark.spark_setup import init
 from spark.runner import Runner
 import spark.providers.transmed.emr.transaction_schemas as transaction_schemas

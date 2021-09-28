@@ -1,3 +1,6 @@
+"""
+visonex normalize
+"""
 import argparse
 import time
 from datetime import datetime
@@ -11,7 +14,6 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
-
 
 # init
 spark, sqlContext = init("Visonex")

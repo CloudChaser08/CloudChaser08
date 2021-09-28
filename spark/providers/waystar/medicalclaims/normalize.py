@@ -55,11 +55,10 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     else:
         driver.spark = spark
         driver.runner = runner
-        
         driver.input_path = file_utils.get_abs_path(
             __file__, '../../../test/providers/waystar/medicalclaims/resources/input/'	
-        ) + '/'	
-        driver.matching_path = file_utils.get_abs_path(	
+        ) + '/'
+        driver.matching_path = file_utils.get_abs_path(
             __file__, '../../../test/providers/waystar/medicalclaims/resources/matching/'	
         ) + '/'
 
