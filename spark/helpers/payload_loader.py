@@ -1,3 +1,4 @@
+"""payload loader default schema"""
 import logging
 from pyspark.sql.functions import coalesce, col, input_file_name
 import spark.helpers.postprocessor as postprocessor

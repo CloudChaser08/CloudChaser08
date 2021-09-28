@@ -1,3 +1,4 @@
+"""post processor"""
 # Generic, agnostic functions to be applied on a dataframe
 
 import spark.helpers.udf.general_helpers as gen_helpers
@@ -327,9 +328,11 @@ def compose(*functions):
 
 def parse_fixed_width_columns(df, columns):
     """
-    Parses fixed width rows given a spark dataframe and the column specification. Returns the parsed dataframe.
+    Parses fixed width rows given a spark dataframe and the column specification.
+    Returns the parsed dataframe.
     
-    Columns are specified with a list of tuples containing (column name, column start, column length, column type)
+    Columns are specified with a list of tuples containing (column name, column start,
+    column length, column type)
     """
     
     df_mas_cols = []

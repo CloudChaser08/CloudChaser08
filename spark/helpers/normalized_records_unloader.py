@@ -1,3 +1,4 @@
+"""normalized records loader"""
 import subprocess
 import re
 import time
@@ -64,12 +65,14 @@ def unload(
 
         staging_dir = test_dir + staging_subdir
         part_files_cmd = [
-            'find', staging_dir + provider_partition_name + '=' + provider_partition_value + '/', '-type', 'f'
+            'find', staging_dir +
+                    provider_partition_name + '=' + provider_partition_value + '/', '-type', 'f'
         ]
     else:
         staging_dir = constants.hdfs_staging_dir + staging_subdir
         part_files_cmd = [
-            'hadoop', 'fs', '-ls', '-R', staging_dir + provider_partition_name + '=' + provider_partition_value + '/'
+            'hadoop', 'fs', '-ls', '-R',
+            staging_dir + provider_partition_name + '=' + provider_partition_value + '/'
         ]
 
     if date_partition_value:
@@ -120,8 +123,8 @@ def unload(
 def partition_and_rename(
         spark, runner, data_type, common_model_script, provider, table_name, date_column, file_date,
         partition_value=None, hvm_historical_date=None, test_dir=None, staging_subdir='',
-        distribution_key='record_id', provider_partition='part_provider', date_partition='part_best_date', columns=None,
-        unload_partition_count=20
+        distribution_key='record_id', provider_partition='part_provider',
+        date_partition='part_best_date', columns=None, unload_partition_count=20
 ):
     """
     Unload normalized data into partitions based on
@@ -140,18 +143,21 @@ def partition_and_rename(
 
     if test_dir:
         staging_dir = test_dir + staging_subdir
-        part_files_cmd = ['find', staging_dir + provider_partition + '=' + provider + '/', '-type', 'f']
+        part_files_cmd = ['find', staging_dir + provider_partition + '=' + provider + '/',
+                          '-type', 'f']
         common_dirpath = '../common/'
 
     else:
         staging_dir = constants.hdfs_staging_dir + staging_subdir
-        part_files_cmd = ['hadoop', 'fs', '-ls', '-R', staging_dir + provider_partition + '=' + provider + '/']
+        part_files_cmd = ['hadoop', 'fs', '-ls', '-R',
+                          staging_dir + provider_partition + '=' + provider + '/']
         common_dirpath = '../../../../common/'
 
     runner.run_spark_script(common_dirpath + common_model_script, [
         ['table_name', 'final_unload', False],
         ['properties'
-         , constants.unload_properties_template.format(provider_partition, date_partition, staging_dir), False],
+         , constants.unload_properties_template.format(provider_partition, date_partition
+                                                       , staging_dir), False],
         ['external', '', False],
         ['additional_columns', '', False]
     ])
@@ -197,7 +203,8 @@ def partition_and_rename(
     else:
         runner.run_spark_script(common_dirpath + 'unload_common_model.sql', [
             ['select_statement', "SELECT {}, '{}' as {}, '{}' as {} FROM {}".format(
-                ','.join(columns), provider, provider_partition, partition_value, date_partition, table_name
+                ','.join(columns), provider, provider_partition, partition_value,
+                date_partition, table_name
             ), False],
             ['unload_partition_count', str(unload_partition_count), False],
             ['original_partition_count', old_partition_count, False],
@@ -242,7 +249,8 @@ def partition_custom(
 
     runner.run_spark_script(common_dirpath + 'custom_model.sql', [
         ['table_name', 'final_unload', False],
-        ['properties', constants.custom_unload_properties_template.format(date_partition, staging_dir), False],
+        ['properties', constants.custom_unload_properties_template.format(date_partition,
+                                                                          staging_dir), False],
         ['all_columns', model_columns, False]
     ])
 
@@ -367,7 +375,8 @@ def unload_delimited_file(
     (
         spark.table('for_delimited_output')
         .repartition(num_files)
-        .write.csv(output_path, sep=delimiter, header=header, quoteAll=quote, compression=compression)
+        .write.csv(output_path, sep=delimiter, header=header, quoteAll=quote,
+                   compression=compression)
     )
 
     # rename output files to desired name
@@ -380,5 +389,6 @@ def unload_delimited_file(
                 template = output_file_name_template
             else:
                 template = output_file_name_prefix + '{part_num}.gz'
-            new_name = template.format(part_num=re.match('''part-([0-9]+)[.-].*''', filename).group(1))
+            new_name = \
+                template.format(part_num=re.match('''part-([0-9]+)[.-].*''', filename).group(1))
             rename_file(output_path + filename, output_path + new_name)

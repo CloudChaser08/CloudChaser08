@@ -1,3 +1,4 @@
+"""reject reversal"""
 from datetime import datetime as dt
 from pyspark.sql.types import StringType, StructType, StructField
 from pyspark.sql.functions import lit

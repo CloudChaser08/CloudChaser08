@@ -1,3 +1,4 @@
+"""explode"""
 from pyspark.sql.types import *
 from pyspark.sql.functions import explode, col, split, \
     monotonically_increasing_id

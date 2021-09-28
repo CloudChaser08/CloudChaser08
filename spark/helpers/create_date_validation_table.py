@@ -1,4 +1,4 @@
-# create date table
+""" create date table"""
 from datetime import timedelta
 
 LOCATION = 's3://healthveritydev/musifer/tmp/'
