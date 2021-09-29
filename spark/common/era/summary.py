@@ -335,8 +335,8 @@ schema_v6 = StructType([
     StructField('mdl_vrsn_num', StringType(), True),
     StructField('data_set_nm', StringType(), True),
     StructField('src_vrsn_id', StringType(), True),
-    StructField('hvm_vdr_id', StringType(), True),
-    StructField('hvm_vdr_feed_id', StringType(), True),
+    StructField('hvm_vdr_id', IntegerType(), True),
+    StructField('hvm_vdr_feed_id', IntegerType(), True),
     StructField('vdr_org_id', StringType(), True),
     StructField('vdr_medcl_clm_pymt_sumry_id', StringType(), True),
     StructField('vdr_medcl_clm_pymt_sumry_id_qual', StringType(), True),
@@ -444,8 +444,8 @@ schema_v7 = StructType([
     StructField('mdl_vrsn_num', StringType(), True),
     StructField('data_set_nm', StringType(), True),
     StructField('src_vrsn_id', StringType(), True),
-    StructField('hvm_vdr_id', StringType(), True),
-    StructField('hvm_vdr_feed_id', StringType(), True),
+    StructField('hvm_vdr_id', IntegerType(), True),
+    StructField('hvm_vdr_feed_id', IntegerType(), True),
     StructField('vdr_org_id', StringType(), True),
     StructField('vdr_medcl_clm_pymt_sumry_id', StringType(), True),
     StructField('vdr_medcl_clm_pymt_sumry_id_qual', StringType(), True),
@@ -549,7 +549,6 @@ schema_v7 = StructType([
 
 data_type = 'era'
 output_directory = data_type + '/2018-02-13/summary'
-output_directory_daily = "daily/" + data_type + "/summary"
 distribution_key = 'row_id'
 
 schemas = {
@@ -559,11 +558,11 @@ schemas = {
                         output_directory=output_directory,
                         distribution_key=distribution_key),
     'schema_v5_daily': Schema(name='schema_v5_daily',
-                        data_type=data_type,
-                        schema_structure=schema_v5_daily,
-                        output_directory=output_directory_daily,
-                        distribution_key=distribution_key,
-                        date_partition_column='crt_dt'),
+                              data_type=data_type,
+                              schema_structure=schema_v5_daily,
+                              output_directory="daily/" + data_type + "/summary",
+                              distribution_key=distribution_key,
+                              date_partition_column='crt_dt'),
     'schema_v6': Schema(name='schema_v6',
                         data_type=data_type,
                         schema_structure=schema_v6,
@@ -572,7 +571,7 @@ schemas = {
     'schema_v7': Schema(name='schema_v7',
                         data_type=data_type,
                         schema_structure=schema_v6,
-                        output_directory=data_type + '/2021-07-21/summary',
+                        output_directory=output_directory,
                         distribution_key=distribution_key)
 }
 
