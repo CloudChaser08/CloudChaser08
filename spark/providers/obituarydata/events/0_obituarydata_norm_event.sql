@@ -1,6 +1,8 @@
 select
     MONOTONICALLY_INCREASING_ID()                                                           AS record_id,
-    pay.hvid                                                                                AS hvid,
+    CASE 
+        WHEN pay.matchStatus = 'multi_match' then null 
+        ELSE pay.hvid END                                                                   AS hvid,
     CURRENT_DATE()                                                                          AS created,
     '11'                                                                                    AS model_version,
     SPLIT(txn.input_file_name, '/')[SIZE(SPLIT(txn.input_file_name, '/')) - 1]              AS data_set,
@@ -65,6 +67,6 @@ select
             )                                                                               AS part_best_date
 FROM  txn
 LEFT OUTER JOIN matching_payload pay
- ON pay.matchStatus != 'multi_match'
+ ON txn.hv_join_key = pay.hvJoinKey
     --AND pay.hvid IS NOT NULL
-    AND txn.hv_join_key = pay.hvJoinKey
+    --AND pay.matchStatus != 'multi_match'
