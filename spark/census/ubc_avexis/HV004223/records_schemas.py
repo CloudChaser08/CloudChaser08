@@ -1,3 +1,4 @@
+"""record schema ubc avexis"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {

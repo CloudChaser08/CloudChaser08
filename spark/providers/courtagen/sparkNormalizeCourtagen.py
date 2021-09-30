@@ -1,3 +1,6 @@
+"""
+courtagen normalize
+"""
 #! /usr/bin/python
 import argparse
 import time

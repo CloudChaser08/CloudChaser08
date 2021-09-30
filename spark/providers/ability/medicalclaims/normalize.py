@@ -1,3 +1,6 @@
+"""
+ability medicalclaims normalize
+"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime, date
@@ -47,10 +50,10 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     external_table_loader.load_ref_gen_ref(runner.sqlContext)
 
     min_date = postprocessor.coalesce_dates(
-                    runner.sqlContext,
-                    '15',
-                    None,
-                    'EARLIEST_VALID_SERVICE_DATE'
+        runner.sqlContext,
+        '15',
+        None,
+        'EARLIEST_VALID_SERVICE_DATE'
                 )
     if min_date:
         min_date = min_date.isoformat()
@@ -120,7 +123,7 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 model_version_number='02'
             ),
             *[postprocessor.apply_date_cap(runner.sqlContext, c, max_date, '15', None, min_date)
-                for c in ['date_received', 'date_service', 'date_service_end']]
+              for c in ['date_received', 'date_service', 'date_service_end']]
         )(
             product_norm
         ).repartition(1000, 'claim_id')

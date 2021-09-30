@@ -1,3 +1,6 @@
+"""
+sparkscrub
+"""
 import argparse
 import csv
 import io
@@ -14,7 +17,8 @@ import logging
 import boto3
 from spark.spark_setup import init
 
-HIDDEN_PHI_DRIVER_S3_KEY = 'incoming/ng-lssa/HiddenPHIHandling/DriverFile/LSDXPHIThru20180717-HV.txt'
+HIDDEN_PHI_DRIVER_S3_KEY = \
+    'incoming/ng-lssa/HiddenPHIHandling/DriverFile/LSDXPHIThru20180717-HV.txt'
 
 
 def gen_scrubbing_func(dryrun):

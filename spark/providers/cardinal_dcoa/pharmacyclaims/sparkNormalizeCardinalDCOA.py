@@ -1,3 +1,6 @@
+"""
+cardinal dcoa normalize
+"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime
@@ -77,7 +80,8 @@ def run(spark, runner, date_input, num_output_files=1, test=False, airflow_test=
         # Create the delivery
         output_path = None
         if airflow_test:
-            output_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/delivery/{}/'.format(date_path)
+            output_path = \
+                's3://salusv/testing/dewey/airflow/e2e/cardinal_dcoa/delivery/{}/'.format(date_path)
         else:
             output_path = 's3://salusv/deliverable/cardinal_dcoa/{}/'.format(date_path)
 
@@ -105,7 +109,8 @@ def main(args):
     runner = Runner(sql_context)
 
     # Run the normalization routine
-    run(spark, runner, args.date, airflow_test=args.airflow_test, num_output_files=args.num_output_files)
+    run(spark, runner, args.date, airflow_test=args.airflow_test,
+        num_output_files=args.num_output_files)
 
     if not args.airflow_test:
         RunRecorder().record_run_details()

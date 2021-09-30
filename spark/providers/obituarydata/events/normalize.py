@@ -1,3 +1,6 @@
+"""
+obituarydata normalize
+"""
 import argparse
 import spark.providers.obituarydata.events.transactional_schemas_v1 as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver

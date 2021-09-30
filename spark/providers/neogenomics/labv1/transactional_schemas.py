@@ -1,3 +1,6 @@
+"""
+Transactional schema
+"""
 from pyspark.sql.types import StringType, StructType, StructField
 
 tests_schema = StructType([

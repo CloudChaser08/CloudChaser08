@@ -1,3 +1,4 @@
+"""pharmacy claims model v6"""
 from pyspark.sql.types import *
 
 schema = StructType([

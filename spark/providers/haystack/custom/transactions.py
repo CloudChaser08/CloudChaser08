@@ -1,3 +1,6 @@
+"""
+haystack_raw jump schema
+"""
 TABLES = ['haystack_raw']
 
 TABLE_COLUMNS = {

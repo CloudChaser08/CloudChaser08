@@ -1,3 +1,6 @@
+"""
+Transmed EMR
+"""
 import argparse
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -43,24 +46,24 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/transmed/emr/resources/matching/'
         ) + '/'
     elif airflow_test:
-        cancerepisode_input_path = 's3://salusv/testing/dewey/airflow/e2e/transmed/emr/out/{}/cancerepisode/'.format(
-            date_input.replace('-', '/')
+        cancerepisode_input_path = 's3://salusv/testing/dewey/airflow/e2e/transmed/emr/out/{}' \
+                                   '/cancerepisode/'.format(date_input.replace('-', '/')
         )
-        treatmentsite_input_path = 's3://salusv/testing/dewey/airflow/e2e/transmed/emr/out/{}/treatmentsite/'.format(
-            date_input.replace('-', '/')
+        treatmentsite_input_path = 's3://salusv/testing/dewey/airflow/e2e/transmed/emr/out/{}' \
+                                   '/treatmentsite/'.format(date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/transmed/emr/payload/{}/'.format(
-            date_input.replace('-', '/')
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/transmed/emr/payload/{}/'\
+            .format(date_input.replace('-', '/')
         )
     else:
-        cancerepisode_input_path = 's3a://salusv/incoming/emr/transmed/{}/cancerepisode/'.format(
-            date_input.replace('-', '/')
+        cancerepisode_input_path = 's3a://salusv/incoming/emr/transmed/{}/cancerepisode/'\
+            .format(date_input.replace('-', '/')
         )
-        treatmentsite_input_path = 's3a://salusv/incoming/emr/transmed/{}/treatmentsite/'.format(
-            date_input.replace('-', '/')
+        treatmentsite_input_path = 's3a://salusv/incoming/emr/transmed/{}/treatmentsite/'\
+            .format(date_input.replace('-', '/')
         )
-        matching_path = 's3a://salusv/matching/payload/emr/transmed/{}/'.format(
-            date_input.replace('-', '/')
+        matching_path = 's3a://salusv/matching/payload/emr/transmed/{}/'\
+            .format(date_input.replace('-', '/')
         )
 
     if not test:
@@ -105,11 +108,13 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     )
 
     max_breast_cancer_types = runner.sqlContext.sql(
-        "SELECT MAX(SIZE(SPLIT(breastcancertype, ','))) as max_length FROM transactions_cancerepisode"
+        "SELECT MAX(SIZE(SPLIT(breastcancertype, ','))) as max_length FROM "
+        "transactions_cancerepisode "
     ).collect()[0].max_length
 
     explode.generate_exploder_table(
-        spark, max_breast_cancer_types if max_breast_cancer_types else 1, 'breast_cancer_type_exploder'
+        spark, max_breast_cancer_types if max_breast_cancer_types else 1,
+        'breast_cancer_type_exploder'
     )
 
     runner.run_spark_script('normalize_lab_result.sql', [

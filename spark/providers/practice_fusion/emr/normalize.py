@@ -179,7 +179,7 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
                     runner.run_spark_script(
                         '0_practice_fusion_emr_norm_pre_emr_medctn.sql', variables,
                         source_file_path=sql_file_path, return_output=True).repartition(
-                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_medctn_ord_id').\
+                            int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_medctn_ord_id').\
                         write.parquet('/stagingout/{}/vdr_medctn_ord_id_key={}/'.format(this_tbl1, key)
                                       , compression='gzip', mode='append')
                     # 2
@@ -193,7 +193,8 @@ def run(spark, runner, date_input, model=None, custom_input_path=None, custom_ma
 
                     this_df2 = runner.run_spark_script('1_practice_fusion_emr_norm_dedup_emr_medctn.sql', variables,
                                                        source_file_path=sql_file_path, return_output=True).repartition(
-                        int(spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'vdr_medctn_ord_id')
+                                                           int(spark.sparkContext.getConf().get(
+                                                             'spark.sql.shuffle.partitions')), 'vdr_medctn_ord_id')
                     this_df2 = this_df2.cache_and_track(this_tbl2)
                     this_df2.createOrReplaceTempView(this_tbl2)
 

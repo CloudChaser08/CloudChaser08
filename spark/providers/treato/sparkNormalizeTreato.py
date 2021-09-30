@@ -1,3 +1,6 @@
+"""
+Treato normalize
+"""
 #! /usr/bin/python
 import argparse
 import re
@@ -72,7 +75,8 @@ def _get_rollup_vals(mapfile_broadcast, diagnosis_code_range):
 
 def _enumerate_range(range_string):
     """
-    Given a range string like 'A01-A10', return an enumerated list of diagnosis codes like [A01, A02, ..., A10]
+    Given a range string like 'A01-A10', return an enumerated list of diagnosis codes like [A01,
+    A02, ..., A10]
     """
 
     # check that the diag range can be enumerated (contains integers on either side)

@@ -1,3 +1,6 @@
+"""
+sentry normalize
+"""
 import argparse
 import spark.providers.sentry.cdm.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver

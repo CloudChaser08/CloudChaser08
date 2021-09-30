@@ -1,3 +1,6 @@
+"""
+8451  normalize
+"""
 import argparse
 
 from spark.runner import Runner
@@ -44,7 +47,8 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
             date_input.replace('-', '/')
         )
 
-    records_loader.load_and_clean_all_v2(runner, input_path, transactional_schemas, load_file_name=True)
+    records_loader.load_and_clean_all_v2(runner, input_path,
+                                         transactional_schemas, load_file_name=True)
     payload_loader.load(runner, matching_path, load_file_name=True)
 
     if not test:
@@ -52,7 +56,8 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
     df = runner.run_all_spark_scripts([['VDR_FILE_DT', date_input, False]])
 
-    output = schema_enforcer.apply_schema(df, event_schema, columns_to_keep=['part_provider', 'part_best_date'])
+    output = schema_enforcer.apply_schema(df, event_schema,
+                                          columns_to_keep=['part_provider', 'part_best_date'])
 
     if not test:
         _columns = df.columns

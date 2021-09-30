@@ -1,3 +1,6 @@
+"""
+Transmed Schema
+"""
 from pyspark.sql.types import StructField, StructType, StringType
 
 cancerepisode = StructType([

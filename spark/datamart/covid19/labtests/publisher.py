@@ -1,3 +1,4 @@
+"""publisher"""
 import os
 import spark.common.utility.logger as logger
 import spark.datamart.covid19.context as context

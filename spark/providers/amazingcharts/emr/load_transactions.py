@@ -1,3 +1,6 @@
+"""
+amazingcharts schema
+"""
 # import csv
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.records_loader as records_loader
@@ -25,8 +28,8 @@ def validate_header(df, tn):
     if header:
         header = [s for s in header]
         if header != TABLE_COLS[tn]:
-            print("Error in header validation for table {}.\nSchema: {}\nActual Header: {}".format(tn, TABLE_COLS[tn],
-                                                                                                   header))
+            print("Error in header validation for "
+                  "table {}.\nSchema: {}\nActual Header: {}".format(tn, TABLE_COLS[tn], header))
             print("Difference: {}".format([(i, j) for (i, j) in zip(header, TABLE_COLS[tn]) if i != j]))
         return header == TABLE_COLS[tn]
     else:
@@ -43,7 +46,8 @@ def load(spark, runner, table_locs, batch_date, test=False):
                 raise ValueError('Error in header validation')
             if tn == 'd_lab_directory' and 'provider_key' not in df.columns:
                 df = df.withColumn('provider_key', lit(None).cast('string'))
-            if table in ['d_costar', 'd_patient', 'd_cpt', 'd_drug', 'd_icd10', 'd_icd9', 'd_lab_directory',
+            if table in ['d_costar', 'd_patient', 'd_cpt', 'd_drug', 'd_icd10',
+                         'd_icd9', 'd_lab_directory',
                          'd_multum_to_ndc', 'd_provider', 'd_vaccine_cpt']:
                 postprocessor.compose(
                     postprocessor.trimmify,
@@ -54,8 +58,8 @@ def load(spark, runner, table_locs, batch_date, test=False):
                 postprocessor.compose(
                     postprocessor.trimmify,
                     lambda df: postprocessor.nullify(df, ['NULL', ''])
-                )(df).where("date_key != 'date_key'").repartition(5000,
-                                                                  'patient_key').cache().createOrReplaceTempView(table)
+                )(df).where("date_key != 'date_key'").\
+                    repartition(5000,'patient_key').cache().createOrReplaceTempView(table)
         except AnalysisException:
             df = spark.createDataFrame(
                 spark.sparkContext.emptyRDD(),

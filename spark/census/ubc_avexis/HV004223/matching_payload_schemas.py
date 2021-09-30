@@ -1,3 +1,4 @@
+"""payload schema ubc avexis"""
 from spark.helpers.source_table import PayloadTable
 
 TABLE_CONF = {

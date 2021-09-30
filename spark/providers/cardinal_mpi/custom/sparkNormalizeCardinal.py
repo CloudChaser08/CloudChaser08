@@ -1,3 +1,6 @@
+"""
+cardinal mpi era summaru
+"""
 #! /usr/bin/python
 import argparse
 from spark.runner import Runner
@@ -28,14 +31,12 @@ def run(spark, runner, batch_id, test=False, airflow_test=False):
         ) + '/'
         output_dir = '/tmp/staging/' + batch_id + '/'
     elif airflow_test:
-        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/cardinal_mpi/custom/payload/{}/'.format(
-            batch_id
-        )
+        matching_path = 's3a://salusv/testing/dewey/airflow/e2e/cardinal_mpi/custom/payload/{}/'\
+            .format(batch_id)
         output_dir = '/tmp/staging/' + batch_id + '/'
     else:
-        matching_path = 's3a://salusv/matching/payload/custom/cardinal_mpi/{}/'.format(
-            batch_id
-        )
+        matching_path = 's3a://salusv/matching/payload/custom/cardinal_mpi/{}/'\
+            .format(batch_id)
         output_dir = constants.hdfs_staging_dir + batch_id + '/'
 
     payload_loader.load(runner, matching_path, ['claimId', 'topCandidates', 'matchStatus'])
@@ -49,8 +50,10 @@ def run(spark, runner, batch_id, test=False, airflow_test=False):
     # topCandidates is suppose to be a column of array type. If all the values
     # are NULL it ends up being a string type. Replace it with an array type
     # column of all nulls so the routine doesn't break
-    if runner.sqlContext.sql('SELECT * FROM matching_payload_count WHERE topcandidates IS NOT NULL').count() == 0:
-        null_array_column = udf(lambda x: None, ArrayType(ArrayType(StringType(), True), True))(lit(None))
+    if runner.sqlContext.\
+            sql('SELECT * FROM matching_payload_count WHERE topcandidates IS NOT NULL').count() == 0:
+        null_array_column = \
+            udf(lambda x: None, ArrayType(ArrayType(StringType(), True), True))(lit(None))
         runner.sqlContext.sql('SELECT * FROM matching_payload') \
             .withColumn('topcandidates', null_array_column) \
             .createOrReplaceTempView("matching_payload")

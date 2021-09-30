@@ -1,3 +1,4 @@
+"""logger"""
 from spark.common.utility.spark_state import SparkState
 from spark.common.utility.run_details import RunDetails
 

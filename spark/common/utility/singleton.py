@@ -1,3 +1,4 @@
+"""singleton"""
 class Singleton(type):
     """This class serves as a metaclass which enforces a Singleton behavior to
     whichever class extends it.

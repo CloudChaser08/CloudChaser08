@@ -1,3 +1,4 @@
+"""spark state"""
 from pyspark import SparkContext
 
 from spark.common.utility.singleton import Singleton
@@ -54,7 +55,8 @@ class SparkState(metaclass=Singleton):
             str
         """
 
-        url = "{base_url}/api/v1/applications/{id}/jobs/".format(base_url=self.ui_url, id=self.app_id)
+        url = \
+            "{base_url}/api/v1/applications/{id}/jobs/".format(base_url=self.ui_url, id=self.app_id)
 
         return url
 

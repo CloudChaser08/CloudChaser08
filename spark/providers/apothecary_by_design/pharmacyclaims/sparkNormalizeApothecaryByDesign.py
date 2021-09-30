@@ -1,3 +1,6 @@
+"""
+apothecary by design normalize
+"""
 from datetime import datetime, date
 from pyspark.sql.functions import isnull, lead
 from pyspark.sql import Window
@@ -30,34 +33,34 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
 
     if test:
         txn_input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/txn_input/'
+            script_path,
+            '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/txn_input/'
         )
         add_input_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/add_input/'
+            script_path,
+            '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/add_input/'
         )
         matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/matching/'
+            script_path,
+            '../../../test/providers/apothecary_by_design/pharmacyclaims/resources/matching/'
         )
     elif airflow_test:
-        txn_input_path = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/out/{}/transactions/'.format(
-            date_input.replace('-', '/')
-        )
-        add_input_path = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/out/{}/additionaldata/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        txn_input_path = \
+            's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/out/{}/transactions/'\
+            .format(date_input.replace('-', '/'))
+        add_input_path = \
+            's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/out/{}/additionaldata/'\
+            .format(date_input.replace('-', '/'))
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/apothecarybydesign/payload/{}/'\
+            .format(date_input.replace('-', '/'))
     else:
-        txn_input_path = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/transactions/'.format(
-            date_input.replace('-', '/')
-        )
-        add_input_path = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/additionaldata/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        txn_input_path = 's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/transactions/'\
+            .format(date_input.replace('-', '/'))
+        add_input_path = \
+            's3://salusv/incoming/pharmacyclaims/apothecarybydesign/{}/additionaldata/'\
+            .format(date_input.replace('-', '/'))
+        matching_path = 's3://salusv/matching/payload/pharmacyclaims/apothecarybydesign/{}/'\
+            .format(date_input.replace('-', '/'))
 
     if not test:
         external_table_loader.load_ref_gen_ref(runner.sqlContext)
@@ -108,7 +111,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         lambda x: schema_enforcer.apply_schema(x, schema.schema_structure),
         postprocessor.nullify,
         postprocessor.add_universal_columns(feed_id='45', vendor_id='204', filename=setid),
-        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date, '45', 'EARLIEST_VALID_SERVICE_DATE'),
+        postprocessor.apply_date_cap(runner.sqlContext, 'date_service', max_date,
+                                     '45', 'EARLIEST_VALID_SERVICE_DATE'),
         pharm_priv.filter
     )(
         normalized_output
@@ -130,7 +134,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             hvm_historical = date(1901, 1, 1)
 
         normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims', 'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
+            spark, runner, 'pharmacyclaims',
+            'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
             'apothecary_by_design', 'pharmacyclaims_common_model',
             'date_service', date_input,
             hvm_historical_date=datetime(hvm_historical.year,

@@ -1,8 +1,12 @@
+"""
+guardant health labtest normalize
+"""
 import argparse
 import datetime
 from spark.runner import Runner
 from spark.spark_setup import init
-from spark.providers.guardant_health.labtests.transaction_schemas import schema as transaction_schema
+from spark.providers.guardant_health.labtests.transaction_schemas import \
+    schema as transaction_schema
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.explode as explode
@@ -35,12 +39,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/guardant_health/labtests/resources/matching/'
         ) + '/'
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/guardant_health/labtests/out/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/guardant_health/labtests/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        input_path = 's3://salusv/testing/dewey/airflow/e2e/guardant_health/labtests/out/{}/'\
+            .format(date_input.replace('-', '/'))
+        matching_path = \
+            's3://salusv/testing/dewey/airflow/e2e/guardant_health/labtests/payload/{}/'\
+            .format(date_input.replace('-', '/'))
     else:
         input_path = 's3a://salusv/incoming/labtests/guardant_health/{}/'.format(
             date_input.replace('-', '/')
@@ -55,7 +58,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
     payload_loader.load(runner, matching_path, ['hvJoinKey'])
 
     postprocessor.compose(
-        postprocessor.add_input_filename('source_file_name'), postprocessor.trimmify, postprocessor.nullify
+        postprocessor.add_input_filename('source_file_name'),
+        postprocessor.trimmify, postprocessor.nullify
     )(
         runner.sqlContext.read.csv(input_path, schema=transaction_schema)
     ).createOrReplaceTempView('transactions')
@@ -95,7 +99,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         )
         normalized_records_unloader.partition_and_rename(
             spark, runner, 'labtests', 'lab_common_model_v4.sql', 'guardant_health',
-            'normalized_labtests', 'date_service', date_input, hvm_historical_date=datetime.datetime(
+            'normalized_labtests', 'date_service', date_input,
+            hvm_historical_date=datetime.datetime(
                 hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
             )
         )

@@ -1,3 +1,4 @@
+"""file utils"""
 from math import ceil
 import os
 import ntpath
@@ -30,7 +31,9 @@ def create_manifest_file(output_path, file_name):
 
     s3_utils.copy_file_from_local(output_file_name, output_path)
 
-def create_parquet_row_count_file(spark, input_path, output_path, file_name, include_header=True):
+
+def create_parquet_row_count_file(spark, input_path, output_path,
+                                  file_name, include_header=True):
     local_path = '/tmp/'
     local_output_file = local_path + file_name
 
@@ -51,13 +54,17 @@ def create_parquet_row_count_file(spark, input_path, output_path, file_name, inc
 
     s3_utils.copy_file_from_local(local_output_file, output_path)
 
-def get_optimal_partition_count(data_size, expected_file_size=PARQUET_FILE_SIZE):
+
+def get_optimal_partition_count(data_size,
+                                expected_file_size=PARQUET_FILE_SIZE):
     """
     Calculates the optimal partition count for a given data size and expected file size
     """
     return int(ceil(data_size / expected_file_size)) or 1
 
-def get_optimal_s3_partition_count(s3_path, expected_file_size=PARQUET_FILE_SIZE):
+
+def get_optimal_s3_partition_count(s3_path,
+                                   expected_file_size=PARQUET_FILE_SIZE):
     """
     Calculates the optimal partition count for a given s3 data path and expected file size
     """
@@ -66,7 +73,9 @@ def get_optimal_s3_partition_count(s3_path, expected_file_size=PARQUET_FILE_SIZE
         expected_file_size=expected_file_size
     )
 
-def get_optimal_hdfs_partition_count(hdfs_path, expected_file_size=PARQUET_FILE_SIZE):
+
+def get_optimal_hdfs_partition_count(hdfs_path,
+                                     expected_file_size=PARQUET_FILE_SIZE):
     """
     Calculates the optimal partition count for a given hdfs data path and expected file size
     """
@@ -75,8 +84,10 @@ def get_optimal_hdfs_partition_count(hdfs_path, expected_file_size=PARQUET_FILE_
         expected_file_size=expected_file_size
     )
 
+
 def clean_up_output_local(output_path):
     subprocess.check_call(['rm', '-rf', output_path])
+
 
 def list_dir_local(output_path):
     return os.listdir(output_path)
@@ -85,12 +96,13 @@ def list_dir_local(output_path):
 def rename_file_local(old, new):
     os.rename(old, new)
 
+
 class FileSystemType:
     LOCAL = 1
     HDFS = 2
 
-def util_functions_factory(system_type=FileSystemType.LOCAL):
 
+def util_functions_factory(system_type=FileSystemType.LOCAL):
     util_funcs = {
         FileSystemType.LOCAL: (clean_up_output_local, list_dir_local, rename_file_local),
         FileSystemType.HDFS: hdfs_utils.HDFS_STANDARD_FUNCTIONS

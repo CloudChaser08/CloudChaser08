@@ -1,12 +1,15 @@
+"""
+practice insight normalize
+"""
 import os
 import argparse
 import subprocess
+from datetime import datetime
 import spark.providers.practice_insight.medicalclaims.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
 import spark.helpers.postprocessor as postprocessor
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import spark.helpers.file_utils as file_utils
 
@@ -65,8 +68,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
             script_path, '../../../test/providers/practice_insight/medicalclaims/resources/input/'
         ) + '/'
         driver.matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/practice_insight/medicalclaims/resources/matching/'
-        ) + '/'
+            script_path, '../../../test/providers/practice_insight/medicalclaims/resources'
+                         '/matching/ ') + '/'
         normalized_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/practice_insight/medicalclaims/resources/hist/'
         ) + '/'
@@ -80,13 +83,16 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     logger.log('Loading external tables')
     if test:
         driver.spark.read.csv(
-            normalized_path, sep="|", quote='"', header=True).createOrReplaceTempView('_temp_medicalclaims_nb_all')
+            normalized_path, sep="|", quote='"', header=True)\
+            .createOrReplaceTempView('_temp_medicalclaims_nb_all')
         driver.spark.sql(
-            "SELECT * FROM _temp_medicalclaims_nb_all WHERE FALSE").createOrReplaceTempView('_temp_medicalclaims_nb')
+            "SELECT * FROM _temp_medicalclaims_nb_all WHERE FALSE")\
+            .createOrReplaceTempView('_temp_medicalclaims_nb')
     else:
         driver.spark.read.parquet(
-            os.path.join(driver.output_path, schema.output_directory, 'part_provider=practice_insight/')). \
-            createOrReplaceTempView('_temp_medicalclaims_nb')
+            os.path.join(driver.output_path, schema.output_directory,
+                         'part_provider=practice_insight/'))\
+            .createOrReplaceTempView('_temp_medicalclaims_nb')
 
     logger.log('Start transform')
     driver.transform()
@@ -110,7 +116,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         if b_run_dedup:
             logger.log('Backup historical data')
             if end_to_end_test:
-                tmp_path = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims/backup/'
+                tmp_path = 's3://salusv/testing/dewey/airflow/e2e/practice_insight/medicalclaims' \
+                           '/backup/ '
             else:
                 tmp_path = 's3://salusv/backup/practice_insight/medicalclaims/{}/'.format(args.date)
             date_part = 'part_provider=practice_insight/part_best_date={}/'

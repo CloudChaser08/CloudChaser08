@@ -1,3 +1,6 @@
+"""
+allscripts normalize custom era
+"""
 import argparse
 import logging
 

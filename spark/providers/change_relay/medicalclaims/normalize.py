@@ -1,3 +1,6 @@
+"""
+change relay nornmalize
+"""
 import argparse
 import spark.providers.change_relay.medicalclaims.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
@@ -60,10 +63,11 @@ if __name__ == "__main__":
     # only 2 columns are needed from the following 2 tables.
     # Select only the columns we need, then broadcast in the sql
     logger.log('Build passthrough and plainout refernce tables')
-    driver.spark.sql('select PCN as pcn, UPPER(claimId) as claimid from matching_payload group by 1, 2')\
-        .createOrReplaceTempView('pas_tiny')
-    driver.spark.sql('select patient_gender, UPPER(claim_number) as claim_number from plainout group by 1, 2')\
-        .createOrReplaceTempView('pln_tiny')
+    SQL_PAYLOAD = "select PCN as pcn, UPPER(claimId) as claimid from matching_payload group by 1, 2"
+    driver.spark.sql(SQL_PAYLOAD).createOrReplaceTempView('pas_tiny')
+    SQL_CLAIM_GENDER = "select patient_gender, UPPER(claim_number) as claim_number " \
+                       "from plainout group by 1, 2"
+    driver.spark.sql(SQL_CLAIM_GENDER).createOrReplaceTempView('pln_tiny')
 
     logger.log('Start transform')
     driver.transform()

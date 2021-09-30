@@ -1,3 +1,6 @@
+"""
+lifeImage
+"""
 import argparse
 import spark.providers.lifeimage.image.transactional_schemas_lifeimage as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver

@@ -1,3 +1,6 @@
+"""
+quest_rinse source normalize
+"""
 import argparse
 import subprocess
 from functools import reduce

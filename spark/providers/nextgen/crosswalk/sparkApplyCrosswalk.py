@@ -1,3 +1,6 @@
+"""
+spark apply cross
+"""
 import argparse
 
 from spark.runner import Runner
@@ -7,7 +10,8 @@ from pyspark.sql.functions import col
 
 def run(spark, runner, nextgen_source, crosswalk_source):
     nextgen_df = runner.sqlContext.read.parquet(nextgen_source)
-    crosswalk_df = runner.sqlContext.read.parquet(crosswalk_source).withColumnRenamed('hvid', 'crosswalk_hvid')
+    crosswalk_df = \
+        runner.sqlContext.read.parquet(crosswalk_source).withColumnRenamed('hvid', 'crosswalk_hvid')
 
     nextgen_df.join(crosswalk_df, nextgen_df.hvid == crosswalk_df.nextgen_id, 'inner') \
               .withColumn('hvid', col('crosswalk_hvid')) \

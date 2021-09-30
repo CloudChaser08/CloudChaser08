@@ -1,5 +1,5 @@
 """
-medicalclaims v10 schema
+medicalclaims v10 schema daily
 """
 # pylint: disable=duplicate-code
 from pyspark.sql.types import LongType, StringType, DateType, FloatType, StructType, StructField

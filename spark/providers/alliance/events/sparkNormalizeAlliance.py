@@ -1,3 +1,6 @@
+"""
+alliance events normalize
+"""
 import argparse
 from datetime import date, datetime
 from spark.runner import Runner

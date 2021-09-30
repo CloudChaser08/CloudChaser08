@@ -1,43 +1,51 @@
+"""extract medical claims"""
 import pyspark.sql.functions as F
 
 
-def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table, filter_by_part_processdate=False):
-    claims = runner.sqlContext.table(claims_table).where("part_provider != 'xifin' and part_provider != 'inovalon'")
+def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
+                       filter_by_part_processdate=False):
+    claims = runner.sqlContext.table(claims_table).where(
+        "part_provider != 'xifin' and part_provider != 'inovalon'")
     ref_vdr_feed = runner.sqlContext.table('dw.ref_vdr_feed')
     ref_vdr_feed = ref_vdr_feed[ref_vdr_feed.hvm_vdr_feed_id.isin(*SUPPLIER_FEED_IDS)]
-    
+
     # Extract conditions
-    ext = claims.join(ref_vdr_feed, claims['data_feed'] == ref_vdr_feed['hvm_vdr_feed_id'], 'inner') \
+    ext = \
+        claims.join(ref_vdr_feed, claims['data_feed'] == ref_vdr_feed['hvm_vdr_feed_id'], 'inner') \
         .join(hvids, claims['hvid'] == hvids['hvid'], 'left') \
         .where(hvids['hvid'].isNotNull())
 
     if filter_by_part_processdate:
-        ext = ext\
+        ext = ext \
             .where(claims['part_best_date'] >= start_dt.isoformat())
 
     ext = ext \
-        .where((claims['date_service'] <= end_dt.isoformat()) & (claims['date_service'] >= start_dt.isoformat())) \
+        .where((claims['date_service'] <= end_dt.isoformat()) & (
+            claims['date_service'] >= start_dt.isoformat())) \
         .select(*[claims[c] for c in claims.columns] +
-                 [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
+                [ref_vdr_feed[c] for c in ref_vdr_feed.columns] + [hvids['humana_group_id']])
 
     # Hashing
-    ext = ext\
-        .withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(repr(timestamp))
-                                             , F.col('humana_group_id'))))\
+    ext = ext \
+        .withColumn('hvid', F.md5(
+            F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(repr(timestamp))
+                    , F.col('humana_group_id')))) \
         .withColumn('prov_rendering_npi', F.md5(F.concat(F.col('prov_rendering_npi'), F.lit('npi')
-                                                           , F.lit('hv000468'), F.lit(repr(timestamp))
-                                                           , F.col('humana_group_id'))))\
-        .withColumn('prov_billing_npi', F.md5(F.concat(F.col('prov_billing_npi'), F.lit('npi'), F.lit('hv000468')
-                                                         , F.lit(repr(timestamp)), F.col('humana_group_id')))) \
+                                                         , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                         , F.col('humana_group_id')))) \
+        .withColumn('prov_billing_npi',
+                    F.md5(F.concat(F.col('prov_billing_npi'), F.lit('npi'), F.lit('hv000468')
+                                   , F.lit(repr(timestamp)), F.col('humana_group_id')))) \
         .withColumn('prov_referring_npi', F.md5(F.concat(F.col('prov_referring_npi'), F.lit('npi')
-                                                           , F.lit('hv000468'), F.lit(repr(timestamp))
-                                                           , F.col('humana_group_id')))) \
+                                                         , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                         , F.col('humana_group_id')))) \
         .withColumn('prov_facility_npi', F.md5(F.concat(F.col('prov_facility_npi'), F.lit('npi')
-                                                          , F.lit('hv000468'), F.lit(repr(timestamp))
-                                                          , F.col('humana_group_id'))))
+                                                        , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                        , F.col('humana_group_id'))))
 
     # Rename columns
-    ext = ext.withColumn('data_feed', F.col('hvm_vdr_feed_id')).withColumn('data_vendor', F.col('hvm_tile_nm'))
+    ext = ext.withColumn('data_feed', F.col('hvm_vdr_feed_id')).withColumn('data_vendor',
+                                                                           F.col('hvm_tile_nm'))
 
     # NULL columns
     for c in NULL_COLUMNS:
@@ -48,26 +56,28 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
 
 
 def extract(runner, hvids, timestamp, start_dt, end_dt):
-    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'dw.hvm_medicalclaims_v08', True)
+    return extract_from_table(runner, hvids, timestamp, start_dt, end_dt,
+                              'dw.hvm_medicalclaims_v08', True)
     # NOTE: 2019-11-04 - Removing synthetic claims until told to turn back on.
-    # .union(extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_medicalclaims', False))
+    # .union(extract_from_table(runner, hvids, timestamp,
+    # start_dt, end_dt, 'synthetic_medicalclaims', False))
 
 
 EXTRACT_COLUMNS = [
     'record_id',
     'claim_id',
-    'hvid',                     # Hashed
+    'hvid',  # Hashed
     'created',
     'model_version',
     'data_set',
-    'data_feed',                # Feed ID#
-    'data_vendor',              # Marketplace tile name
+    'data_feed',  # Feed ID#
+    'data_vendor',  # Marketplace tile name
     'source_version',
-    'patient_gender',           # NULL per Austin
-    'patient_age',              # NULL, was age-group
-    'patient_year_of_birth',    # NULL per Austin
-    'patient_zip3',             # NULL per Austin
-    'patient_state',            # NULL per Austin
+    'patient_gender',  # NULL per Austin
+    'patient_age',  # NULL, was age-group
+    'patient_year_of_birth',  # NULL per Austin
+    'patient_zip3',  # NULL per Austin
+    'patient_state',  # NULL per Austin
     'claim_type',
     'date_received',
     'date_service',
@@ -100,7 +110,7 @@ EXTRACT_COLUMNS = [
     'procedure_code',
     'procedure_code_qual',
     'principal_proc_ind',
-    'procedure_units_billed',   # Renamed from "procedure_units" in model v3
+    'procedure_units_billed',  # Renamed from "procedure_units" in model v3
     'procedure_modifier_1',
     'procedure_modifier_2',
     'procedure_modifier_3',
@@ -112,80 +122,80 @@ EXTRACT_COLUMNS = [
     'line_allowed',
     'total_charge',
     'total_allowed',
-    'prov_rendering_npi',       # Hashed per Austin
-    'prov_billing_npi',         # Hashed per Austin
-    'prov_referring_npi',       # Hashed per Austin
-    'prov_facility_npi',        # Hashed per Austin
+    'prov_rendering_npi',  # Hashed per Austin
+    'prov_billing_npi',  # Hashed per Austin
+    'prov_referring_npi',  # Hashed per Austin
+    'prov_facility_npi',  # Hashed per Austin
     'payer_vendor_id',
-    'payer_name',               # NULL per Austin
-    'payer_parent_name',        # NULL per Austin
-    'payer_org_name',           # NULL per Austin
+    'payer_name',  # NULL per Austin
+    'payer_parent_name',  # NULL per Austin
+    'payer_org_name',  # NULL per Austin
     'payer_plan_id',
-    'payer_plan_name',          # NULL per Austin
+    'payer_plan_name',  # NULL per Austin
     'payer_type',
-    'prov_rendering_vendor_id',        # NULL per Austin
-    'prov_rendering_tax_id',           # NULL per Austin
-    'prov_rendering_dea_id',           # NULL per Austin
-    'prov_rendering_ssn',              # NULL per Austin
-    'prov_rendering_state_license',    # NULL per Austin
-    'prov_rendering_upin',             # NULL per Austin
-    'prov_rendering_commercial_id',    # NULL per Austin
-    'prov_rendering_name_1',           # NULL per Austin
-    'prov_rendering_name_2',           # NULL per Austin
-    'prov_rendering_address_1',        # NULL per Austin
-    'prov_rendering_address_2',        # NULL per Austin
-    'prov_rendering_city',             # NULL per Austin
-    'prov_rendering_state',            # NULL per Austin
-    'prov_rendering_zip',              # NULL per Austin
-    'prov_rendering_std_taxonomy',     # NULL per Austin
+    'prov_rendering_vendor_id',  # NULL per Austin
+    'prov_rendering_tax_id',  # NULL per Austin
+    'prov_rendering_dea_id',  # NULL per Austin
+    'prov_rendering_ssn',  # NULL per Austin
+    'prov_rendering_state_license',  # NULL per Austin
+    'prov_rendering_upin',  # NULL per Austin
+    'prov_rendering_commercial_id',  # NULL per Austin
+    'prov_rendering_name_1',  # NULL per Austin
+    'prov_rendering_name_2',  # NULL per Austin
+    'prov_rendering_address_1',  # NULL per Austin
+    'prov_rendering_address_2',  # NULL per Austin
+    'prov_rendering_city',  # NULL per Austin
+    'prov_rendering_state',  # NULL per Austin
+    'prov_rendering_zip',  # NULL per Austin
+    'prov_rendering_std_taxonomy',  # NULL per Austin
     'prov_rendering_vendor_specialty',  # NULL per Austin
-    'prov_billing_vendor_id',          # NULL per Austin
-    'prov_billing_tax_id',             # NULL per Austin
-    'prov_billing_dea_id',             # NULL per Austin
-    'prov_billing_ssn',                # NULL per Austin
-    'prov_billing_state_license',      # NULL per Austin
-    'prov_billing_upin',               # NULL per Austin
-    'prov_billing_commercial_id',      # NULL per Austin
-    'prov_billing_name_1',             # NULL per Austin
-    'prov_billing_name_2',             # NULL per Austin
-    'prov_billing_address_1',          # NULL per Austin
-    'prov_billing_address_2',          # NULL per Austin
-    'prov_billing_city',               # NULL per Austin
-    'prov_billing_state',              # NULL per Austin
-    'prov_billing_zip',                # NULL per Austin
-    'prov_billing_std_taxonomy',       # NULL per Austin
-    'prov_billing_vendor_specialty',   # NULL per Austin
-    'prov_referring_vendor_id',        # NULL per Austin
-    'prov_referring_tax_id',           # NULL per Austin
-    'prov_referring_dea_id',           # NULL per Austin
-    'prov_referring_ssn',              # NULL per Austin
-    'prov_referring_state_license',    # NULL per Austin
-    'prov_referring_upin',             # NULL per Austin
-    'prov_referring_commercial_id',    # NULL per Austin
-    'prov_referring_name_1',           # NULL per Austin
-    'prov_referring_name_2',           # NULL per Austin
-    'prov_referring_address_1',        # NULL per Austin
-    'prov_referring_address_2',        # NULL per Austin
-    'prov_referring_city',             # NULL per Austin
-    'prov_referring_state',            # NULL per Austin
-    'prov_referring_zip',              # NULL per Austin
-    'prov_referring_std_taxonomy',     # NULL per Austin
+    'prov_billing_vendor_id',  # NULL per Austin
+    'prov_billing_tax_id',  # NULL per Austin
+    'prov_billing_dea_id',  # NULL per Austin
+    'prov_billing_ssn',  # NULL per Austin
+    'prov_billing_state_license',  # NULL per Austin
+    'prov_billing_upin',  # NULL per Austin
+    'prov_billing_commercial_id',  # NULL per Austin
+    'prov_billing_name_1',  # NULL per Austin
+    'prov_billing_name_2',  # NULL per Austin
+    'prov_billing_address_1',  # NULL per Austin
+    'prov_billing_address_2',  # NULL per Austin
+    'prov_billing_city',  # NULL per Austin
+    'prov_billing_state',  # NULL per Austin
+    'prov_billing_zip',  # NULL per Austin
+    'prov_billing_std_taxonomy',  # NULL per Austin
+    'prov_billing_vendor_specialty',  # NULL per Austin
+    'prov_referring_vendor_id',  # NULL per Austin
+    'prov_referring_tax_id',  # NULL per Austin
+    'prov_referring_dea_id',  # NULL per Austin
+    'prov_referring_ssn',  # NULL per Austin
+    'prov_referring_state_license',  # NULL per Austin
+    'prov_referring_upin',  # NULL per Austin
+    'prov_referring_commercial_id',  # NULL per Austin
+    'prov_referring_name_1',  # NULL per Austin
+    'prov_referring_name_2',  # NULL per Austin
+    'prov_referring_address_1',  # NULL per Austin
+    'prov_referring_address_2',  # NULL per Austin
+    'prov_referring_city',  # NULL per Austin
+    'prov_referring_state',  # NULL per Austin
+    'prov_referring_zip',  # NULL per Austin
+    'prov_referring_std_taxonomy',  # NULL per Austin
     'prov_referring_vendor_specialty',  # NULL per Austin
-    'prov_facility_vendor_id',         # NULL per Austin
-    'prov_facility_tax_id',            # NULL per Austin
-    'prov_facility_dea_id',            # NULL per Austin
-    'prov_facility_ssn',               # NULL per Austin
-    'prov_facility_state_license',     # NULL per Austin
-    'prov_facility_upin',              # NULL per Austin
-    'prov_facility_commercial_id',     # NULL per Austin
-    'prov_facility_name_1',            # NULL per Austin
-    'prov_facility_name_2',            # NULL per Austin
-    'prov_facility_address_1',         # NULL per Austin
-    'prov_facility_address_2',         # NULL per Austin
-    'prov_facility_city',              # NULL per Austin
-    'prov_facility_state',             # NULL per Austin
-    'prov_facility_zip',               # NULL per Austin
-    'prov_facility_std_taxonomy',      # NULL per Austin
+    'prov_facility_vendor_id',  # NULL per Austin
+    'prov_facility_tax_id',  # NULL per Austin
+    'prov_facility_dea_id',  # NULL per Austin
+    'prov_facility_ssn',  # NULL per Austin
+    'prov_facility_state_license',  # NULL per Austin
+    'prov_facility_upin',  # NULL per Austin
+    'prov_facility_commercial_id',  # NULL per Austin
+    'prov_facility_name_1',  # NULL per Austin
+    'prov_facility_name_2',  # NULL per Austin
+    'prov_facility_address_1',  # NULL per Austin
+    'prov_facility_address_2',  # NULL per Austin
+    'prov_facility_city',  # NULL per Austin
+    'prov_facility_state',  # NULL per Austin
+    'prov_facility_zip',  # NULL per Austin
+    'prov_facility_std_taxonomy',  # NULL per Austin
     'prov_facility_vendor_specialty',  # NULL per Austin
     'cob_payer_vendor_id_1',
     'cob_payer_seq_code_1',

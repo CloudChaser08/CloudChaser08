@@ -1,3 +1,6 @@
+"""
+change relay dhc source schema
+"""
 import argparse
 import spark.providers.change_relay_dhc.medicalclaims.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
@@ -12,7 +15,8 @@ if __name__ == "__main__":
     provider_name = 'change_relay_dhc'
     output_table_names_to_schemas = {
         'change_dxrelay_claims_normalized': dhc_medicalclaims_schemas['claims_schema_v1'],
-        'change_dxrelay_service_lines_normalized': dhc_medicalclaims_schemas['service_lines_schema_v1']
+        'change_dxrelay_service_lines_normalized':
+            dhc_medicalclaims_schemas['service_lines_schema_v1']
     }
     provider_partition_name = 'change_relay'
 

@@ -1,3 +1,6 @@
+"""
+cardinal rcm normalize
+"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime
@@ -31,12 +34,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/cardinal_rcm/medicalclaims/resources/matching/'
         ) + '/'
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_rcm/medicalclaims/out/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_rcm/medicalclaims/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        input_path = \
+            's3://salusv/testing/dewey/airflow/e2e/cardinal_rcm/medicalclaims/out/{}/'\
+            .format(date_input.replace('-', '/'))
+        matching_path = \
+            's3://salusv/testing/dewey/airflow/e2e/cardinal_rcm/medicalclaims/payload/{}/'\
+                .format(date_input.replace('-', '/'))
     else:
         input_path = 's3a://salusv/incoming/medicalclaims/cardinal_rcm/{}/'.format(
             date_input.replace('-', '/')
@@ -94,9 +97,11 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
         ),
         medical_priv.filter,
         postprocessor.apply_date_cap(
-            runner.sqlContext, 'date_service', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE'),
+            runner.sqlContext, 'date_service', max_date, vendor_feed_id,
+            'EARLIEST_VALID_SERVICE_DATE'),
         postprocessor.apply_date_cap(
-            runner.sqlContext, 'date_service_end', max_date, vendor_feed_id, 'EARLIEST_VALID_SERVICE_DATE')
+            runner.sqlContext, 'date_service_end', max_date, vendor_feed_id,
+            'EARLIEST_VALID_SERVICE_DATE')
     )(
         runner.sqlContext.sql('select * from medicalclaims_common_model')
     ).createTempView('medicalclaims_common_model')

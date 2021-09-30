@@ -1,3 +1,6 @@
+"""
+Normalize
+"""
 import argparse
 from subprocess import check_output
 from datetime import datetime, time
@@ -114,7 +117,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
     min_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'EARLIEST_VALID_SERVICE_DATE')
     min_date = min_date.isoformat().split("T")[0] if min_date is not None else None
     max_date = date_input
-    min_diag_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'EARLIEST_VALID_DIAGNOSIS_DATE')
+    min_diag_date = postprocessor\
+        .get_gen_ref_date(runner.sqlContext, 35, 'EARLIEST_VALID_DIAGNOSIS_DATE')
     min_diag_date = min_diag_date.isoformat().split("T")[0] if min_diag_date is not None else None
     logging.debug("Loaded min dates")
 
@@ -147,7 +151,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
         )(runner.sqlContext.table(table)).createOrReplaceTempView(table)
 
     runner.sqlContext.table(
-        'demographics_local').cache_and_track('demographics_local').createOrReplaceTempView('demographics_local')
+        'demographics_local').cache_and_track('demographics_local')\
+        .createOrReplaceTempView('demographics_local')
 
     runner.sqlContext.table('demographics_local').count()
 
@@ -171,7 +176,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
                                 ['min_date', min_date],
                                 ['max_date', max_date]
                             ],
-                            return_output=True).createOrReplaceTempView('procedure_order_real_actcode')
+                            return_output=True)\
+        .createOrReplaceTempView('procedure_order_real_actcode')
     normalized['procedure'] = schema_enforcer.apply_schema(
         runner.run_spark_script('normalize_procedure_1.sql', [
             ['min_date', min_date],
@@ -195,9 +201,9 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
     logging.debug("Normalized lab order")
 
     normalized['lab_result'] = schema_enforcer.apply_schema(
-            runner.run_spark_script('normalize_lab_result_1.sql', [
-                ['min_date', min_date],
-                ['max_date', max_date]
+        runner.run_spark_script('normalize_lab_result_1.sql', [
+            ['min_date', min_date],
+            ['max_date', max_date]
             ], return_output=True), lab_result_schema, columns_to_keep=['part_mth']) \
         .union(schema_enforcer.apply_schema(
             runner.run_spark_script('normalize_lab_result_2.sql', [
@@ -227,7 +233,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
     # script in order to ensure that when we run a distinct to remove
     # duplicates, we maintain at least 1 normalized row per source row
     normalized['medication'] = p1.union(p2).distinct().drop('row_num') \
-        .withColumn('medctn_diag_dt', FN.coalesce(FN.col('medctn_ord_dt'), FN.col('enc_dt')))  # For whitelisting purposes
+        .withColumn('medctn_diag_dt', FN.coalesce(FN.col('medctn_ord_dt'), FN.col('enc_dt')))
+    # For whitelisting purposes
     logging.debug("Normalized medication")
 
     runner.run_spark_script('normalize_provider_order_prenorm.sql', [
@@ -238,7 +245,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
         ['min_date', min_date],
         ['max_date', max_date]
     ], return_output=True) \
-        .withColumn('prov_ord_diag_dt', FN.coalesce(FN.col('prov_ord_dt'), FN.col('enc_dt')))  # For whitelisting purposes
+        .withColumn('prov_ord_diag_dt', FN.coalesce(FN.col('prov_ord_dt'), FN.col('enc_dt')))
+    # For whitelisting purposes
     logging.debug("Normalized provider order")
 
     cln_obs1 = runner.run_spark_script('normalize_clinical_observation_1.sql', [
@@ -249,7 +257,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
         ['min_date', min_date],
         ['max_date', max_date]
     ], return_output=True)
-    normalized['clinical_observation'] = clean_and_union_cln_obs(runner.sqlContext, cln_obs1, cln_obs3)
+    normalized['clinical_observation'] = \
+        clean_and_union_cln_obs(runner.sqlContext, cln_obs1, cln_obs3)
     logging.debug("Normalized clinical observation")
 
     runner.run_spark_script('normalize_vital_sign_prenorm.sql', [
@@ -468,7 +477,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
             'filter_args': [update_encounter_whitelists]
         })
 
-    min_hvm_date = postprocessor.get_gen_ref_date(runner.sqlContext, 35, 'HVM_AVAILABLE_HISTORY_START_DATE')
+    min_hvm_date = postprocessor.\
+        get_gen_ref_date(runner.sqlContext, 35, 'HVM_AVAILABLE_HISTORY_START_DATE')
 
     if min_hvm_date is not None:
         historical_date = datetime.combine(min_hvm_date, time(0))
@@ -479,7 +489,8 @@ def run(spark, runner, date_input, input_file_path, payload_path, normalize_enco
 
     for table in normalized_tables:
         filter_args = [runner.sqlContext] + table.get('filter_args', [])
-        cols_to_keep = table.get('cols_to_keep', []) + (['part_mth'] if table['date_column'] == 'part_mth' else [])
+        cols_to_keep = table.get('cols_to_keep', []) + \
+                       (['part_mth'] if table['date_column'] == 'part_mth' else [])
         df = postprocessor.compose(
             postprocessor.add_universal_columns(
                 feed_id='35', vendor_id='118', filename=None,
@@ -665,7 +676,8 @@ if __name__ == "__main__":
     parser.add_argument('--output_demo_ref', default=S3_DEMOGRAPHICS_REFERENCE, type=str)
     parser.add_argument('--input_enc_ref', default=S3_ENCOUNTER_REFERENCE, type=str)
     parser.add_argument('--output_enc_ref', default=S3_ENCOUNTER_REFERENCE, type=str)
-    parser.add_argument('--dont_normalize_encounter', default=True, action='store_false', dest='normalize_encounter')
+    parser.add_argument('--dont_normalize_encounter', default=True, action='store_false',
+                        dest='normalize_encounter')
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
     main(args)

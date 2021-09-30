@@ -1,3 +1,4 @@
+"""post processor"""
 # Generic, agnostic functions to be applied on a dataframe
 
 import spark.helpers.udf.general_helpers as gen_helpers
@@ -82,7 +83,7 @@ def apply_date_cap(sqlc, date_col, max_cap, vdr_feed_id, domain_name, custom_min
                 "Error occurred while loading min_cap data for hvm_vdr_feed_id='{}' AND "
                 "gen_ref_domn_nm = '{}', "
                 "check to make sure ref_gen_ref was loaded before calling this function.").format(
-                vdr_feed_id, domain_name
+                    vdr_feed_id, domain_name
             ))
             raise
 
@@ -156,8 +157,8 @@ def apply_whitelist(sqlc, col_name, domain_name, comp_col_names=None,
         logging.error(("Error occurred while loading whitelist results for domain_name = '{}', "
                        "check to make sure ref_gen_ref was loaded before calling this "
                        "function.").format(
-            domain_name
-        ))
+                          domain_name
+                      ))
         raise
 
     if not values:
@@ -327,9 +328,11 @@ def compose(*functions):
 
 def parse_fixed_width_columns(df, columns):
     """
-    Parses fixed width rows given a spark dataframe and the column specification. Returns the parsed dataframe.
+    Parses fixed width rows given a spark dataframe and the column specification.
+    Returns the parsed dataframe.
     
-    Columns are specified with a list of tuples containing (column name, column start, column length, column type)
+    Columns are specified with a list of tuples containing (column name, column start,
+    column length, column type)
     """
     
     df_mas_cols = []

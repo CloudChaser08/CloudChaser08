@@ -1,5 +1,7 @@
+"""Schema enforcer"""
 from pyspark.sql.functions import col, lit
 from pyspark.sql.utils import AnalysisException
+
 
 def has_column(df, col):
     try:
@@ -8,8 +10,10 @@ def has_column(df, col):
     except AnalysisException:
         return False
 
+
 def apply_schema(df, schema, columns_to_fill=None, columns_to_keep=None):
     return apply_schema_func(schema, columns_to_fill, columns_to_keep)(df)
+
 
 def apply_schema_func(schema, cols_to_fill=None, cols_to_keep=None):
     """
@@ -61,7 +65,9 @@ def apply_schema_func(schema, cols_to_fill=None, cols_to_keep=None):
         new_columns = []
         for field in schema:
             if field.name in columns_to_fill:
-                if has_column(df, field.name): # use the column name if it exists in df, and the column position if it does not
+                if has_column(df,
+                              field.name):
+                    # use the column name if it exists in df, and the column position if it does not
                     col_value = df[field.name]
                 else:
                     col_value = col(df.columns[columns_to_fill.index(field.name)])

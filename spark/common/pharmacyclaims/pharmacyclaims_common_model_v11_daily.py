@@ -1,3 +1,4 @@
+"""pharmacyclaims common model v11 daily"""
 from pyspark.sql.types import *
 from spark.common.schema import Schema
 

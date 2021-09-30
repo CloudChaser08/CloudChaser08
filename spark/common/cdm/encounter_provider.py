@@ -1,3 +1,4 @@
+"""cdm encounter provider"""
 from pyspark.sql.types import *
 from spark.common.schema import Schema
 

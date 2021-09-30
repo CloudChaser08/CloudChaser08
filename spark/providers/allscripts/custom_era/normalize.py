@@ -1,3 +1,6 @@
+"""
+allscripts custom era normalize
+"""
 import argparse
 import spark.providers.allscripts.custom_era.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver

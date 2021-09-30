@@ -1,3 +1,6 @@
+"""
+Normalize labv1
+"""
 import argparse
 import datetime
 import subprocess

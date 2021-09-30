@@ -1,6 +1,10 @@
+"""
+inovalon pharmacyclaims normalize
+"""
 import os
 import argparse
 import subprocess
+from datetime import date, datetime
 import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v1 as transactional_schemas_v1
 import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v2 as transactional_schemas_v2
 import spark.providers.inovalon.pharmacyclaims.transactional_schemas_v3 as transactional_schemas_v3
@@ -13,7 +17,6 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharmacyclaims_schema
 import spark.helpers.postprocessor as postprocessor
 import spark.common.utility.logger as logger
-from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 

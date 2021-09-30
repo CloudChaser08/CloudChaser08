@@ -1,3 +1,6 @@
+"""
+inovalon dhc normalize
+"""
 import argparse
 import spark.providers.inovalon_dhc.enrollmentrecords.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
@@ -22,7 +25,8 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'inovalon_dhc'
 
-    if datetime.strptime(date_input, '%Y-%m-%d').date() < datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
+    if datetime.strptime(date_input, '%Y-%m-%d').date() < \
+            datetime.strptime(v_cutoff_date, '%Y-%m-%d').date():
         schema = enrollment_schemas['schema_v5']
     else:
         schema = enrollment_schemas['schema_v6']

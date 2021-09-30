@@ -1,3 +1,6 @@
+"""
+allscripts emr test
+"""
 import argparse
 import subprocess
 import gzip
@@ -87,7 +90,8 @@ def run(spark, dryrun):
     """Execute the spark job"""
     # S3 API only returns 1000 results at a time. It's easier to use the cli to
     # list everything
-    res = subprocess.check_output(['aws', 's3', 'ls', '--recursive', 's3://salusv/incoming/emr/allscripts/'])
+    res = subprocess.check_output(['aws', 's3', 'ls', '--recursive',
+                                   's3://salusv/incoming/emr/allscripts/'])
     as_keys = [r.split(" ")[-1] for r in res.split("\n") if r != '']
 
     as_keys_filtered = []

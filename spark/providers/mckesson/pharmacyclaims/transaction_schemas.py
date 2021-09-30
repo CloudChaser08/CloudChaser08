@@ -1,3 +1,6 @@
+"""
+mckesson Transactional schema
+"""
 from pyspark.sql.types import StringType, StructType, StructField
 
 old_schema = StructType([

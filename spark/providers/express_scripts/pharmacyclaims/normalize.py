@@ -1,3 +1,6 @@
+"""
+express scripts pharmacy claims normalize
+"""
 import os
 import argparse
 import subprocess
@@ -7,10 +10,10 @@ from spark.common.utility import logger
 import spark.helpers.file_utils as file_utils
 import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.records_loader as records_loader
+import pyspark.sql.functions as f
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.providers.express_scripts.pharmacyclaims.transactional_schemas as source_table_schemas
-import pyspark.sql.functions as f
 import spark.helpers.postprocessor as postprocessor
 
 ACCREDO_PREFIX = '10130X001_HV_ODS_Claims'
@@ -20,7 +23,8 @@ STAGE_REVERSE_TRANS_PATH = '/temp_stage/'
 REVERSAL_APPLY_HIST_MONTHS = 2
 
 
-def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False, test=False, spark=None, runner=None):
+def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False, test=False,
+        spark=None, runner=None):
     logger.log("esi-rx: this normalization apply rejects/reversal process "
                "and re-write output (warehouse) data for "
                "most recent <REVERSAL_APPLY_HIST_MONTHS> months + current month. ")
@@ -66,16 +70,19 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
     input_path_prev = ""
     if test:
         input_path_prev = file_utils.get_abs_path(
-            script_path, '../../../test/providers/express_scripts/pharmacyclaims/resources/input_prev/'
+            script_path,
+            '../../../test/providers/express_scripts/pharmacyclaims/resources/input_prev/'
         ) + '/'
         driver.input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/express_scripts/pharmacyclaims/resources/input/'
         ) + '/'
         driver.matching_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/express_scripts/pharmacyclaims/resources/matching/'
+            script_path,
+            '../../../test/providers/express_scripts/pharmacyclaims/resources/matching/'
         ) + '/'
         normalized_path = file_utils.get_abs_path(
-            script_path, '../../../test/providers/express_scripts/pharmacyclaims/resources/normalized/'
+            script_path,
+            '../../../test/providers/express_scripts/pharmacyclaims/resources/normalized/'
         ) + '/'
 
     driver.load(extra_payload_cols=['RXNumber', 'hvJoinKey'])
@@ -96,7 +103,7 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
     # collect list of days /months for reject and reversals
     start_date = (datetime.strptime(date_input, '%Y-%m-%d')
                   - relativedelta(months=reversal_apply_hist_months)).replace(day=1)  # start date
-    delta = datetime.strptime(date_input, '%Y-%m-%d') - start_date       # as timedelta
+    delta = datetime.strptime(date_input, '%Y-%m-%d') - start_date  # as timedelta
     conf = driver.source_table_schema.TABLE_CONF['transaction']
     list_of_months = {}
     for i in range(delta.days + 1):
@@ -106,17 +113,21 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
 
     if test:
         logger.log('    -loading: prev transaction files from {}'.format(input_path_prev))
-        records_loader.load(driver.runner, input_path_prev, source_table_conf=conf, load_file_name=True
-                            , file_name_col='input_file_name', spark_context=driver.spark
+        records_loader.load(driver.runner, input_path_prev, source_table_conf=conf,
+                            load_file_name=True, file_name_col='input_file_name',
+                            spark_context=driver.spark
                             ).createOrReplaceTempView('_temp_rev_transaction')
         driver.spark.read.csv(
-            normalized_path, sep="|", quote='"', header=True).createOrReplaceTempView('_temp_pharmacyclaims_nb')
+            normalized_path, sep="|", quote='"', header=True). \
+            createOrReplaceTempView('_temp_pharmacyclaims_nb')
     else:
         if first_run:
             logger.log('-loading: requested first run and not required to apply reversals')
             driver.spark.sql(
-                sql_stmnt.format("transaction where 1 = 2")).createOrReplaceTempView('_temp_rev_transaction')
-            driver.spark.sql("select * from transaction where 1=2").createOrReplaceTempView('_temp_pharmacyclaims_nb')
+                sql_stmnt.format("transaction where 1 = 2")). \
+                createOrReplaceTempView('_temp_rev_transaction')
+            driver.spark.sql("select * from transaction where 1=2"). \
+                createOrReplaceTempView('_temp_pharmacyclaims_nb')
         else:
             # ----------load incoming data to identify rejects and reversals----------
             # load reject reversal source form raw salusv/incoming
@@ -126,8 +137,9 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
             # collect incoming data(3 columns) and save into local
             hdfs_utils.clean_up_output_hdfs(STAGE_REVERSE_TRANS_PATH)
             for i in range(delta.days + 1):
-                s3_esi_path_in = "s3://salusv/incoming/{}/{}/".format(driver.data_type, provider_name) + \
-                                 (start_date + timedelta(days=i)).strftime('%Y/%m/%d')
+                s3_esi_path_in = \
+                    "s3://salusv/incoming/{}/{}/".format(driver.data_type, provider_name) + \
+                    (start_date + timedelta(days=i)).strftime('%Y/%m/%d')
                 try:
                     subprocess.check_call(['aws', 's3', 'ls', s3_esi_path_in])
                     has_data = True
@@ -135,8 +147,10 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
                     continue
 
                 # load into /temp_staging hdfs location
-                logger.log('    -loading: prev transaction files from {}'.format(s3_esi_path_in + '/'))
-                records_loader.load(driver.runner, s3_esi_path_in + '/', source_table_conf=conf, load_file_name=True
+                logger.log(
+                    '    -loading: prev transaction files from {}'.format(s3_esi_path_in + '/'))
+                records_loader.load(driver.runner, s3_esi_path_in + '/',
+                                    source_table_conf=conf, load_file_name=True
                                     , file_name_col='input_file_name', spark_context=driver.spark
                                     ).createOrReplaceTempView('_temp_esi_rx_src')
                 driver.spark.sql(sql_stmnt.format('_temp_esi_rx_src')).repartition(5).write.parquet(
@@ -145,14 +159,17 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
             # final temp table
             if has_data:
                 logger.log('    -loading: create external '
-                           'table {} from {}'.format('_temp_rev_transaction', STAGE_REVERSE_TRANS_PATH))
-                driver.spark.read.parquet(STAGE_REVERSE_TRANS_PATH).createOrReplaceTempView('_temp_rev_transaction')
+                           'table {} from {}'.format('_temp_rev_transaction',
+                                                     STAGE_REVERSE_TRANS_PATH))
+                driver.spark.read.parquet(STAGE_REVERSE_TRANS_PATH). \
+                    createOrReplaceTempView('_temp_rev_transaction')
             else:
                 logger.log('    -loading: there is no transaction data for reversal apply. '
                            'create empty external table {} from '
                            'existing transaction table'.format('_temp_rev_transaction'))
                 driver.spark.sql(
-                    sql_stmnt.format("transaction where 1 = 2")).createOrReplaceTempView('_temp_rev_transaction')
+                    sql_stmnt.format("transaction where 1 = 2")). \
+                    createOrReplaceTempView('_temp_rev_transaction')
 
             # ----------load parquet from warehouse to apply rejects and reversals----------
             logger.log('    -loading: create external table {} from warehouse '
@@ -163,7 +180,7 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
                         & (f.col('part_best_date') <= '{}'.format(max(list_of_months.values())))) \
                 .createOrReplaceTempView('_temp_pharmacyclaims_nb')
 
-            # ----------------------------------------------------------------------------------------
+            # --------------------------------------------------------------------------------------
 
     driver.transform()
     if not test:
@@ -178,14 +195,17 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
             logger.log('Backup historical data')
             if end_to_end_test:
                 tmp_path = \
-                    's3://salusv/testing/dewey/airflow/e2e/{}/pharmacyclaims/backup/'.format(provider_partition_name)
+                    's3://salusv/testing/dewey/airflow/e2e/{}/pharmacyclaims/backup/' \
+                        .format(provider_partition_name)
             else:
                 tmp_path = 's3://salusv/backup/{}/pharmacyclaims/{}/{}={}/'.format(
-                    provider_partition_name, date_input, schema.provider_partition_column, provider_partition_name)
+                    provider_partition_name, date_input,
+                    schema.provider_partition_column, provider_partition_name)
             date_part = 'part_best_date={}/'
             for month in list_of_months.values():
                 subprocess.check_call(
-                    ['aws', 's3', 'mv', '--recursive', normalized_output_provider_path + date_part.format(month)
+                    ['aws', 's3', 'mv', '--recursive',
+                     normalized_output_provider_path + date_part.format(month)
                         , tmp_path + date_part.format(month)]
                 )
         driver.copy_to_output_path()

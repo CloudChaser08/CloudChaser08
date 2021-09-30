@@ -1,3 +1,4 @@
+"""datamart util"""
 from datetime import datetime, timedelta
 from collections import OrderedDict
 from dateutil.relativedelta import relativedelta
@@ -34,7 +35,8 @@ def get_list_of_months_v1(start_month, end_month):
     temp_month = start_month
     while True:
         collect_mths.append(temp_month)
-        temp_month = (datetime.strptime(temp_month, '%Y-%m') + relativedelta(months=1)).strftime('%Y-%m')
+        temp_month = \
+            (datetime.strptime(temp_month, '%Y-%m') + relativedelta(months=1)).strftime('%Y-%m')
         if datetime.strptime(temp_month, '%Y-%m') > datetime.strptime(end_month, '%Y-%m'):
             break
     return collect_mths
@@ -57,7 +59,8 @@ def has_table(spark, db, table):
         output: True /False
     """
     table_status = False
-    tbl_cnt = spark.sql("show tables in {}".format(db)).where(f.col("tableName").isin({table})).count()
+    tbl_cnt = \
+        spark.sql("show tables in {}".format(db)).where(f.col("tableName").isin({table})).count()
 
     if tbl_cnt == 1:
         table_status = True
@@ -75,8 +78,8 @@ def get_external_table_location(spark, db, table):
     """
     location_df_list = spark.sql(
         "desc formatted {}.{}".format(db, table)).filter(
-        f.col("col_name") == "Location").select(
-        f.col("data_type")).collect()
+            f.col("col_name") == "Location").select(
+            f.col("data_type")).collect()
 
     location = str([x.data_type for x in location_df_list][0])
     return location

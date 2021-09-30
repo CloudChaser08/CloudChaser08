@@ -1,3 +1,6 @@
+"""
+emdeon Normalize RX normalize
+"""
 #! /usr/bin/python
 import os
 import argparse
@@ -71,7 +74,8 @@ if args.sample:
     print("running load_transactions_v2")
     date_path = args.date.replace('-', '_')  # this was modified for the sample
     runner.run_spark_script(get_rel_path('load_transactions_v2.sql'), [
-        ['input_path', S3_EMDEON_IN + date_path + '/RX_DEID_CF_ON/']  # note this was added for the sample
+        ['input_path', S3_EMDEON_IN + date_path + '/RX_DEID_CF_ON/']
+        # note this was added for the sample
     ])
 else:
     date_path = args.date.replace('-', '/')
@@ -140,7 +144,8 @@ old_partition_count = spark.conf.get('spark.sql.shuffle.partitions')
 print("running unload_common_model")
 runner.run_spark_script(get_rel_path('../../../common/unload_common_model.sql'), [
     ['select_statement',
-     "SELECT *, 'NULL' as part_best_date FROM pharmacyclaims_common_model WHERE date_service is NULL", False],
+     "SELECT *,'NULL' as part_best_date FROM pharmacyclaims_common_model "
+     "WHERE date_service is NULL" ,False],
     ['unload_partition_count', 20, False],
     ['original_partition_count', old_partition_count, False],
     ['distribution_key', 'record_id', False]
@@ -172,4 +177,5 @@ spark.sparkContext.parallelize(part_files).foreach(move_file)
 spark.sparkContext.stop()
 
 print("running copy to output")
-subprocess.check_call(['s3-dist-cp', '--src', '/text/pharmacyclaims/emdeon/', '--dest', S3_EMDEON_OUT])
+subprocess.check_call(['s3-dist-cp', '--src', '/text/pharmacyclaims/emdeon/',
+                       '--dest', S3_EMDEON_OUT])

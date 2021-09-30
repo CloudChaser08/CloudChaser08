@@ -1,3 +1,6 @@
+"""
+spark normalization
+"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime

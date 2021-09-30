@@ -1,3 +1,6 @@
+"""
+allscripts emr schema
+"""
 from pyspark.sql.types import StructType, StructField, StringType
 
 
@@ -100,7 +103,8 @@ medications = TransactionTable(
         ]
     ]),
     ['gen2patientid', 'medid', 'versionid'],
-    skewed_columns=['administeredbygen2providerid', 'prescribedbygen2providerid', 'genproviderid', 'gen2providerid']
+    skewed_columns=['administeredbygen2providerid', 'prescribedbygen2providerid',
+                    'genproviderid', 'gen2providerid']
 )
 
 orders = TransactionTable(

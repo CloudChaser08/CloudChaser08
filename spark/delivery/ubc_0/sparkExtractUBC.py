@@ -1,3 +1,4 @@
+"""spark extract UBC"""
 #! /usr/bin/python
 import argparse
 import time
@@ -60,9 +61,12 @@ def run(spark, runner, month, test=False):
         pharmacy_prelim_part_files_cmd = ['find', pharmacy_prelim, '-type', 'f']
         enrollment_part_files_cmd = ['find', enrollment_outpath, '-type', 'f']
     else:
-        pharmacy_final_part_files_cmd = ['hadoop', 'fs', '-ls', '-R', pharmacy_final.replace('hdfs://', '')]
-        pharmacy_prelim_part_files_cmd = ['hadoop', 'fs', '-ls', '-R', pharmacy_prelim.replace('hdfs://', '')]
-        enrollment_part_files_cmd = ['hadoop', 'fs', '-ls', '-R', enrollment_outpath.replace('hdfs://', '')]
+        pharmacy_final_part_files_cmd = ['hadoop', 'fs', '-ls', '-R',
+                                         pharmacy_final.replace('hdfs://', '')]
+        pharmacy_prelim_part_files_cmd = ['hadoop', 'fs', '-ls', '-R',
+                                          pharmacy_prelim.replace('hdfs://', '')]
+        enrollment_part_files_cmd = ['hadoop', 'fs', '-ls', '-R',
+                                     enrollment_outpath.replace('hdfs://', '')]
 
     part_files = subprocess.check_output(pharmacy_final_part_files_cmd).decode().strip().split("\n")
     prefix = 'pharmacyclaims_{}_final'.format(month_final)

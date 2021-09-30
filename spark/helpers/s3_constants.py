@@ -1,3 +1,4 @@
+"""s3 constants"""
 # Various s3 paths used for normalization output
 # If you need to use a new output path, consider adding it here instead of in a local variable
 

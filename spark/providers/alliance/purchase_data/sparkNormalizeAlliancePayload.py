@@ -1,3 +1,6 @@
+"""
+alliance purchase normalize
+"""
 import sys
 
 from pyspark.sql.functions import col, lit
@@ -18,7 +21,8 @@ from spark.common.utility.run_recorder import RunRecorder
 
 date_input = sys.argv[1]
 
-payload_dir = 's3a://salusv/matching/payload/consumer/alliance/{}/'.format(date_input.replace('-', '/'))
+payload_dir = 's3a://salusv/matching/payload/consumer/alliance/{}/'\
+    .format(date_input.replace('-', '/'))
 dest_dir = \
     's3a://salusv/warehouse/parquet/consumer/' \
     '2017-08-02/part_provider=alliance/part_best_date={}/'.format(date_input[:7])

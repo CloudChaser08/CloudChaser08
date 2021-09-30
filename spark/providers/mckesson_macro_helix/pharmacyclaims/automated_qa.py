@@ -1,3 +1,6 @@
+"""
+mckesson macro helix
+"""
 from spark.spark_setup import init
 from spark.runner import Runner
 import spark.helpers.payload_loader as payload_loader
@@ -15,7 +18,8 @@ MCKESSON_MATCHING_PAYLOAD_LOCATION = 's3a://salusv/sample/mckesson_macrohelix/pa
 MCKESSON_TARGET_DATA_LOCATION = 's3a://salusv/sample/mckesson_macrohelix/normalized/*/*'
 
 payload_loader.load(
-    spark_sql_runner, MCKESSON_MATCHING_PAYLOAD_LOCATION, extra_cols=['claimId', 'patientId', 'hvJoinKey']
+    spark_sql_runner, MCKESSON_MATCHING_PAYLOAD_LOCATION,
+    extra_cols=['claimId', 'patientId', 'hvJoinKey']
 )
 
 spark_sql_runner.run_spark_script('./load_transactions.sql', [

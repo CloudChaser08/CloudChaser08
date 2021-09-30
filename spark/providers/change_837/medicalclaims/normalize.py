@@ -1,8 +1,13 @@
+"""
+change 837 normalize
+"""
 import os
 import argparse
 from datetime import datetime
-import spark.providers.change_837.medicalclaims.transactional_schemas as historic_source_table_schemas
-import spark.providers.change_837.medicalclaims.transactional_schemas_v2 as future_source_table_schemas
+import spark.providers.change_837.medicalclaims.transactional_schemas as \
+    historic_source_table_schemas
+import spark.providers.change_837.medicalclaims.transactional_schemas_v2 as \
+    future_source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
@@ -28,7 +33,8 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
-    if datetime.strptime(date_input, '%Y-%m-%d').date() <= datetime.strptime(_passthrough_cutoff, '%Y-%m-%d').date():
+    if datetime.strptime(date_input, '%Y-%m-%d').date() <= \
+            datetime.strptime(_passthrough_cutoff, '%Y-%m-%d').date():
         logger.log('Historic Load using Passthrough table to get PCN')
         source_table_schemas = historic_source_table_schemas
         pas_tiny_table_name = 'passthrough'
@@ -71,10 +77,11 @@ if __name__ == "__main__":
     # only 2 columns are needed from the following 2 tables.
     # Select only the columns we need, then broadcast in the sql
     logger.log('Build passthrough and plainout refernce tables')
-    driver.spark.sql('select PCN as pcn, UPPER(claimId) as claimid from {} group by 1, 2'.format(pas_tiny_table_name)) \
-        .createOrReplaceTempView('pas_tiny')
-    driver.spark.sql('select patient_gender, UPPER(claim_number) as claim_number from plainout group by 1, 2') \
-        .createOrReplaceTempView('pln_tiny')
+    V_SQL = 'select PCN as pcn, UPPER(claimId) as claimid from {} group by 1, 2'\
+        .format(pas_tiny_table_name)
+    driver.spark.sql(V_SQL).createOrReplaceTempView('pas_tiny')
+    V_SQL = 'select patient_gender, UPPER(claim_number) as claim_number from plainout group by 1, 2'
+    driver.spark.sql(V_SQL).createOrReplaceTempView('pln_tiny')
 
     logger.log('Start transform')
     driver.transform()

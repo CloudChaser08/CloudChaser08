@@ -1,3 +1,6 @@
+"""
+cardinal tsi normalize
+"""
 import argparse
 import datetime
 from spark.runner import Runner
@@ -41,15 +44,14 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             script_path, '../../../test/providers/cardinal_tsi/emr/resources/matching/'
         ) + '/'
     elif airflow_test:
-        diagnosis_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_tsi/emr/out/{}/diagnosis/'.format(
-            date_input.replace('-', '/')
-        )
-        medication_input_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_tsi/emr/out/{}/medication/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_tsi/emr/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
+        diagnosis_input_path = \
+            's3://salusv/testing/dewey/airflow/e2e/cardinal_tsi/emr/out/{}/diagnosis/'\
+            .format(date_input.replace('-', '/'))
+        medication_input_path = \
+            's3://salusv/testing/dewey/airflow/e2e/cardinal_tsi/emr/out/{}/medication/'\
+            .format(date_input.replace('-', '/'))
+        matching_path = 's3://salusv/testing/dewey/airflow/e2e/cardinal_tsi/emr/payload/{}/'\
+            .format(date_input.replace('-', '/'))
     else:
         diagnosis_input_path = 's3a://salusv/incoming/emr/cardinal_tsi/{}/diagnosis/'.format(
             date_input.replace('-', '/')
@@ -109,7 +111,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'privacy_filter': priv_diagnosis,
             'custom_transformer': Transformer(
                 diag_cd=[
-                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code, ['diag_cd', 'diag_cd_qual', 'enc_dt'])
+                    TransformFunction(post_norm_cleanup.clean_up_diagnosis_code,
+                                      ['diag_cd', 'diag_cd_qual', 'enc_dt'])
                 ]
             ),
             'date_caps': [
@@ -126,7 +129,8 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
             'date_caps': [
                 ('medctn_start_dt', 'EARLIEST_VALID_SERVICE_DATE', None),
                 ('medctn_end_dt', 'EARLIEST_VALID_SERVICE_DATE', None),
-                ('medctn_last_rfll_dt', 'EARLIEST_VALID_SERVICE_DATE', lambda d: d - datetime.timedelta(year=1))
+                ('medctn_last_rfll_dt', 'EARLIEST_VALID_SERVICE_DATE',
+                 lambda d: d - datetime.timedelta(year=1))
             ]
         }
     ]
@@ -142,10 +146,12 @@ def run(spark, runner, date_input, test=False, airflow_test=False):
                 model_version='mdl_vrsn_num'
             ),
 
-            table['privacy_filter'].filter(runner.sqlContext, additional_transformer=table.get('custom_transformer')),
+            table['privacy_filter'].filter(runner.sqlContext,
+                                           additional_transformer=table.get('custom_transformer')),
             *[
                 postprocessor.apply_date_cap(
-                    runner.sqlContext, date_col, date_input, '31', domain_name, date_function=date_fn)
+                    runner.sqlContext, date_col, date_input, '31',
+                    domain_name, date_function=date_fn)
                 for (date_col, domain_name, date_fn) in table['date_caps']
             ]
         )(

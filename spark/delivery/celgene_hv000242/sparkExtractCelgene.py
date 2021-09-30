@@ -1,3 +1,4 @@
+"""celgene hv 000242"""
 import argparse
 from datetime import datetime, timedelta
 from spark.runner import Runner
@@ -38,8 +39,8 @@ def run(spark, runner, date_input, test=False):
         extractor.export_table(
             runner.sqlContext, 'pharmacyclaims_extract', None,
             file_utils.get_abs_path(
-                script_path, PHARMACY_OUT_TEMPLATE.format(date_input.replace('-', ''))
-            ), partitions=1, output_file_name='pharmacy_claims_{}'.format(date_obj.strftime('%Y%m%d'))
+                script_path, PHARMACY_OUT_TEMPLATE.format(date_input.replace('-', ''))),
+            partitions=1, output_file_name='pharmacy_claims_{}'.format(date_obj.strftime('%Y%m%d'))
         )
 
         extractor.export_table(

@@ -1,3 +1,6 @@
+"""
+mckesson res normalize
+"""
 import argparse
 from pyspark.sql.functions import lit, col
 from spark.common.utility import logger

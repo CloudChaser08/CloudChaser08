@@ -1,5 +1,7 @@
+"""
+allscripts emr dedup
+"""
 from pyspark.sql import functions as f
-from pyspark.sql import catalog as c
 from pyspark.sql import Window
 from spark.runner import Runner
 from spark.spark_setup import init
@@ -15,17 +17,18 @@ conf_parameters = {
     'spark.max.executor.failures': 800
 }
 
+
 def dedup_table(df, dup_ids):
     # HV_May12_01
     df = df.withColumn('data_set_nm_dt', f.to_date(df['data_set_nm'].substr(3, 5), 'MMMyy'))
 
-    window = Window.partitionBy(dup_ids).orderBy( 
+    window = Window.partitionBy(dup_ids).orderBy(
         f.col('data_captr_dt').desc(),
         f.col('data_set_nm_dt').desc(),
         f.col('crt_dt').desc()
     )
     df = df.withColumn(
-        'rn', 
+        'rn',
         f.row_number().over(window)
     ).filter(
         f.col('rn') == 1
@@ -36,7 +39,7 @@ def dedup_table(df, dup_ids):
 
 tables = {
     'lab_result': ['vdr_lab_test_id']
-    , 'clinical_observation' : ['vdr_clin_obsn_id', 'clin_obsn_substc_cd']
+    , 'clinical_observation': ['vdr_clin_obsn_id', 'clin_obsn_substc_cd']
     , 'lab_order': ['vdr_lab_ord_id']
     , 'procedure': ['vdr_proc_id', 'proc_diag_cd']
     , 'medication': ['vdr_medctn_ord_id', 'medctn_alt_substc_cd']
@@ -46,16 +49,18 @@ tables = {
     , 'encounter': ['vdr_enc_id', 'vdr_alt_enc_id']
 }
 
-# s3-dist-cp --s3ServerSideEncryption --deleteOnSuccess --src /staging/ --dest s3://salusv/warehouse/transformed/allscripts_dedup/ 
-s3_path_template = "s3://salusv/warehouse/transformed/allscripts_restate/emr/2017-08-23/{table}/part_hvm_vdr_feed_id=25/"
-s3_path_template_out = "s3://salusv/warehouse/transformed/allscripts_dedup/emr/2017-08-23/{table}/part_hvm_vdr_feed_id=25/"
+# s3-dist-cp --s3ServerSideEncryption --deleteOnSuccess --src /staging/ --dest
+# s3://salusv/warehouse/transformed/allscripts_dedup/
+s3_path_template = \
+    "s3://salusv/warehouse/transformed/allscripts_restate/emr/2017-08-23/{table}/part_hvm_vdr_feed_id=25/"
+s3_path_template_out = \
+    "s3://salusv/warehouse/transformed/allscripts_dedup/emr/2017-08-23/{table}/part_hvm_vdr_feed_id=25/"
 
 staging_location = '/staging/'
 copy_command_template = 's3-dist-cp --s3ServerSideEncryption --src {src} --dest {dest}'
 
 
 def dist_cp(src, dest):
-
     copy_command = [
         's3-dist-cp',
         '-Dmapreduce.job.reduces=2000',
@@ -68,8 +73,8 @@ def dist_cp(src, dest):
 
     subprocess.call(copy_command)
 
-def rm_staging():
 
+def rm_staging():
     copy_command = [
         'hadoop',
         'fs',
@@ -79,6 +84,7 @@ def rm_staging():
     ]
 
     subprocess.call(copy_command)
+
 
 # for each table
 for table, dup_ids in tables.items():
@@ -96,13 +102,13 @@ for table, dup_ids in tables.items():
     print("{} start count:".format(table), df.count())
 
     print("------------------------> Step 1 end <----------------------------")
-    
+
     ### Step 2 -- order by duplicate ids, repartition, export
-    print("------------------------> Step 2 start <----------------------------") 
+    print("------------------------> Step 2 start <----------------------------")
     df = dedup_table(df, dup_ids).withColumn(
-        'part_mth_r', 
+        'part_mth_r',
         f.concat(
-            df['part_mth'], 
+            df['part_mth'],
             (
                 f.when(
                     df['part_mth'] == '0_PREDATES_HVM_HISTORY', f.rand() * 200
@@ -114,7 +120,10 @@ for table, dup_ids in tables.items():
     )
 
     # repartition and export
-    df.repartition(5000, 'part_mth_r').drop('part_mth_r').write.parquet(staging_location, mode='append', compression='gzip', partitionBy='part_mth')
+    df.repartition(5000, 'part_mth_r').drop('part_mth_r').write.parquet(staging_location,
+                                                                        mode='append',
+                                                                        compression='gzip',
+                                                                        partitionBy='part_mth')
     df = spark.read.parquet(staging_location)
     print("{} end count:".format(table), df.count())
     print("------------------------> Step 2 end <----------------------------")
@@ -126,6 +135,3 @@ for table, dup_ids in tables.items():
     print("------------------------> Step 3 end <----------------------------")
 
     rm_staging()
-
-  
-    

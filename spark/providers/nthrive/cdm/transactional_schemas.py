@@ -1,3 +1,6 @@
+"""
+schema
+"""
 # pylint: disable=duplicate-code
 from spark.helpers.source_table import SourceTable
 

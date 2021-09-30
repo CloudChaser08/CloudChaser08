@@ -1,3 +1,6 @@
+"""
+Normalize
+"""
 import argparse
 import datetime
 from spark.common.marketplace_driver import MarketplaceDriver

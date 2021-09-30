@@ -1,6 +1,10 @@
+"""
+change 835 schema
+"""
 from spark.helpers.source_table import SourceTable
 
-# ('product_service_id_qualifier', 2),  #  will indicate what kind of ProductServiceID it is  "03" indicates NDC code
+# ('product_service_id_qualifier', 2),  #  will indicate what kind
+# of ProductServiceID it is  "03" indicates NDC code
 
 TABLE_CONF = {
     'claim': SourceTable(

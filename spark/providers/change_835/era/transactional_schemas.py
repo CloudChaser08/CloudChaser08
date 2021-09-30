@@ -1,3 +1,6 @@
+"""
+change 835 era source schema
+"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {

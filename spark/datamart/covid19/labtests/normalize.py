@@ -120,7 +120,7 @@ def transform(requested_list_of_months, output_to_transform_path, archive_dir, t
     this_day = str((datetime.utcnow() - timedelta(hours=4)).strftime("%A"))
     # TODO: Create access method for protected member `_full_archive_requested_days`
     if not context.LAB_SKIP_ARCHIVE and not this_day.lower() in [
-        fa.lower() for fa in covid19_lab_transformer._full_archive_requested_days
+            fa.lower() for fa in covid19_lab_transformer._full_archive_requested_days
     ]:
         covid19_lab_transformer.archive_current_prod()
     else:

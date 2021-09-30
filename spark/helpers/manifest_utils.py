@@ -1,3 +1,4 @@
+"""manifest utils"""
 import subprocess
 from pyspark import SparkContext
 
@@ -61,7 +62,8 @@ def write(file_list, files_per_manifest=1000, output_dir=OUTPUT_DIR):
         # When using srcPrefixesFile, the src and prefixes need to start with the same URI.
         # However, s3-dist-cp exands /staging/ to hdfs://{ip-address}:port/, so we have
         # to correct the URI's in the file by changing their prefixes.
-        new_prefix = subprocess.check_output(['hdfs', 'getconf', '-confKey', 'fs.defaultFS']).decode().strip()
+        new_prefix = subprocess.check_output(['hdfs', 'getconf', '-confKey',
+                                              'fs.defaultFS']).decode().strip()
 
         def reformat_uri(iterator):
             final_iterator = []

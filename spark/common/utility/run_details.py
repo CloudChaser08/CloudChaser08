@@ -1,3 +1,4 @@
+"""run details"""
 from spark.common.utility.output_type import DataType, RunType
 from spark.common.utility.singleton import Singleton
 

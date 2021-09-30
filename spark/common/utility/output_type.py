@@ -1,3 +1,4 @@
+"""output data"""
 from enum import Enum
 
 

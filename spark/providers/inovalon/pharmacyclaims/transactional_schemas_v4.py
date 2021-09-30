@@ -1,3 +1,6 @@
+"""
+inovalon pharmacyclaims source schema v4
+"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {

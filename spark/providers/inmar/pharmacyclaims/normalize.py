@@ -1,13 +1,16 @@
+"""
+inmar pharmacy claims normalize
+"""
 import os
-import spark.providers.inmar.pharmacyclaims.transactional_schemas as source_table_schemas
 import subprocess
 import argparse
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+import spark.providers.inmar.pharmacyclaims.transactional_schemas as source_table_schemas
 from spark.common.utility.output_type import DataType, RunType
 import spark.common.utility.logger as logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
 
 if __name__ == "__main__":
@@ -58,7 +61,8 @@ if __name__ == "__main__":
 
     driver.init_spark_context(conf_parameters=conf_parameters)
     logger.log('Loading external tables')
-    driver.spark.read.parquet(os.path.join(driver.output_path, schema.output_directory, 'part_provider=inmar/'))\
+    driver.spark.read.parquet(os.path.join(driver.output_path,
+                                           schema.output_directory, 'part_provider=inmar/'))\
         .createOrReplaceTempView('_temp_pharmacyclaims_nb')
     driver.load()
     driver.transform()
@@ -84,8 +88,10 @@ if __name__ == "__main__":
     date_part = 'part_provider=inmar/part_best_date={}/'
 
     current_year_month = args.date[:7] + '-01'
-    one_month_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m-01')
-    two_months_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m-01')
+    one_month_prior = \
+        (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=1)).strftime('%Y-%m-01')
+    two_months_prior = \
+        (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m-01')
 
     for month in [current_year_month, one_month_prior, two_months_prior]:
         subprocess.check_call(

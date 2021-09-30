@@ -1,3 +1,4 @@
+"""all medical claims schemas inport"""
 # medicalclaims schemas
 from spark.common.medicalclaims import medicalclaims_common_model_v1
 from spark.common.medicalclaims import medicalclaims_common_model_v2

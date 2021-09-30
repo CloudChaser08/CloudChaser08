@@ -1,13 +1,18 @@
+"""
+express scripts enr normalize
+"""
 import argparse
-from spark.helpers.normalized_records_unloader import distcp
 import subprocess
 from math import ceil
 import datetime
+from spark.helpers.normalized_records_unloader import distcp
 from spark.common.utility import logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.enrollment import schemas as enrollment_schemas
-import spark.providers.express_scripts.enrollmentrecords.transactional_schemas as transactional_schemas
-import spark.providers.express_scripts.enrollmentrecords.transactional_schemas_v1 as transactional_schemas_v1
+import spark.providers.express_scripts.enrollmentrecords.transactional_schemas as \
+    transactional_schemas
+import spark.providers.express_scripts.enrollmentrecords.transactional_schemas_v1 as \
+    transactional_schemas_v1
 import spark.helpers.postprocessor as postprocessor
 import spark.helpers.payload_loader as payload_loader
 import spark.helpers.file_utils as file_utils

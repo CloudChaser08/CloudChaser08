@@ -1,3 +1,6 @@
+"""
+8451 hvXXXXXX rx driver
+"""
 from datetime import date
 import os
 import re
@@ -84,9 +87,9 @@ class _8451CensusDriver(CensusDriver):
         log("Repartition and write files to hdfs")
         dataframe.repartition(self.NUM_PARTITIONS).write.csv(output_path, sep="|", header=True, compression="gzip")
 
-        # rename output files to desired name
-        # this step removes the spark hash added to the name by default
-        # e.g. part-00081-35b44b47-2b52-4430-a12a-c4ed31c7bfd5-c000.psv.gz becomes <batch_id>_response_00081.psv.gz
+        # rename output files to desired name this step removes the spark hash added to the name
+        # by default e.g. part-00081-35b44b47-2b52-4430-a12a-c4ed31c7bfd5-c000.psv.gz becomes
+        # <batch_id>_response_00081.psv.gz
         #
         log("Renaming files")
         for filename in [f for f in self._list_dir(output_path) if f[0] != '.' and f != "_SUCCESS"]:

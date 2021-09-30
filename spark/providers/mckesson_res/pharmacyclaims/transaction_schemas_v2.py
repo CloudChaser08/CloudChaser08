@@ -1,3 +1,6 @@
+"""
+mckesson res source schema v2
+"""
 from spark.helpers.source_table import SourceTable
 
 # new schema with 118 columns

@@ -1,3 +1,4 @@
+"""records schema questrince hv000838_1b"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {

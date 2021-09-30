@@ -1,3 +1,6 @@
+"""
+change 835 era normalize
+"""
 import os
 import argparse
 import spark.providers.change_835.era.transactional_schemas as source_table_schemas

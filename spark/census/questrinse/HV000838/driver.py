@@ -1,3 +1,4 @@
+"""driver schema questrince hv000838"""
 from math import ceil
 import re
 
@@ -24,7 +25,8 @@ class QuestRinseCensusDriver(CensusDriver):
         matching_payload_df = self._spark.table('matching_payload')
 
         cleaned_matching_payload_df = (
-            postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
+            postprocessor.compose(postprocessor.trimmify,
+                                  postprocessor.nullify)(matching_payload_df))
 
         cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
@@ -41,7 +43,8 @@ class QuestRinseCensusDriver(CensusDriver):
 
         df = self._spark.table('order_result')
         df = df.repartition(int(
-            self._spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')), 'unique_accession_id')
+            self._spark.sparkContext.getConf().get('spark.sql.shuffle.partitions')),
+            'unique_accession_id')
         df = df.cache_and_track('order_result')
         df.createOrReplaceTempView('order_result')
         df.count()
@@ -55,15 +58,19 @@ class QuestRinseCensusDriver(CensusDriver):
             sql_stmnt = str(table_conf['sql_stmnt']).strip()
             if not sql_stmnt:
                 continue
-            self._runner.run_spark_query(sql_stmnt, return_output=True).createOrReplaceTempView(table_name)
+            self._runner.run_spark_query(sql_stmnt,
+                                         return_output=True).createOrReplaceTempView(table_name)
             if table_name == REFERENCE_LOINC_DELTA:
                 self._spark.table(table_name).repartition(repart_num).write.parquet(
-                    REFERENCE_HDFS_OUTPUT_PATH + table_name, compression='gzip', mode='append', partitionBy=['year'])
+                    REFERENCE_HDFS_OUTPUT_PATH + table_name, compression='gzip',
+                    mode='append', partitionBy=['year'])
             else:
                 self._spark.table(table_name).repartition(repart_num).write.parquet(
-                    REFERENCE_HDFS_OUTPUT_PATH + table_name, compression='gzip', mode='append')
+                    REFERENCE_HDFS_OUTPUT_PATH + table_name,
+                    compression='gzip', mode='append')
                 self._spark.read.parquet(
-                    REFERENCE_HDFS_OUTPUT_PATH + table_name).cache().createOrReplaceTempView(table_name)
+                    REFERENCE_HDFS_OUTPUT_PATH + table_name).cache()\
+                    .createOrReplaceTempView(table_name)
 
         if hdfs_utils.list_parquet_files(REFERENCE_HDFS_OUTPUT_PATH + REFERENCE_LOINC_DELTA)[0].strip():
             logger.log('Loading Delta LOINC reference data from HDFS')
@@ -82,14 +89,17 @@ class QuestRinseCensusDriver(CensusDriver):
         dataframe.count()
         _batch_id_path, _batch_id_value = self._get_batch_info(batch_date, batch_id)
         local_output_path = '/staging/{batch_id_path}/'.format(batch_id_path=_batch_id_path)
-        dataframe.repartition(100).write.parquet(local_output_path, compression='gzip', mode='overwrite')
+        dataframe.repartition(100).write.parquet(local_output_path,
+                                                 compression='gzip', mode='overwrite')
 
         # Delivery requirement: max file size of 1GB
         # Calculate number of partitions required to maintain a max file size of 1GB
-        repartition_cnt = int(ceil(hdfs_utils.get_hdfs_file_path_size(local_output_path) / PARQUET_FILE_SIZE))
+        repartition_cnt = \
+            int(ceil(hdfs_utils.get_hdfs_file_path_size(local_output_path) / PARQUET_FILE_SIZE))
         logger.log('Repartition into {} partitions'.format(repartition_cnt))
 
-        dataframe.repartition(repartition_cnt).write.parquet(local_output_path, compression='gzip', mode='overwrite')
+        dataframe.repartition(repartition_cnt).write.parquet(local_output_path,
+                                                             compression='gzip', mode='overwrite')
 
         logger.log("Renaming files")
         output_file_name_template = 'Data_Set_{}_response_{{:05d}}.gz.parquet'.format(batch_id)

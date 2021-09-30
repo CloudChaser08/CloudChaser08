@@ -1,3 +1,6 @@
+""""
+spark creat crosswalk
+"""
 import argparse
 import pyspark.sql.functions as FN
 import spark.helpers.payload_loader as payload_loader
@@ -20,8 +23,10 @@ def get_batch_date(filename):
 
 
 def run(spark, runner):
-    source_1 = 's3://salusv/matching/payload/emr/nextgen/{2017/12,2018/01,2018/02,2018/03,2018/04,2018/05}/*/recurring/'
-    source_2 = 's3://salusv/matching/payload/emr/nextgen/2018/*/*/crosswalk/'
+    source_1 = \
+        's3://salusv/matching/payload/emr/nextgen/{2017/12,2018/01,2018/02,2018/03,2018/04,2018/05}/*/recurring/'
+    source_2 = \
+        's3://salusv/matching/payload/emr/nextgen/2018/*/*/crosswalk/'
     payload_df = payload_loader.load(runner, source_1, return_output=True, load_file_name=True)\
         .union(payload_loader.load(runner, source_2, return_output=True, load_file_name=True))
 

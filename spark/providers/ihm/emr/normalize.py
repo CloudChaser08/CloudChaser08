@@ -1,3 +1,6 @@
+"""
+ihm emr normalize
+"""
 import argparse
 import spark.providers.ihm.emr.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver

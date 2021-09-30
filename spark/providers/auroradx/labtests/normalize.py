@@ -1,3 +1,6 @@
+"""
+aurora dx normalize
+"""
 import argparse
 import datetime
 import subprocess
@@ -120,7 +123,8 @@ def main(args):
     spark.stop()
 
     # the full data set is reprocessed every time
-    subprocess.check_output(['aws', 's3', 'rm', '--recursive', output_path + 'part_provider=aurora_diagnostics'])
+    subprocess.check_output(['aws', 's3', 'rm', '--recursive',
+                             output_path + 'part_provider=aurora_diagnostics'])
 
     if args.end_to_end_test:
         normalized_records_unloader.distcp(output_path)

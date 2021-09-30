@@ -1,13 +1,15 @@
+"""extractor"""
 import subprocess
 
 
 def export_table(
-        sqlContext, table_name, schema_name, hdfs_location, partitions=20, delimiter='|', output_file_name=None
+        sqlContext, table_name, schema_name, hdfs_location,
+        partitions=20, delimiter='|', output_file_name=None
 ):
     full_table_name = '{}.{}'.format(schema_name, table_name) if schema_name else table_name
 
     sqlContext.sql('select * from {table_name}'.format(table_name=full_table_name)).repartition(partitions)  \
-        .write                                                                                               \
+        .write \
         .csv(path=hdfs_location, compression="gzip", sep=delimiter, quoteAll=True, header=True)
 
     # rename files

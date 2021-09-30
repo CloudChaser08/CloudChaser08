@@ -1,8 +1,8 @@
-
+"""rebuild questrince hv000838_1b"""
 TABLE_CONF = [
     {
         "table_name": "lqrc_order_result_trans"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 result_name
                 ,local_result_code
@@ -19,7 +19,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_blacklisted_lab_id_lkp"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT CAST(lab_id as STRING) AS lab_id
                 , CAST(do_not_use_ind as STRING) AS do_not_use_ind
                 , CAST(do_not_assign_ind as STRING) AS do_not_assign_ind
@@ -63,7 +63,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_missing_loincs"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 UPPER(result_name) AS upper_result_name
                 , local_result_code
@@ -95,7 +95,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_future_30_days_possibilities"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 missing_loincs.date_of_service AS missing_date_of_service
                 , UPPER(rslt.result_name) AS upper_result_name
@@ -135,7 +135,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_no_future_for_30_days"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 missing_loincs.*
             FROM
@@ -168,7 +168,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_one_loinc_match"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 missing_date_of_service
                 , upper_result_name
@@ -185,7 +185,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_one_loinc_match_joined"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 missing.date_of_service
                 , missing.upper_result_name
@@ -249,7 +249,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_many_loinc_matches"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 missing_date_of_service
                 , upper_result_name
@@ -266,7 +266,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_many_loinc_matches_joined"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 poss.missing_date_of_service
                 , poss.upper_result_name
@@ -311,7 +311,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_many_loinc_matches_joined_no_ties"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 multimatch.missing_date_of_service
                 , multimatch.upper_result_name
@@ -345,7 +345,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_many_loinc_matches_tied"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 missing_date_of_service
                 , upper_result_name
@@ -362,7 +362,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_many_loinc_matches_tied_joined"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 date_match.missing_date_of_service
                 , UPPER(rslt.result_name) AS upper_result_name
@@ -417,7 +417,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_closest_future_loinc_result"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 UPPER(rslt.result_name) AS upper_result_name
                 , rslt.local_result_code
@@ -471,7 +471,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_closest_future_loinc_joined"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 missing.date_of_service
                 , missing.upper_result_name
@@ -491,7 +491,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "lqrc_loinc_final"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT * FROM lqrc_one_loinc_match_joined
             UNION ALL SELECT * FROM lqrc_many_loinc_matches_joined_no_ties
             UNION ALL SELECT * FROM lqrc_many_loinc_matches_tied_joined
@@ -500,7 +500,7 @@ TABLE_CONF = [
     }
     , {
         "table_name": "loinc_delta"
-        , "sql_stmnt": """
+        , "sql_stmnt": """               
             SELECT
                 curr.*
                 ,CAST(year(CAST(SUBSTR(date_of_service,1,10) AS DATE)) AS STRING) as year

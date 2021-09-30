@@ -1,3 +1,6 @@
+"""
+xifin normalize
+"""
 from datetime import datetime, date
 from functools import reduce
 import argparse
@@ -181,4 +184,3 @@ if __name__ == '__main__':
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
     main(args)
-

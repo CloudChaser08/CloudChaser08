@@ -1,3 +1,4 @@
+"""spark normalize mindBody"""
 #! /usr/bin/python
 import argparse
 from datetime import datetime

@@ -1,3 +1,6 @@
+"""
+change rx dhc normalize
+"""
 import argparse
 import spark.providers.change_rx_dhc.custom_mart.transactional_schemas as source_table_schemas_v1
 import spark.providers.change_rx_dhc.custom_mart.transactional_schemas_v2 as source_table_schemas_v2
