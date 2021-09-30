@@ -1,7 +1,7 @@
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
-    'enr': SourceTable(
+    'enr_adj': SourceTable(
         'csv',
         trimmify_nullify=True,
         separator='|',
