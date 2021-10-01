@@ -115,7 +115,7 @@ SELECT DISTINCT
     pay.threedigitzip,
     pay.gender,
     'PHARMACY'                                                                          AS benefit_type
-FROM enr
+FROM enr_adj as enr
 LEFT OUTER JOIN mbr ON enr.memberuid = mbr.memberuid
 LEFT OUTER JOIN matching_payload pay ON enr.memberuid = pay.claimid
 
