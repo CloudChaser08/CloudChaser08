@@ -228,7 +228,7 @@ class Covid19LabBuilder:
                     self.runner.\
                         run_spark_query('drop view {}'.format(lab_build_all_tests_custom_view))
                     self.runner.\
-                        un_spark_query('drop view {}'.format(lab_collect_all_tests_custom_view))
+                        run_spark_query('drop view {}'.format(lab_collect_all_tests_custom_view))
                     hdfs_utils.clean_up_output_hdfs(self._lab_fact_all_tests_custom_interim)
                 else:
                     logger.log("        -loading: Alert!!! there is no data on ['{}']".format(
