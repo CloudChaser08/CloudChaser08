@@ -52,9 +52,9 @@ SELECT DISTINCT
     pay.threedigitzip,
     pay.gender,
 	'MEDICAL'                                                                           AS benefit_type
- FROM inovalon_enr_norm_enr_subset enr
-LEFT OUTER JOIN inovalon_enr_norm_mbr_subset mbr ON enr.memberuid = mbr.memberuid
-LEFT OUTER JOIN inovalon_enr_norm_pay_subset pay ON enr.memberuid = pay.claimid
+ FROM enr_adj enr
+LEFT OUTER JOIN mbr mbr ON enr.memberuid = mbr.memberuid
+LEFT OUTER JOIN matching_payload pay ON enr.memberuid = pay.claimid
 
 WHERE UPPER(COALESCE(enr.memberuid, 'X')) <> 'MEMBERUID'
   AND COALESCE(medicalindicator, 'X') = '1'
