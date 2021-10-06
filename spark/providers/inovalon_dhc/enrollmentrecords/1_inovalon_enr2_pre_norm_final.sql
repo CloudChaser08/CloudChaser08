@@ -216,8 +216,8 @@ SELECT
     /* bpm - capping was not included: */
 
     CASE
-        WHEN CAST(txn.effectivedate AS DATE)  < '{AVAILABLE_START_DATE}'
-          OR CAST(txn.effectivedate AS DATE)  > '{VDR_FILE_DT}'                           THEN '0_PREDATES_HVM_HISTORY'
+        WHEN CAST(txn.effectivedate AS DATE)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
+          OR CAST(txn.effectivedate AS DATE)  > CAST('{VDR_FILE_DT}' AS DATE)                           THEN '0_PREDATES_HVM_HISTORY'
         WHEN CAP_YEAR_OF_BIRTH
             (
                 txn.age,
