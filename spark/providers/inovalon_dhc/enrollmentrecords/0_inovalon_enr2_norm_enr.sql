@@ -3,35 +3,34 @@ SELECT DISTINCT
     enr.effectivedate                                                                   AS orig_effectivedate,
     enr.terminationdate                                                                 AS orig_terminationdate,
     --------------------------------------------------------------------------------------------------------------
-    -----------------------------------New Logic introduced (JKS - 2021-08-17)------------------------------------
+    -----------------------------------New Logic introduced (JKS - 2021-08-17) modified code 2021-09-20 ----------
     --------------------------------------------------------------------------------------------------------------
+    -------------------Latest date is the start date -------------------------------------------------------------
     CASE
-        WHEN enr.effectivedate >= enr.claimadjustedeffectivedate   AND enr.effectivedate                >= enr.rxclaimadjustedeffectivedate THEN enr.effectivedate
-        WHEN enr.claimadjustedeffectivedate >= enr.effectivedate   AND enr.claimadjustedeffectivedate   >= enr.rxclaimadjustedeffectivedate THEN enr.claimadjustedeffectivedate
-        WHEN enr.rxclaimadjustedeffectivedate >= enr.effectivedate AND enr.rxclaimadjustedeffectivedate >= enr.claimadjustedeffectivedate   THEN enr.rxclaimadjustedeffectivedate
+        WHEN enr.effectivedate IS NULL                              AND  enr.claimadjustedeffectivedate IS NULL AND enr.rxclaimadjustedeffectivedate IS NULL THEN NULL
+        WHEN enr.effectivedate IS NOT NULL                          AND  enr.claimadjustedeffectivedate IS NULL AND enr.rxclaimadjustedeffectivedate IS NULL THEN enr.effectivedate
+
+        WHEN COALESCE(enr.effectivedate, '1900-01-01') >= COALESCE(enr.claimadjustedeffectivedate, '1900-01-01')   AND COALESCE(enr.effectivedate , '1900-01-01') >= COALESCE(enr.rxclaimadjustedeffectivedate, '1900-01-01')
+                        THEN enr.effectivedate
+        WHEN COALESCE(enr.claimadjustedeffectivedate , '1900-01-01') >= COALESCE(enr.effectivedate, '1900-01-01')  AND COALESCE(enr.claimadjustedeffectivedate  ,'1900-01-01')  >= COALESCE(enr.rxclaimadjustedeffectivedate, '1900-01-01')
+                        THEN enr.claimadjustedeffectivedate
+        WHEN COALESCE(enr.rxclaimadjustedeffectivedate, '1900-01-01') >= COALESCE(enr.effectivedate, '1900-01-01') AND COALESCE(enr.rxclaimadjustedeffectivedate, '1900-01-01') >= COALESCE(enr.claimadjustedeffectivedate, '1900-01-01')
+                        THEN enr.rxclaimadjustedeffectivedate
         ELSE NULL
     END                                                                                  AS effectivedate,
-
+    -------------------Earliest date is the terminate date -------------------------------------------------------
     CASE
-        WHEN enr.terminationdate <= claimadjustedterminationdate   AND enr.terminationdate                <= enr.rxclaimadjustedterminationdate THEN enr.terminationdate
-        WHEN enr.claimadjustedterminationdate <= terminationdate   AND enr.claimadjustedterminationdate   <= enr.rxclaimadjustedterminationdate THEN enr.claimadjustedterminationdate
-        WHEN enr.rxclaimadjustedterminationdate <= terminationdate AND enr.rxclaimadjustedterminationdate <= enr.terminationdate                THEN enr.rxclaimadjustedterminationdate
+        WHEN enr.terminationdate IS NULL                           AND  enr.claimadjustedterminationdate IS NULL AND enr.rxclaimadjustedterminationdate IS NULL THEN NULL
+        WHEN enr.terminationdate IS NOT NULL                       AND  enr.claimadjustedterminationdate IS NULL AND enr.rxclaimadjustedterminationdate IS NULL THEN enr.terminationdate
+
+        WHEN COALESCE(enr.terminationdate, '9999-01-01') <= COALESCE(claimadjustedterminationdate, '9999-01-01')   AND COALESCE(enr.terminationdate, '9999-01-01') <= COALESCE(enr.rxclaimadjustedterminationdate, '9999-01-01')
+                        THEN enr.terminationdate
+        WHEN COALESCE(enr.claimadjustedterminationdate, '9999-01-01')   <= COALESCE(terminationdate, '9999-01-01') AND COALESCE(enr.claimadjustedterminationdate, '9999-01-01') <= COALESCE(enr.rxclaimadjustedterminationdate, '9999-01-01')
+                        THEN enr.claimadjustedterminationdate
+        WHEN COALESCE(enr.rxclaimadjustedterminationdate, '9999-01-01') <= COALESCE(terminationdate, '9999-01-01') AND COALESCE(enr.rxclaimadjustedterminationdate, '9999-01-01') <= COALESCE(enr.terminationdate, '9999-01-01')
+                        THEN enr.rxclaimadjustedterminationdate
         ELSE NULL
     END                                                                                  AS terminationdate,
-
-    /* effectivedate Below codes are removed after discussion with Will 2021-08-17*/
-    -- CASE
-    --     WHEN enr.effectivedate > DATE_ADD('{VDR_FILE_DT}', 365)  THEN NULL
-    --     WHEN enr.effectivedate < '{EARLIEST_SERVICE_DATE}' THEN NULL
-    --     ELSE enr.effectivedate
-    -- END                                                                                 AS effectivedate,
-    -- /* terminationdate */
-    -- CASE
-    --     WHEN enr.effectivedate > DATE_ADD('{VDR_FILE_DT}', 365)                THEN NULL
-    --     WHEN enr.effectivedate < '{EARLIEST_SERVICE_DATE}'               THEN NULL
-    --     WHEN enr.terminationdate > CONCAT(1 + YEAR('{VDR_FILE_DT}'), '-12-31') THEN CONCAT(1 + YEAR('{VDR_FILE_DT}'), '-12-31')
-    --     ELSE enr.terminationdate
-    -- END                                                                                 AS terminationdate,
     enr.createddate,
     enr.productcode,
     enr.groupplantypecode,
@@ -42,20 +41,20 @@ SELECT DISTINCT
     enr.payergroupcode,
     enr.payertypecode,
     enr.input_file_name,
-    mbr.statecode,
+	mbr.statecode,
     mbr.birthyear,
     mbr.zip3value,
     mbr.gendercode,
-    pay.age,
+	pay.age,
     pay.state,
     pay.hvid,
     pay.yearofbirth,
     pay.threedigitzip,
     pay.gender,
-    'MEDICAL'                                                                           AS benefit_type
- FROM enr_adj as enr
-LEFT OUTER JOIN mbr ON enr.memberuid = mbr.memberuid
-LEFT OUTER JOIN matching_payload pay ON enr.memberuid = pay.claimid
+	'MEDICAL'                                                                           AS benefit_type
+ FROM inovalon_enr_norm_enr_subset enr
+LEFT OUTER JOIN inovalon_enr_norm_mbr_subset mbr ON enr.memberuid = mbr.memberuid
+LEFT OUTER JOIN inovalon_enr_norm_pay_subset pay ON enr.memberuid = pay.claimid
 
 WHERE UPPER(COALESCE(enr.memberuid, 'X')) <> 'MEMBERUID'
   AND COALESCE(medicalindicator, 'X') = '1'
@@ -68,32 +67,31 @@ SELECT DISTINCT
     -----------------------------------New Logic introduced (JKS - 2021-08-17)------------------------------------
     -------------------Latest date is the start date -------------------------------------------------------------
     CASE
-        WHEN enr.effectivedate >= enr.claimadjustedeffectivedate   AND enr.effectivedate                >= enr.rxclaimadjustedeffectivedate THEN enr.effectivedate
-        WHEN enr.claimadjustedeffectivedate >= enr.effectivedate   AND enr.claimadjustedeffectivedate   >= enr.rxclaimadjustedeffectivedate THEN enr.claimadjustedeffectivedate
-        WHEN enr.rxclaimadjustedeffectivedate >= enr.effectivedate AND enr.rxclaimadjustedeffectivedate >= enr.claimadjustedeffectivedate   THEN enr.rxclaimadjustedeffectivedate
+        WHEN enr.effectivedate IS NULL                              AND  enr.claimadjustedeffectivedate IS NULL AND enr.rxclaimadjustedeffectivedate IS NULL THEN NULL
+        WHEN enr.effectivedate IS NOT NULL                          AND  enr.claimadjustedeffectivedate IS NULL AND enr.rxclaimadjustedeffectivedate IS NULL THEN enr.effectivedate
+
+        WHEN COALESCE(enr.effectivedate, '1900-01-01') >= COALESCE(enr.claimadjustedeffectivedate, '1900-01-01')   AND COALESCE(enr.effectivedate , '1900-01-01') >= COALESCE(enr.rxclaimadjustedeffectivedate, '1900-01-01')
+                        THEN enr.effectivedate
+        WHEN COALESCE(enr.claimadjustedeffectivedate , '1900-01-01') >= COALESCE(enr.effectivedate, '1900-01-01')  AND COALESCE(enr.claimadjustedeffectivedate  ,'1900-01-01')  >= COALESCE(enr.rxclaimadjustedeffectivedate, '1900-01-01')
+                        THEN enr.claimadjustedeffectivedate
+        WHEN COALESCE(enr.rxclaimadjustedeffectivedate, '1900-01-01') >= COALESCE(enr.effectivedate, '1900-01-01') AND COALESCE(enr.rxclaimadjustedeffectivedate, '1900-01-01') >= COALESCE(enr.claimadjustedeffectivedate, '1900-01-01')
+                        THEN enr.rxclaimadjustedeffectivedate
         ELSE NULL
     END                                                                                  AS effectivedate,
     -------------------Earliest date is the terminate date -------------------------------------------------------
     CASE
-        WHEN enr.terminationdate <= claimadjustedterminationdate   AND enr.terminationdate                <= enr.rxclaimadjustedterminationdate THEN enr.terminationdate
-        WHEN enr.claimadjustedterminationdate <= terminationdate   AND enr.claimadjustedterminationdate   <= enr.rxclaimadjustedterminationdate THEN enr.claimadjustedterminationdate
-        WHEN enr.rxclaimadjustedterminationdate <= terminationdate AND enr.rxclaimadjustedterminationdate <= enr.terminationdate                THEN enr.rxclaimadjustedterminationdate
+        WHEN enr.terminationdate IS NULL                           AND  enr.claimadjustedterminationdate IS NULL AND enr.rxclaimadjustedterminationdate IS NULL THEN NULL
+        WHEN enr.terminationdate IS NOT NULL                       AND  enr.claimadjustedterminationdate IS NULL AND enr.rxclaimadjustedterminationdate IS NULL THEN enr.terminationdate
+
+        WHEN COALESCE(enr.terminationdate, '9999-01-01') <= COALESCE(claimadjustedterminationdate, '9999-01-01')   AND COALESCE(enr.terminationdate, '9999-01-01') <= COALESCE(enr.rxclaimadjustedterminationdate, '9999-01-01')
+                        THEN enr.terminationdate
+        WHEN COALESCE(enr.claimadjustedterminationdate, '9999-01-01')   <= COALESCE(terminationdate, '9999-01-01') AND COALESCE(enr.claimadjustedterminationdate, '9999-01-01') <= COALESCE(enr.rxclaimadjustedterminationdate, '9999-01-01')
+                        THEN enr.claimadjustedterminationdate
+        WHEN COALESCE(enr.rxclaimadjustedterminationdate, '9999-01-01') <= COALESCE(terminationdate, '9999-01-01') AND COALESCE(enr.rxclaimadjustedterminationdate, '9999-01-01') <= COALESCE(enr.terminationdate, '9999-01-01')
+                        THEN enr.rxclaimadjustedterminationdate
         ELSE NULL
     END                                                                                  AS terminationdate,
 
-    /* effectivedate Below codes are removed after discussion with Will 2021-08-17*/
-    -- CASE
-    --     WHEN enr.effectivedate > DATE_ADD('{VDR_FILE_DT}', 365)  THEN NULL
-    --     WHEN enr.effectivedate < '{EARLIEST_SERVICE_DATE}' THEN NULL
-    --     ELSE enr.effectivedate
-    -- END                                                                                 AS effectivedate,
-    -- /* terminationdate */
-    -- CASE
-    --     WHEN enr.effectivedate > DATE_ADD('{VDR_FILE_DT}', 365)  THEN NULL
-    --     WHEN enr.effectivedate <'{EARLIEST_SERVICE_DATE}'  THEN NULL
-    --     WHEN enr.terminationdate > CONCAT(1 + YEAR('{VDR_FILE_DT}'), '-12-31') THEN CONCAT(1 + YEAR('{VDR_FILE_DT}'), '-12-31')
-    --     ELSE enr.terminationdate
-    -- END                                                                                 AS terminationdate,
     enr.createddate,
     enr.productcode,
     enr.groupplantypecode,
@@ -104,18 +102,18 @@ SELECT DISTINCT
     enr.payergroupcode,
     enr.payertypecode,
     enr.input_file_name,
-    mbr.statecode,
+	mbr.statecode,
     mbr.birthyear,
     mbr.zip3value,
     mbr.gendercode,
-    pay.age,
+	pay.age,
     pay.state,
     pay.hvid,
     pay.yearofbirth,
     pay.threedigitzip,
     pay.gender,
-    'PHARMACY'                                                                          AS benefit_type
-FROM enr_adj as enr
+	'PHARMACY'                                                                          AS benefit_type
+FROM enr_adj enr
 LEFT OUTER JOIN mbr ON enr.memberuid = mbr.memberuid
 LEFT OUTER JOIN matching_payload pay ON enr.memberuid = pay.claimid
 
