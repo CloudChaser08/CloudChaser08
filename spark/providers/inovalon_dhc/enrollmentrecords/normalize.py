@@ -51,7 +51,7 @@ if __name__ == "__main__":
         vdr_feed_id=179,
         use_ref_gen_values=True,
         output_to_delivery_path=hasDeliveryPath,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
     driver.output_path = os.path.join(driver.output_path, 'royalty/')
 
