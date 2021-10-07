@@ -1,3 +1,8 @@
+"""
+Additional Quest RINSE test conditions
+
+eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru, spark)
+"""
 import pytest
 pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
 
@@ -145,10 +150,12 @@ def test_20(spark):
     eval_test('1 IN 1352', '', '', '', '1 IN 1352', spark)
 
 
-def test_21(spark):
+def test_fractional_decimal_leading_zero(spark):
     """
     3.4
     """
     eval_test('.25/4.75', '', '0.25/4.75', '', '', spark)
     # Both sides of a fraction need the leading zero in a decimal
     eval_test('.25/.75', '', '0.25/0.75', '', '', spark)
+    eval_test('.2/.2', '', '0.2/0.2', '', '', spark)
+    eval_test(' .3 / .3 ', '', '0.3/0.3', '', '', spark)

@@ -1,6 +1,10 @@
 """
+Phase 3 Quest RINSE test conditions
+
 Derived tests from:
 https://docs.google.com/spreadsheets/d/14JArxwTBSlX44kcmJ5x0yNeEFZD2Go1d8Zt_iXojpyA/edit#gid=0
+
+eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru, spark)
 """
 import pytest
 pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")

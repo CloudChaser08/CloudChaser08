@@ -1,3 +1,8 @@
+"""
+Original Quest RINSE test conditions
+
+eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru, spark)
+"""
 import pytest
 pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
 

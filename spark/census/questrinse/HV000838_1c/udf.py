@@ -22,7 +22,8 @@ Steps:
         a. Clean numerics
         b. Return as passthrough for certain numerics (ex 1 in 100 *no operator)
         c. Clean alphas
-        d. Coalesce nulls as empty strings
+        d. Substitute Alphas
+        e. Coalesce nulls as empty strings
     11. Specific string substitutions
     12. Failsafe return original string if no elements
     13. Return parsed elements
@@ -185,7 +186,8 @@ def clean_numeric(value):
         # remove space around slashes
         value = re.sub(r'\s*\/\s*', r'/', value)
 
-    return value
+    # Ensure numerics are clean.
+    return value.strip()
 
 
 @F.udf(T.ArrayType(T.StringType()))
@@ -276,7 +278,8 @@ def parse_value(result):
 # These will match generic patterns and immediately return the value in ALPHA
 ####################################################################################################
         # TNP or #/TNP
-        if re.search(r'^(\d+/)?TNP(/.+)?$', result, flags=re.IGNORECASE):
+        if re.search(r'^(\d+/)?TNP(/.+)?$', result, flags=re.IGNORECASE)\
+                or re.search(r'^TNP.*', result):
             alpha = 'TEST NOT PERFORMED'
             return operator, numeric, alpha, passthru
 
@@ -369,6 +372,30 @@ def parse_value(result):
             alpha = re.sub(r'^~', r'', alpha)
             alpha = re.sub(r',?\s*not quantified', r'', alpha, flags=re.IGNORECASE)
             alpha = alpha.strip()
+
+####################################################################################################
+# Alpha field substitutions
+#   - TEST NOT PERFORMED
+#   - DO NOT REPORT
+#   - NOT GIVEN
+# These will match generic patterns and substitute the existing ALPHA column
+# Similar to the "Generic result substitutions" above
+####################################################################################################
+            # TNP prefix, NT prefix, TNP text throughout, NP text throughout,
+            if re.search(r'^TNP.*', alpha)\
+                    or re.search(r'(test )?not performed', alpha, flags=re.IGNORECASE)\
+                    or re.fullmatch(r'NT', alpha):
+                alpha = 'TEST NOT PERFORMED'
+
+            # DNR prefix, DNR text throughout
+            if re.search(r'^DNR.*', alpha)\
+                    or re.search(r'do not report', alpha, flags=re.IGNORECASE):
+                alpha = 'DO NOT REPORT'
+
+            # NG only, NG text throughout
+            if re.search(r'not given', alpha, flags=re.IGNORECASE) \
+                    or re.fullmatch(r'NG', alpha):
+                alpha = 'NOT GIVEN'
 
         # convert `None`s to empty strings
         operator, numeric, alpha, passthru = empty(operator, numeric, alpha, passthru)
