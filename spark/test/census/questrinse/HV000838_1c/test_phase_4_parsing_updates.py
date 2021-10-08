@@ -46,6 +46,10 @@ def test_tnp_text_throughout(spark):
     Criteria: "test not performed -> Anywhere in field, lower case or mixed case"
     Alpha only: "TEST NOT PERFORMED"
     """
+    eval_test('testing the test not performed', '', '', 'TEST NOT PERFORMED', '', spark)
+    eval_test('Test Not Performed', '', '', 'TEST NOT PERFORMED', '', spark)
+    eval_test(' Test  Not  Performed', '', '', 'TEST NOT PERFORMED', '', spark)
+    eval_test('TEST NOT PERFORMED', '', '', 'TEST NOT PERFORMED', '', spark)
     eval_test('1 testing the test not performed', '', '1', 'TEST NOT PERFORMED', '', spark)
     eval_test('2 test not performed', '', '2', 'TEST NOT PERFORMED', '', spark)
     eval_test('> 3 the TEST  NOT PERFOrMED test', '>', '3', 'TEST NOT PERFORMED', '', spark)
@@ -58,6 +62,10 @@ def test_np_text_throughout(spark):
     Criteria: "not performed -> Anywhere in field, lower case or mixed case"
     Alpha only: "TEST NOT PERFORMED"
     """
+    eval_test('testing the not performed', '', '', 'TEST NOT PERFORMED', '', spark)
+    eval_test('Not Performed', '', '', 'TEST NOT PERFORMED', '', spark)
+    eval_test(' Not  Performed ', '', '', 'TEST NOT PERFORMED', '', spark)
+    eval_test('NOT PERFORMED', '', '', 'TEST NOT PERFORMED', '', spark)
     eval_test('1 testing the not performed', '', '1', 'TEST NOT PERFORMED', '', spark)
     eval_test('2 not performed', '', '2', 'TEST NOT PERFORMED', '', spark)
     eval_test('> 3 the   NOT PERFOrMED test', '>', '3', 'TEST NOT PERFORMED', '', spark)
@@ -70,6 +78,10 @@ def test_ng_text_throughout(spark):
     Criteria: "not given -> Anywhere in field, lower case or mixed case"
     Alpha only: "NOT GIVEN"
     """
+    eval_test('testing the not given', '', '', 'NOT GIVEN', '', spark)
+    eval_test('Not Given', '', '', 'NOT GIVEN', '', spark)
+    eval_test(' not given ', '', '', 'NOT GIVEN', '', spark)
+    eval_test('NOT GIVEN', '', '', 'NOT GIVEN', '', spark)
     eval_test('1 testing the not given', '', '1', 'NOT GIVEN', '', spark)
     eval_test('2 Not Given', '', '2', 'NOT GIVEN', '', spark)
     eval_test('> 3 the   NOT GIVEN test', '>', '3', 'NOT GIVEN', '', spark)
@@ -82,6 +94,10 @@ def test_dnr_text_throughout(spark):
     Criteria: "do not report -> Anywhere in field, lower case or mixed case"
     Alpha only: "DO NOT REPORT"
     """
+    eval_test('Do Not Report ', '', '', 'DO NOT REPORT', '', spark)
+    eval_test('testing the do not report', '', '', 'DO NOT REPORT', '', spark)
+    eval_test(' do not report ', '', '', 'DO NOT REPORT', '', spark)
+    eval_test('DO NOT REPORT', '', '', 'DO NOT REPORT', '', spark)
     eval_test('1 testing the do not report', '', '1', 'DO NOT REPORT', '', spark)
     eval_test('2 do not report', '', '2', 'DO NOT REPORT', '', spark)
     eval_test('> 3 the DO  NOT REPoRT test', '>', '3', 'DO NOT REPORT', '', spark)
@@ -94,6 +110,7 @@ def test_nt_only(spark):
     Criteria: "NT (by itself, no other characters)"
     Alpha only: "TEST NOT PERFORMED"
     """
+    eval_test('NT', '', '', 'TEST NOT PERFORMED', '', spark)
     eval_test('1 NT', '', '1', 'TEST NOT PERFORMED', '', spark)
     eval_test('2   NT   ', '', '2', 'TEST NOT PERFORMED', '', spark)
     eval_test('> 3 NT ', '>', '3', 'TEST NOT PERFORMED', '', spark)
@@ -106,6 +123,7 @@ def test_ng_only(spark):
     Criteria: "NG (by itself, no other characters)"
     Alpha only: "NOT GIVEN"
     """
+    eval_test('NG', '', '', 'NOT GIVEN', '', spark)
     eval_test('1 NG', '', '1', 'NOT GIVEN', '', spark)
     eval_test('2   NG   ', '', '2', 'NOT GIVEN', '', spark)
     eval_test('> 3 NG ', '>', '3', 'NOT GIVEN', '', spark)

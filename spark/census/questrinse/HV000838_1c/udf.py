@@ -273,19 +273,29 @@ def parse_value(result):
 # Generic result substitutions
 #   - TEST NOT PERFORMED
 #   - DO NOT REPORT
+#   - NOT GIVEN
 #   - CULTURE INDICATED
 #   - INDICATED
 # These will match generic patterns and immediately return the value in ALPHA
 ####################################################################################################
         # TNP or #/TNP
-        if re.search(r'^(\d+/)?TNP(/.+)?$', result, flags=re.IGNORECASE)\
-                or re.search(r'^TNP.*', result):
+        if re.search(r'^(\d+/)?TNP(/.+)?$', result, flags=re.IGNORECASE) \
+                or re.fullmatch(r'^TNP.*', result) \
+                or re.fullmatch(r'[^\d]*(test )?not performed[^\d]*', result, flags=re.IGNORECASE) \
+                or re.fullmatch(r'NT', result):
             alpha = 'TEST NOT PERFORMED'
             return operator, numeric, alpha, passthru
 
         # DNR or #/DNR
-        if re.search(r'^(\d+/)?DNR$', result, flags=re.IGNORECASE):
+        if re.search(r'^(\d+/)?DNR$', result, flags=re.IGNORECASE)\
+                or re.fullmatch(r'[^\d]*do not report[^\d]*', result, flags=re.IGNORECASE):
             alpha = 'DO NOT REPORT'
+            return operator, numeric, alpha, passthru
+
+        # NG
+        if re.fullmatch(r'[^\d]*not given[^\d]*', result, flags=re.IGNORECASE) \
+                or re.fullmatch(r'NG', result):
+            alpha = 'NOT GIVEN'
             return operator, numeric, alpha, passthru
 
         # Culture Indicated
