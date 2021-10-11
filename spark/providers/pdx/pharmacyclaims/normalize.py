@@ -23,6 +23,7 @@ schema_obj = schemas['schema_v7']
 schema = schema_obj.schema_structure
 
 OUTPUT_PATH_PRODUCTION = os.path.join('s3://salusv/warehouse/parquet/', schema_obj.output_directory)
+OUTPUT_PATH_TRANSFORMED = os.path.join('s3://salusv/warehouse/transformed/', schema_obj.output_directory)
 OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/pdx/spark-output/'
 PART_PROVIDER = schema_obj.provider_partition_column
 PART_BEST_DATE = schema_obj.date_partition_column
@@ -142,7 +143,7 @@ def main(args):
 
     spark.stop()
 
-    output_path = OUTPUT_PATH_PRODUCTION
+    output_path = OUTPUT_PATH_TRANSFORMED
     tmp_path = 's3://salusv/backup/pdx/{}/'.format(args.date)
     if args.end_to_end_test:
         output_path = OUTPUT_PATH_TEST
