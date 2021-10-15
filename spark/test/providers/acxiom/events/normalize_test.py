@@ -27,7 +27,7 @@ def test_source_record_id_is_mapped():
 
 
 def test_target_logical_delete_reason_is_set_if_id_found_in_ids_table():
-    assert [x for x in results if x.source_record_id == 'c'][0].logical_delete_reason == 'DELETE'
+    assert [x for x in results if x.source_record_id == 'a'][0].logical_delete_reason == 'DELETE'
 
 
 def test_cleanup(spark):
