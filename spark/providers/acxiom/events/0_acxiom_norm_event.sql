@@ -54,4 +54,4 @@ select
     CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)                                 AS part_best_date
 FROM  matching_payload pay
     LEFT OUTER JOIN exclude_acxiom_ids aid
-        ON pay.source_record_id = aid.aid
+        ON pay.claimid = aid.aid
