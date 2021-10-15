@@ -20,7 +20,7 @@ SELECT
     -------------------------------------------------------------------------------------------------------------------------
     CASE
         WHEN pay.hvid       IS NOT NULL THEN pay.hvid
-        WHEN ptn.patient_id IS NOT NULL THEN CONCAT('136_' , ptn.patient_id)
+        WHEN prx.patient_id IS NOT NULL THEN CONCAT('136_' , prx.patient_id)
         ELSE NULL
     END																			            AS hvid,
 
@@ -259,11 +259,10 @@ LEFT OUTER JOIN medication   med ON COALESCE(prx.medication_id, 'NULL') = COALES
 LEFT OUTER JOIN transcript_prescription trx  ON COALESCE(trx.prescription_id, 'NULL') = COALESCE(prx.prescription_id, 'empty')
 LEFT OUTER JOIN transcript trs   ON COALESCE(trx.transcript_id, 'NULL') = COALESCE(trs.transcript_id, 'empty')
 
---LEFT OUTER JOIN diagnosis dgn        ON COALESCE(prx.diagnosis_id, 'NULL')         = COALESCE(dgn.diagnosis_id, 'empty')
 LEFT OUTER JOIN diagnosis_icd9  icd9           ON COALESCE(prx.diagnosis_id, 'NULL')         = COALESCE(icd9.diagnosis_id, 'empty')
 LEFT OUTER JOIN diagnosis_icd10 icd10          ON COALESCE(prx.diagnosis_id, 'NULL')         = COALESCE(icd10.diagnosis_id, 'empty')
-
-LEFT OUTER JOIN patient ptn    ON COALESCE(trs.patient_id, 'NULL') = COALESCE(ptn.patient_id, 'empty')
+LEFT OUTER JOIN patient ptn    ON COALESCE(prx.patient_id, 'NULL') = COALESCE(ptn.patient_id, 'empty')
+--LEFT OUTER JOIN patient ptn    ON COALESCE(trs.patient_id, 'NULL') = COALESCE(ptn.patient_id, 'empty')
 LEFT OUTER JOIN provider prv   ON COALESCE(trs.provider_id, 'NULL') = COALESCE(prv.provider_id, 'empty')
 LEFT OUTER JOIN practice prc   ON COALESCE(prv.practice_id, 'NULL') = COALESCE(prc.practice_id, 'empty')
 LEFT OUTER JOIN specialty spc  ON COALESCE(prv.primary_specialty_id, 'NULL') = COALESCE(spc.specialty_id, 'empty')
@@ -285,5 +284,5 @@ WHERE
             AND diag_explode.n = 0
         )
     )
-AND TRIM(UPPER(COALESCE(trx.prescription_id, 'empty'))) <> 'PRESCRIPTION_ID'
+AND TRIM(UPPER(COALESCE(prx.prescription_id, 'empty'))) <> 'PRESCRIPTION_ID'
 --LIMIT 10

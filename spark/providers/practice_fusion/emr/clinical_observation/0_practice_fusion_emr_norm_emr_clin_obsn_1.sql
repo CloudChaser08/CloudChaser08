@@ -19,7 +19,7 @@ SELECT
     -------------------------------------------------------------------------------------------------------------------------
     CASE
         WHEN pay.hvid       IS NOT NULL THEN pay.hvid
-        WHEN ptn.patient_id IS NOT NULL THEN CONCAT('136_' , ptn.patient_id)
+        WHEN agy.patient_id IS NOT NULL THEN CONCAT('136_' , agy.patient_id)
         ELSE NULL
     END																			            AS hvid,
 

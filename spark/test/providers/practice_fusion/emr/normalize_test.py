@@ -35,4 +35,5 @@ def test_init(spark):
         )
     ]).toDF().createOrReplaceTempView('gen_ref_whtlst')
 
-    practice_fusion.run(spark['spark'], spark['runner'], '2019-04-17', test=True)
+    practice_fusion.run(date_input='2019-04-17', model=None, test=True, end_to_end_test=False,
+                        skip_filter_duplicates=False, spark=spark['spark'], runner=spark['runner'])
