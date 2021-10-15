@@ -214,6 +214,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
 
     for mdl in models:
         if test:
+            logger.log('Processing for {}'.format(mdl))
             output_table_names_to_schemas = {MODEL_SCHEMA[mdl][0]: MODEL_SCHEMA[mdl][1]}
             driver = MarketplaceDriver(
                 provider_name,

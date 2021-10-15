@@ -14,7 +14,7 @@ SELECT
     ptnt_state_cd,
     ptnt_zip3_cd,
     hv_enc_id,
-    enc_dt,
+    --enc_dt,
     lab_test_execd_dt,
     lab_result_dt,
     lab_test_prov_vdr_id,
