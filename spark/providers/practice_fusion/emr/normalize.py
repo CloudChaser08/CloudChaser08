@@ -417,10 +417,10 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                         partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
 
                         cmn_tables = ['transcript', 'patient', 'provider', 'practice', 'specialty']
-                        if key == '1':
+                        if key == 1:
                             cmn_tables.extend(['diagnosis', 'transcript_diagnosis', 'diagnosis_icd9', 'diagnosis_icd10',
                                                'diagnosis_snomed'])
-                        elif key == '2':
+                        elif key == 2:
                             cmn_tables.extend(['encounter', 'enctype', 'enccat'])
 
                         logger.log('Apply custom nullify trimmify')
@@ -545,9 +545,9 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                         partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
 
                         cmn_tables = ['transcript', 'patient', 'provider', 'practice', 'specialty']
-                        if key == '1':
+                        if key == 1:
                             cmn_tables.extend(['encounter', 'enctype', 'enccat'])
-                        elif key == '2':
+                        elif key == 2:
                             cmn_tables.extend(['appointment'])
                             logger.log('Loading external table: gen_ref_whtlst')
                             external_table_loader.load_analytics_db_table(
