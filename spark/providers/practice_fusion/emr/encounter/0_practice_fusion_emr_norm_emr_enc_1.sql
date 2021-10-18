@@ -137,18 +137,18 @@ SELECT
     --- enc_grp_txt
     --------------------------------------------------------------------------------------------------
           CASE
-            WHEN COALESCE (en_catg.name, ect.name ) IS NULL THEN NULL
+            WHEN COALESCE (ect.name, ect.name ) IS NULL THEN NULL
             ELSE TRIM(
             SUBSTR(
                         CONCAT
                             (
                                 CASE
-                                    WHEN en_catg.name  IS NULL  THEN ''
-                                    ELSE CONCAT( '| ENCOUNTER_CATEGORY_NAME: ', en_catg.name )
+                                    WHEN ect.name  IS NULL  THEN ''
+                                    ELSE CONCAT( '| ENCOUNTER_CATEGORY_NAME: ', ect.name )
                                 END,
                                 CASE
-                                    WHEN ect.name  IS NULL THEN ''
-                                    ELSE CONCAT(' - ', ect.name)
+                                    WHEN etp.name  IS NULL THEN ''
+                                    ELSE CONCAT(' - ', etp.name)
                                 END
                             ), 3
                     ))
@@ -178,7 +178,6 @@ SELECT
             THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(SUBSTR(trs.dos,1, 10), 1, 7)
 	END																					    AS part_mth
-	,right(nvl(trs.transcript_id,'0'), 1) as vdr_enc_id_key
 FROM transcript trs
 LEFT OUTER JOIN patient ptn     ON COALESCE(trs.patient_id, 'NULL')           = COALESCE(ptn.patient_id, 'empty')
 LEFT OUTER JOIN matching_payload pay     ON LOWER(COALESCE(ptn.patient_id, 'NULL'))    = COALESCE(pay.claimid, 'empty')
@@ -186,8 +185,11 @@ LEFT OUTER JOIN provider prv    ON COALESCE(trs.provider_id, 'NULL')          = 
 LEFT OUTER JOIN practice prc    ON COALESCE(prv.practice_id, 'NULL')          = COALESCE(prc.practice_id, 'empty')
 LEFT OUTER JOIN specialty spc   ON COALESCE(prv.primary_specialty_id, 'NULL') = COALESCE(spc.specialty_id, 'empty')
 LEFT OUTER JOIN encounter enc     ON COALESCE(trs.transcript_id, 'NULL')      = COALESCE(enc.transcript_id, 'empty')
-LEFT OUTER JOIN enctype ect ON COALESCE(enc.enctype_id, 'NULL')         = COALESCE(ect.enctype_id, 'empty')
-LEFT OUTER JOIN enccat en_catg ON COALESCE(ect.enccat_id, 'NULL')       = COALESCE(en_catg.enccat_id, 'empty')
+-- LEFT OUTER JOIN encountertype ect ON COALESCE(enc.enctype_id, 'NULL')         = COALESCE(ect.enctype_id, 'empty')
+-- LEFT OUTER JOIN encountercategory en_catg ON COALESCE(ect.enccat_id, 'NULL')       = COALESCE(en_catg.enccat_id, 'empty')
+
+LEFT OUTER JOIN enctype    etp ON COALESCE(enc.enctype_id, 'NULL')    = COALESCE(etp.enctype_id, 'empty')
+LEFT OUTER JOIN enccat     ect ON COALESCE(etp.enccat_id, 'NULL')     = COALESCE(ect.enccat_id, 'empty')
 
 WHERE TRIM(lower(COALESCE(trs.transcript_id, 'empty'))) <> 'transcript_id'
 --LIMIT 10

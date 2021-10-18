@@ -7,7 +7,7 @@ SELECT
             '136_',
             COALESCE(apt.appointment_id, 'NO_APPOINTMENT_ID'), '_',
             COALESCE(trs.transcript_id, 'NO_TRANSCRIPT_ID'  )
-        )                                                                                       AS hv_enc_id,
+        )                                                                                   AS hv_enc_id,
     CURRENT_DATE()                                                                          AS crt_dt,
 	'10'                                                                                    AS mdl_vrsn_num,
     SPLIT(apt.input_file_name, '/')[SIZE(SPLIT(apt.input_file_name, '/')) - 1]              AS data_set_nm,
@@ -24,7 +24,7 @@ SELECT
     --------------------------------------------------------------------------------------------------
     CASE
         WHEN pay.hvid       IS NOT NULL THEN pay.hvid
-        WHEN ptn.patient_id IS NOT NULL THEN CONCAT('136_' , ptn.patient_id)
+        WHEN apt.patient_id IS NOT NULL THEN CONCAT('136_' , apt.patient_id)
         ELSE NULL
     END																			            AS hvid,
     --------------------------------------------------------------------------------------------------
@@ -177,7 +177,6 @@ SELECT
             THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(COALESCE(apt.start_time, SUBSTR(trs.dos,1, 10)), 1, 7)
 	END																					    AS part_mth
-	,right(nvl(apt.appointment_id,'0'), 1) as vdr_enc_id_key
 FROM appointment apt
 LEFT OUTER JOIN transcript trs  ON COALESCE(apt.transcript_id, 'NULL')     = COALESCE(trs.transcript_id, 'empty')
 LEFT OUTER JOIN patient ptn     ON COALESCE(trs.patient_id, 'NULL')        = COALESCE(ptn.patient_id, 'empty')
