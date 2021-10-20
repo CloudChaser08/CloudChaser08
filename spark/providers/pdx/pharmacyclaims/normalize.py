@@ -143,7 +143,7 @@ def main(args):
 
     spark.stop()
 
-    output_path = OUTPUT_PATH_TRANSFORMED
+    output_path = OUTPUT_PATH_PRODUCTION
     tmp_path = 's3://salusv/backup/pdx/{}/'.format(args.date)
     if args.end_to_end_test:
         output_path = OUTPUT_PATH_TEST
