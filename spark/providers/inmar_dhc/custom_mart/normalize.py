@@ -6,6 +6,8 @@ import spark.providers.inmar_dhc.custom_mart.transactional_schemas as source_tab
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.datamart.dhc.custom import schemas as dhc_custom_schemas
 import spark.common.utility.logger as logger
+import spark.helpers.s3_utils as s3_utils
+import os
 
 hasDeliveryPath = True
 
@@ -13,8 +15,9 @@ if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'inmar_dhc'
+    dhc_schema = dhc_custom_schemas['rx_token_bridge_v1']
     output_table_names_to_schemas = {
-        'inmar_norm_final': dhc_custom_schemas['rx_token_bridge_v1']
+        'inmar_norm_final': dhc_schema
     }
     provider_partition_name = 'inmar'
 
@@ -51,6 +54,16 @@ if __name__ == "__main__":
 
     driver.init_spark_context(conf_parameters=conf_parameters)
     driver.load(payloads=False)
+
+    logger.log('Loading previous history for deduplication')
+
+    output_path = os.path.join(driver.output_path, dhc_schema.output_directory
+                               , 'part_provider={}/part_file_date={}'.format(provider_partition_name, date_input))
+    if s3_utils.list_folders(output_path):
+        driver.spark.read.parquet(output_path).createOrReplaceTempView('_temp_rxtoken_nb')
+    else:
+        v_sql = "select claim_id, '{}' as part_file_date from txn where 1=2".format(date_input)
+        driver.spark.sql(v_sql).createOrReplaceTempView('_temp_rxtoken_nb')
 
     logger.log('Start transform')
     driver.transform()
