@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     output_path = os.path.join(driver.output_path, dhc_schema.output_directory
                                , 'part_provider={}/part_file_date={}/'.format(provider_partition_name, date_input))
-    if list(s3_utils.list_folders(output_path)):
+    if any(s3_utils.list_folders(output_path)):
         driver.spark.read.parquet(output_path).createOrReplaceTempView('_temp_rxtoken_nb')
     else:
         v_sql = "select claim_id, '{}' as part_file_date from txn where 1=2".format(date_input)
