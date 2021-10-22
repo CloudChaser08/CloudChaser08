@@ -1,6 +1,7 @@
 """
 Scipher labtests normalize
 """
+import os
 import argparse
 import spark.providers.scipher.labtests.transactional_schemas as source_table_schemas
 from spark.common.marketplace_driver import MarketplaceDriver
@@ -37,6 +38,9 @@ if __name__ == "__main__":
         vdr_feed_id=239,
         use_ref_gen_values=True,
         output_to_delivery_path=HAS_DELIVERY_PATH,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
+
+    driver.output_path = os.path.join(driver.output_path, 'hv002854/')
+
     driver.run()
