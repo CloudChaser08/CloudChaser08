@@ -62,7 +62,7 @@ if __name__ == "__main__":
     if any(s3_utils.list_folders(output_path)):
         driver.spark.read.parquet(output_path).createOrReplaceTempView('_temp_rxtoken_nb')
     else:
-        v_sql = "select claim_id, '{}' as part_file_date from txn where 1=2".format(date_input)
+        v_sql = "select 'claim_id' AS claim_id, '{}' as part_file_date from txn where 1=2".format(date_input)
         driver.spark.sql(v_sql).createOrReplaceTempView('_temp_rxtoken_nb')
 
     logger.log('Start transform')
