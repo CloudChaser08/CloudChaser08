@@ -1,6 +1,6 @@
 import pytest
 
-from spark.common.utility.compaction import Compaction
+from spark.common.utility.compaction import compaction
 
 
 from mock import patch 
@@ -21,9 +21,9 @@ def test_uuid1(test_method):
     spark = SparkSession.builder.master("local[*]") \
                         .appName('abc') \
                         .getOrCreate()
-    t = Compaction(spark, 's3://mock/test/')
+    t = compaction(spark, 's3://mock/test/')
 
-    test = t.get_uuid()
+    test = t.get_uuid()[1]
     spark.stop()    
     
     assert test == "1e123c9c-f440-403a-94b8-429fe36f2f7b"
@@ -33,8 +33,8 @@ def test_uuid2(test_method):
     spark = SparkSession.builder.master("local[*]") \
                     .appName('abc') \
                     .getOrCreate()
-    t = Compaction(spark, 's3://mock/test/')
-    test = t.get_uuid()
+    t = compaction(spark, 's3://mock/test/')
+    test = t.get_uuid()[1]
     spark.stop()    
     
     assert test == "a3175e37-e352-4758-844d-ea1cf4bb9533"
@@ -44,7 +44,7 @@ def test_worth(test_method):
     spark = SparkSession.builder.master("local[*]") \
                     .appName('abc') \
                     .getOrCreate()
-    t = Compaction(spark, 's3://mock/test/')
+    t = compaction(spark, 's3://mock/test/')
     test = t.worth_compacting()
     spark.stop()    
     
@@ -55,7 +55,7 @@ def test_worth1(test_method):
     spark = SparkSession.builder.master("local[*]") \
                     .appName('abc') \
                     .getOrCreate()
-    t = Compaction(spark, 's3://mock/test/')
+    t = compaction(spark, 's3://mock/test/')
     test = t.worth_compacting()
     spark.stop()    
    
@@ -66,7 +66,7 @@ def test_worth2(test_method):
     spark = SparkSession.builder.master("local[*]") \
                     .appName('abc') \
                     .getOrCreate()
-    t = Compaction(spark, 's3://mock/test/')
+    t = compaction(spark, 's3://mock/test/')
     test = t.worth_compacting()
     spark.stop()
         

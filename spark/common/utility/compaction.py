@@ -21,6 +21,7 @@
 
     ~ Douglas King <dhking@healthverity.com>
 """
+
 import subprocess
 from datetime import datetime
 from uuid import uuid4
@@ -34,25 +35,28 @@ from spark.helpers.s3_utils import list_folders, has_s3_subdirectories, \
     list_files, get_file_path_size, parse_s3_path, list_path_pages
 from spark.helpers.file_utils import get_optimal_s3_partition_count
 
-PARQUET_FILE_SIZE = 1024 * 1024 * 250
+PARQUET_FILE_SIZE = 1024 * 1024 * 350
 BACKUP_ROOT = "s3://salusv/warehouse/backup/weekly/"
 MAX_DELETE_RANGE = 1000  # Max files allowed in s3.delete_objects()
 S3_CLIENT = boto3.client('s3')
 SIZE_30 = 1024 * 1024 * 30      #30 MB
 
-class Compaction:
+class compaction:
 
-    def __init__(self, spark_session, path, test_dir = '', file_limit = 2,
-                 continue_to_source = False) -> None:
+    def __init__(self, spark_session, path, test_path = '', file_limit = 2,
+                 continue_to_source = False, file_size = PARQUET_FILE_SIZE, uuid = '', process_date = '') -> None:
         """ Compaction initialization
 
         Args:
             spark_session : Spark session of the job
             path (str): Path to be compacted
             output_to_test (bool, optional): Redirects output to test directory. Defaults to False.
-            test_dir (str, optional): Test output directory. Defaults to ''.
-            file_limit (int, optional): [description]. Defaults to 2.
-            continue_to_source (bool, optional): [description]. Defaults to False.
+            test_path (str, optional): Test output directory. Defaults to ''.
+            file_limit (int, optional): Only compacts directory if 'non-compacted' files are greater than this.
+            continue_to_source (bool, optional): Flag for replacing source. Defaults to False.
+            file_size (int, optional): Output file size
+            uuid (str, optional): uuid for file name
+            process_date (str, optional): Process date for file name
         """
         if path.endswith("/"):
             self.paths = [path]
@@ -61,9 +65,12 @@ class Compaction:
         self.spark = spark_session
         self.bucket,_ = parse_s3_path(path)
         self.current_path = path
-        self.test_dir = test_dir
+        self.test_path = test_path
         self.comp_limit = file_limit
         self.continue_to_source = continue_to_source
+        self.file_size = file_size
+        self.uuid = uuid
+        self.process_date = process_date
 
     def check_sub(self):
         """
@@ -81,19 +88,19 @@ class Compaction:
         Returns:
             Bool : True if the number of such files are more than the limit.
         """
-        files_to_compact=0
+        files_to_compact = 0
 
         try:
             files = [l for l in list_files(self.current_path)]
         except:
-            logging.critical("No files in {}".format(self.current_path))
+            logging.info("No files in {}".format(self.current_path))
             return False
 
         if(len(files) > 1):
             for file in files:
                 file = file.split("/")[-1]
 
-                if(file.endswith(".parquet") and (get_file_path_size(os.path.join(self.current_path,file)) < (PARQUET_FILE_SIZE-SIZE_30) or get_file_path_size(os.path.join(self.current_path,file)) > (PARQUET_FILE_SIZE+SIZE_30) )):
+                if(file.endswith(".parquet") and (get_file_path_size(os.path.join(self.current_path,file)) < (self.file_size-SIZE_30) or get_file_path_size(os.path.join(self.current_path,file)) > (self.file_size+SIZE_30) )):
                     files_to_compact +=1
 
         logging.info("files to be compacted %s", files_to_compact)
@@ -103,18 +110,23 @@ class Compaction:
         return False
 
     def get_uuid(self):
-        """ Returns the most recent uuid in the path
+        """ Returns the most recent uuid and process date in the path
 
         Returns:
             str : uuid
         """
-        list= list_files(self.current_path)
 
-        list_new = \
+        try:
+            list= list_files(self.current_path)
+            list_new = \
             [(l.split("/")[-1].split("_")[0],re.search('part-\d{5}-(.+?)\.', l).group(1)) for l in list]
+        except:
+            print("Directory does not contain any files")
+            return
+        
         list_new.sort(key = lambda y:y[0],reverse=True)
-
-        return (list_new[0][1])
+        
+        return (list_new[0])
 
     def run(self):
         """Runs all the methods of the class
@@ -127,10 +139,20 @@ class Compaction:
 
 
             if self.worth_compacting():
-                uuid=self.get_uuid()
-                logging.info("... compacting directory %s", self.current_path)
+                
+                try:
+                    date,uuid = self.get_uuid()
+                except Exception as err:
+                    logging.critical("%s", str(err))
+                    print("failed to extract process date and uuid")
+                    uuid = uuid4()
+                if self.uuid:
+                    uuid = self.uuid
+                if self.process_date:
+                    date = self.process_date
+                print("... compacting directory %s", self.current_path)
 
-                self.compact_s3_path( self.current_path, self.spark, file_uuid=uuid)
+                self.compact_s3_path( self.current_path, self.spark, file_uuid=uuid, process_date=date)
 
             self.paths.pop(0)
         pass
@@ -227,7 +249,7 @@ class Compaction:
 
         file_list = [f for f in file_list_out.decode().split("\n") if f]
         for file_name in file_list:
-            resolved_file_name = f"{process_date}_c_part-{file_counter:05}-{file_uuid}.c000.gz.parquet"
+            resolved_file_name = f"{process_date}_part-{file_counter:05}-{file_uuid}.c000.gz.parquet"
             logging.info("...renaming %s as %s", file_name, resolved_file_name)
             subprocess.check_output(['aws', 's3', 'mv', f"{compaction_plan['compact_path']}{file_name}",
                                      f"{compaction_plan['rename_path']}{resolved_file_name}"])
@@ -249,22 +271,24 @@ class Compaction:
         :return: filenames with given prefix removed.
         :rtype: list[str]
         """
-        return list([file_name[len(s3_url):] for file_name in
-                     list_files(s3_url, recursive=False, full_path=True)
-                     if file_name[len(s3_url):].startswith(starts_with)
-                     and file_name[len(s3_url):].endswith(ends_with)
-                     ])
+        
+        s3_files = []
+        for file in list_files(s3_url, recursive=False, full_path=True):
+            if file[len(s3_url):].startswith(starts_with) and file[len(s3_url):].endswith(ends_with):
+                s3_files.append(file[len(s3_url):])
+                 
+        return s3_files
 
     def _move_completed_files(self, compaction_plan):
         """
-        Rename_path files get moved to source_path
+        Rename_path files get moved to test_path
         :param compaction_plan: Paths for work: Partition Name, Source, Backup, Rename, Compact
         :type compaction_plan: dict[str, str]
         :return: None
         :rtype: None
         """
-        # TODO: I think this can be made into a single step with the rename/move being the same
-        logging.info("...moving %s files back to source path", compaction_plan['rename_path'])
+
+        logging.info("...moving %s files back to source path", compaction_plan['source_path'])
         subprocess.check_output(
             ['aws', 's3', 'mv', '--recursive', '--exclude="*"', '--include="*.gz.parquet"',
              f"{compaction_plan['rename_path']}", f"{compaction_plan['source_path']}"])
@@ -277,8 +301,7 @@ class Compaction:
         :return: None
         :rtype: None
         """
-        # TODO: I think this can be made into a single step with the rename/move being the same
-        logging.info("...moving %s files back to test path", compaction_plan['rename_path'])
+        logging.info("...moving %s files back to test path", compaction_plan['test_path'])
         subprocess.check_output(
             ['aws', 's3', 'mv', '--recursive', '--exclude="*"', '--include="*.gz.parquet"',
              f"{compaction_plan['rename_path']}", f"{compaction_plan['test_path']}"])
@@ -304,7 +327,7 @@ class Compaction:
         """
 
 
-        logging.info("Run id: %s", file_uuid)
+        print("Run id: %s", file_uuid)
         if not process_date:
             process_date = f"{datetime.now():%Y-%m-%d}"
         logging.info("Operation date: %s", process_date)
@@ -327,7 +350,7 @@ class Compaction:
         rename_path = os.path.join(operations_root, 'rename') + '/'
         logging.info("...RENAME DIR: %s", rename_path)
 
-        test_path = os.path.join(self.test_dir, path_ext)
+        test_path = os.path.join(self.test_path, path_ext)
         logging.info("...TEST DIR: %s", test_path)
 
         compaction_plans.append({
@@ -335,7 +358,7 @@ class Compaction:
             "backup_path": backup_path,
             "rename_path": rename_path,
             "compact_path": compact_path,
-            "test_dir":test_path
+            "test_path": test_path
         })
 
         # TODO: Split these off into asynchronous chunks
@@ -345,7 +368,7 @@ class Compaction:
             self._compact_files(plan, spark_session)
             if not self._confirm_record_counts(plan, spark_session):
                 raise Exception("File counts before and after compaction do not match for %s." %
-                                plan['partition_name'])
+                                path_ext)
 
             logging.info("...record counts match")
             file_counter = self._rename_files(plan, file_counter, process_date, file_uuid)
@@ -371,24 +394,11 @@ class Compaction:
                          plan['backup_path'], plan['source_path']]
                     )
 
-                    # and remove partial transfers
-                    logging.critical("...failed final moves. Deleting partially transferred files.")
-
-                    files_already_moved = self._s3_filtered_files_at_level(
-                        plan['backup_path'],
-                        starts_with=f"{process_date}_c_part-",
-                        ends_with=f"-{file_uuid}.c000.gz.parquet")
-
-                    files_already_moved_full_paths = [os.path.join(plan['source_path'], f) for f in
-                                                      files_already_moved]
-
-                    self._s3_bulk_delete(files_already_moved_full_paths)
-
-            if self.test_dir:
+            if self.test_path:
 
                 try:
-                    logging.critical("...Moving Files to Test dir")
-                    self._move_completed_files(plan)
+                    logging.info("...Moving Files to Test dir")
+                    self._move_test_files(plan)
 
                 except Exception as err:
                     logging.critical("%s", str(err))
