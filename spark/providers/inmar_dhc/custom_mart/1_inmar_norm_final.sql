@@ -10,5 +10,5 @@ SELECT
 FROM
     inmar_norm norm
 WHERE NOT EXISTS (SELECT 1 FROM _temp_rxtoken_nb hist
-                        WHERE norm.claimid = hist.claimid
+                        WHERE norm.claim_id = hist.claim_id
                             )
