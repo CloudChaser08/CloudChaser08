@@ -173,4 +173,4 @@ WHERE
     )
 
 -- Remove header records
-    AND proc.patient_id <> 'PatientID'
+    AND TRIM(lower(COALESCE(proc.patient_id, 'empty'))) <> 'patientid'

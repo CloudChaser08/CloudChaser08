@@ -156,5 +156,5 @@ LEFT OUTER JOIN plainout pln
 LEFT OUTER JOIN matching_payload pay
                         ON pay.hvjoinkey = pln.hvjoinkey
 -- Remove header records
-WHERE diag.patient_id <> 'PatientID'
+WHERE TRIM(lower(COALESCE(diag.patient_id, 'empty'))) <> 'patientid'
 -- LIMIT 10

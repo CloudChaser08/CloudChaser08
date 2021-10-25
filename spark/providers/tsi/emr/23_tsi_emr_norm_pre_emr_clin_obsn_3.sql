@@ -401,5 +401,5 @@ WHERE
             )[pat_resp_explode.n] IS NOT NULL
     )
 -- Remove header records
-    AND mdhaq.patient_id <> 'PatientID'
+    AND TRIM(lower(COALESCE(mdhaq.patient_id, 'empty'))) <> 'patientid'
 -- LIMIT 10

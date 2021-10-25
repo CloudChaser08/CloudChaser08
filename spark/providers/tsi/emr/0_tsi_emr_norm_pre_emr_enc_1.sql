@@ -137,4 +137,4 @@ WHERE
             )[prov_explode.n] IS NOT NULL
     )
 -- Remove header records
-    AND enc.patient_id <> 'PatientID'
+    AND TRIM(lower(COALESCE(enc.patient_id, 'empty'))) <> 'patientid'

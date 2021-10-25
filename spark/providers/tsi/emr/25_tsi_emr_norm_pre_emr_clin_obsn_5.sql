@@ -128,5 +128,5 @@ LEFT OUTER JOIN plainout pln
 LEFT OUTER JOIN matching_payload pay
                 ON pay.hvjoinkey = pln.hvjoinkey
 
-WHERE tob_det.patient_id <> 'PatientID'
+WHERE TRIM(lower(COALESCE(tob_det.patient_id, 'empty'))) <> 'patientid'
 -- LIMIT 10

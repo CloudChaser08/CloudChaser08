@@ -132,5 +132,5 @@ LEFT OUTER JOIN matching_payload pay
 INNER JOIN      gen_ref_whtlst allow_list
                 ON gen_ord.order_name_local = allow_list.gen_ref_nm
 -- Remove header records
-WHERE gen_ord.patient_id <> 'PatientID'
+WHERE TRIM(lower(COALESCE(gen_ord.patient_id, 'empty'))) <> 'patientid'
 -- LIMIT 5

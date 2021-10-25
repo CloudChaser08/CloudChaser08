@@ -173,5 +173,5 @@ WHERE
             )[prov_explode.n] IS NOT NULL
     )
 -- Remove header records
-    AND vac.patient_id <> 'PatientID'
+    AND TRIM(lower(COALESCE(vac.patient_id, 'empty'))) <> 'patientid'
 -- LIMIT 10

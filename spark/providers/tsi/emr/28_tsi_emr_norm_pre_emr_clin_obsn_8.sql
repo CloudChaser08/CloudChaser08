@@ -156,5 +156,5 @@ WHERE
             )[clin_obsn_typ_cd_explode.n] IS NOT NULL
     )
 -- Remove header records
-    AND soc.patient_id <> 'PatientID'
+    AND TRIM(lower(COALESCE(soc.patient_id, 'empty'))) <> 'patientid'
 -- LIMIT 10

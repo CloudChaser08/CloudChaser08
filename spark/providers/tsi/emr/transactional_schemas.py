@@ -1,5 +1,5 @@
 """
-inovalon medicalclaims source schema
+tsi emr source schema
 """
 from spark.helpers.source_table import SourceTable
 
