@@ -22,6 +22,36 @@ TABLE_CONF = {
             'record_last_modified_user_id'
         ]
     ),
+    'results': SourceTable(
+        'csv',
+        separator=',',
+        trimmify_nullify=False,
+        columns=[
+            'patient_id',
+            'encounter_id',
+            'lab_rad_order_id',
+            'result_id',
+            'order_test_id',
+            'test_code',
+            'test_name',
+            'component_name',
+            'component_code',
+            'result_value',
+            'result_units_local',
+            'reference_range',
+            'result_status',
+            'loinc',
+            'result_date_time',
+            'order_comment',
+            'test_comment',
+            'micro_result_notes',
+            'record_creating_user_id',
+            'record_create_date_time',
+            'record_last_modified_user_id',
+            'record_modify_date_time',
+            'result_flag'
+        ]
+    ),
     'provider': SourceTable(
         'csv',
         separator=',',
