@@ -15,6 +15,7 @@ from spark.common.emr.lab_test import schemas as lab_test_schemas
 from spark.common.emr.clinical_observation import schemas as clinical_observation_schemas
 import spark.helpers.external_table_loader as external_table_loader
 
+
 HAS_DELIVERY_PATH = True
 
 if __name__ == "__main__":
@@ -53,8 +54,9 @@ if __name__ == "__main__":
         end_to_end_test,
         vdr_feed_id=241,
         use_ref_gen_values=True,
+        unload_partition_count=10,
         output_to_delivery_path=HAS_DELIVERY_PATH,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     driver.output_path = os.path.join(driver.output_path, 'hv002854/')
@@ -65,6 +67,7 @@ if __name__ == "__main__":
         'spark.driver.memoryOverhead': 1024
     }
     logger.log('Loading external table: gen_ref_whtlst')
+    driver.init_spark_context()
     external_table_loader.load_analytics_db_table(
         driver.runner.sqlContext, 'dw', 'gen_ref_whtlst', 'gen_ref_whtlst')
     driver.run(conf_parameters=conf_parameters)

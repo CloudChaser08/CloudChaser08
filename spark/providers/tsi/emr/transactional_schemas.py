@@ -230,7 +230,7 @@ TABLE_CONF = {
             'encounter_id'
         ]
     ),
-    'general_orders ': SourceTable(
+    'general_orders': SourceTable(
         'csv',
         separator=',',
         columns=[
@@ -348,6 +348,44 @@ TABLE_CONF = {
             'right_wrist_pain',
             'right_wrist_swelling',
             'right_ankle_swelling'
+        ]
+    ),
+    'joint_exam': SourceTable(
+        'csv',
+        separator=',',
+        columns=[
+            'data_source',
+            'enterprise_id',
+            'practice_id',
+            'patient_id',
+            'encounter_id',
+            'record_creating_user_id',
+            'record_create_date_time',
+            'record_last_modified_user_id',
+            'record_modify_date_time',
+            'left_acromioclavicular_joint_normal',
+            'right_acromioclavicular_joint_normal',
+            'left_ankle_joint_normal',
+            'right_ankle_joint_normal',
+            'left_sternoclavicular_joint_normal',
+            'right_sternoclavicular_joint_normal',
+            'left_tmj_joint_normal',
+            'right_tmj_joint_normal',
+            'left_wrist_joint_normal',
+            'right_wrist_joint_normal',
+            'left_elbow_joint_normal',
+            'right_elbow_joint_normal',
+            'left_foot_joints_normal',
+            'right_foot_joints_normal',
+            'left_hand_joints_normal',
+            'right_hand_joints_normal',
+            'left_hip_joint_normal',
+            'right_hip_joint_normal',
+            'left_knee_joint_normal',
+            'right_knee_joint_normal',
+            'left_shoulder_joint_normal',
+            'right_shoulder_joint_normal',
+            'joint_exam_comments'
         ]
     ),
     'lab_rad_orders': SourceTable(
