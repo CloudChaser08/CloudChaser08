@@ -61,13 +61,20 @@ if __name__ == "__main__":
 
     driver.output_path = os.path.join(driver.output_path, 'hv002854/')
 
-    # init
     conf_parameters = {
-        'spark.executor.memoryOverhead': 1024,
-        'spark.driver.memoryOverhead': 1024
+        'spark.executor.memoryOverhead': 4096,
+        'spark.driver.memoryOverhead': 4096
     }
     logger.log('Loading external table: gen_ref_whtlst')
-    driver.init_spark_context()
+    # init
+    driver.init_spark_context(conf_parameters=conf_parameters)
+    driver.load()
     external_table_loader.load_analytics_db_table(
         driver.runner.sqlContext, 'dw', 'gen_ref_whtlst', 'gen_ref_whtlst')
-    driver.run(conf_parameters=conf_parameters)
+
+    driver.transform()
+    driver.save_to_disk()
+    driver.stop_spark()
+    driver.log_run()
+    driver.copy_to_output_path()
+    logger.log('Done')

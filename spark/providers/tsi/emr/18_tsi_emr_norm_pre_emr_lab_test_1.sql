@@ -33,7 +33,7 @@ SELECT
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
         WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex 
-        ELSE 'U' 
+        ELSE NULL 
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
     --------------------------------------------------------------------------------------------------
@@ -80,20 +80,20 @@ SELECT
     END                                                                                     AS lab_test_prov_mdcr_speclty_cd,
 
     CASE
-        WHEN prov.provider_type                     NOT IN ('Provider Type', NULL)
-            AND prov.provider_local_specialty_name  NOT IN ('Provider local specialty name', NULL)
+        WHEN prov.provider_type                     NOT IN ('Provider Type', 'null')
+            AND prov.provider_local_specialty_name  NOT IN ('Provider local specialty name', 'null')
             THEN COALESCE(prov.provider_type, prov.provider_local_specialty_name)
-        WHEN prov.provider_type                     NOT IN ('Provider Type', NULL)
-            AND prov.provider_local_specialty_name      IN ('Provider local specialty name', NULL)
+        WHEN prov.provider_type                     NOT IN ('Provider Type', 'null')
+            AND prov.provider_local_specialty_name      IN ('Provider local specialty name', 'null')
             THEN prov.provider_type    
-        WHEN prov.provider_type                         IN ('Provider Type', NULL)
-            AND prov.provider_local_specialty_name  NOT IN ('Provider local specialty name', NULL)
+        WHEN prov.provider_type                         IN ('Provider Type', 'null')
+            AND prov.provider_local_specialty_name  NOT IN ('Provider local specialty name', 'null')
             THEN prov.provider_local_specialty_name
         ELSE NULL
     END                                                                                     AS lab_test_prov_alt_speclty_id,
     CASE
-        WHEN prov.provider_type                     NOT IN ('Provider Type', NULL)
-            OR prov.provider_local_specialty_name   NOT IN ('Provider local specialty name', NULL)
+        WHEN prov.provider_type                     NOT IN ('Provider Type', 'null')
+            OR prov.provider_local_specialty_name   NOT IN ('Provider local specialty name', 'null')
             THEN 'SPECIALTY_NAME'
     END                                                                                     AS lab_test_prov_alt_speclty_id_qual,
     MASK_ZIP_CODE(prov.zip_code)                                                            AS lab_test_prov_zip_cd,
@@ -106,7 +106,12 @@ SELECT
     lab_rad.order_status                                                                    AS lab_ord_stat_cd,
     'ORDER_STATUS'                                                                          AS lab_ord_stat_cd_qual,
     rslt.result_status                                                                      AS lab_test_stat_cd,
-    'TEST_STATUS'                                                                           AS lab_test_stat_cd_qual,
+    
+    CASE
+        WHEN rslt.result_status IS NOT NULL THEN 'TEST_STATUS'
+        ELSE NULL
+    END                                                                                     AS lab_test_stat_cd_qual,
+    
     CONCAT
         (
         'ORDER_TYPE_CLASSIFICATION: ', lab_rad.order_type_classification, ' | ', 

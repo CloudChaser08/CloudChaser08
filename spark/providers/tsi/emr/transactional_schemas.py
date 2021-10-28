@@ -76,6 +76,7 @@ TABLE_CONF = {
         'csv',
         separator=',',
         columns=[
+            'person_id',
             'sex',
             'date_of_birth',
             'zip',
@@ -104,9 +105,7 @@ TABLE_CONF = {
             'created_by',
             'modified_by',
             'sex_pass_through',
-            'hvjoinkey',
-            'person_id'
-
+            'hvjoinkey'
         ]
     ),
     'appointments': SourceTable(

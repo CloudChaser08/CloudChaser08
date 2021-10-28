@@ -23,8 +23,8 @@ SELECT
     END																			            AS hvid,
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
-        WHEN pln.sex IN ('F', 'M', 'U', NULL) THEN pln.sex 
-        ELSE 'U' 
+        WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex 
+        ELSE NULL 
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
     --------------------------------------------------------------------------------------------------
@@ -56,20 +56,20 @@ SELECT
     END                                                                                     AS medctn_prov_mdcr_speclty_cd,
 
     CASE
-        WHEN prov.provider_type                     NOT IN ('Provider Type', NULL)
-            AND prov.provider_local_specialty_name  NOT IN ('Provider local specialty name', NULL)
+        WHEN prov.provider_type                     NOT IN ('Provider Type', 'null')
+            AND prov.provider_local_specialty_name  NOT IN ('Provider local specialty name', 'null')
             THEN COALESCE(prov.provider_type, prov.provider_local_specialty_name)
-        WHEN prov.provider_type                     NOT IN ('Provider Type', NULL)
-            AND prov.provider_local_specialty_name      IN ('Provider local specialty name', NULL)
+        WHEN prov.provider_type                     NOT IN ('Provider Type', 'null')
+            AND prov.provider_local_specialty_name      IN ('Provider local specialty name', 'null')
             THEN prov.provider_type    
-        WHEN prov.provider_type                         IN ('Provider Type', NULL)
-            AND prov.provider_local_specialty_name  NOT IN ('Provider local specialty name', NULL)
+        WHEN prov.provider_type                         IN ('Provider Type', 'null')
+            AND prov.provider_local_specialty_name  NOT IN ('Provider local specialty name', 'null')
             THEN prov.provider_local_specialty_name
         ELSE NULL
     END                                                                                     AS medctn_prov_alt_speclty_id,
     CASE
-        WHEN prov.provider_type                     NOT IN ('Provider Type', NULL)
-            OR prov.provider_local_specialty_name   NOT IN ('Provider local specialty name', NULL)
+        WHEN prov.provider_type                     NOT IN ('Provider Type', 'null')
+            OR prov.provider_local_specialty_name   NOT IN ('Provider local specialty name', 'null')
             THEN 'SPECIALTY_NAME'
     END                                                                                     AS medctn_prov_alt_speclty_id_qual,
     MASK_ZIP_CODE(prov.zip_code)                                                            AS medctn_prov_zip_cd,
@@ -143,4 +143,5 @@ LEFT OUTER JOIN matching_payload pay
             ON pay.hvjoinkey = pln.hvjoinkey
 -- Remove header records
 WHERE TRIM(lower(COALESCE(med_ord.patient_id, 'empty'))) <> 'patientid'
+
 -- LIMIT 10
