@@ -6,22 +6,24 @@ $ /bin/sh -c "PYSPARK_PYTHON=python3 /home/hadoop/spark/bin/run.sh \
     /home/hadoop/spark/reference/pull_loinc.py"
 """
 
+import subprocess
+import sys
 import boto3
-from spark.spark_setup import init
-from uuid import uuid4
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
-import os
-import sys
-from spark.helpers.s3_utils import parse_s3_path
+from spark.spark_setup import init
+import spark.helpers.hdfs_utils as hdfs_utils
 
-UUID = str(uuid4())
-S3_TEMP_PATH = 's3://salusv/warehouse/backup/weekly/loinc_raw/'
-S3_CONCAT_PATH = 's3://salusv/warehouse/backup/weekly/loinc_concat/'
+loinc_ref = 'default.ref_loinc'  # HV default DB
+dw_quest_labtests_loc = 's3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/'
 
-S3_DESTINATION = {
+ref_file_name = 'lab.psv.gz'
+stage_ref_loc = '/staging/'
+s3 = boto3.resource('s3')
+
+S3_CONF = {
     'Bucket': 'salusv',
-    'Key': 'marketplace/search/lab/lab.psv.gz'
+    'Key': 'marketplace/search/lab/{}'.format(ref_file_name)
 }
 
 # init
@@ -36,28 +38,8 @@ conf_parameters = {
 spark, sql_context = init("marketplace-pull-loinc", conf_parameters=conf_parameters)
 
 
-def upload_psv_to_s3(source_bucket, source_key, dest_bucket, dest_key):
-    s3 = boto3.client('s3')
-
-    list_obj_paginator = s3.get_paginator('list_objects_v2')
-    source_key_file = None
-    for page in list_obj_paginator.paginate(Bucket=source_bucket, Prefix=source_key):
-        if 'Contents' in page:
-            for i, file_obj in enumerate(
-                    [x for x in page['Contents'] if x['Key'].endswith('.csv.gz')], 1):
-                if i > 1:
-                    raise Exception("More files than expected. Exiting.")
-                source_key_file = file_obj['Key']
-
-    if source_key_file:
-        s3.copy_object(CopySource={'Bucket': source_bucket, 'Key': source_key_file},
-                       Bucket=dest_bucket, Key=dest_key)
-
-
 def pull_loinc():
-    s3_temp_dir = os.path.join(S3_TEMP_PATH, UUID)
-    s3_concat_dir = os.path.join(S3_CONCAT_PATH, UUID)
-
+    print('Collect default.ref_loinc')
     get_ref_loinc = """
     SELECT DISTINCT
         trim(loinc_num) AS loinc_code
@@ -67,13 +49,13 @@ def pull_loinc():
         , trim(loinc_class) AS loinc_class
         , trim(method_type) AS loinc_method
         , trim(relatednames2) AS related
-    FROM ref_loinc
-    """
+    FROM {}
+    """.format(loinc_ref)
 
     rank_window = Window.orderBy(F.col("claims").desc(), F.col("loinc_code").asc())
 
-    loinc_popularity = spark.read.parquet(
-        's3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider=quest/') \
+    print('Collect quest data from dw.labtests')
+    loinc_popularity = spark.read.parquet(dw_quest_labtests_loc) \
         .select("loinc_code", "claim_id").groupBy("loinc_code") \
         .agg(F.approx_count_distinct('claim_id').alias('claims'))
 
@@ -84,17 +66,27 @@ def pull_loinc():
         .withColumn("ordernum", F.row_number().over(rank_window)) \
         .select(output_columns)
 
-    df.write \
+    print('Write output into {}'.format(stage_ref_loc))
+    df.coalesce(1).write \
+        .mode("overwrite") \
         .option('sep', '|') \
+        .option('compression', 'gzip') \
         .option('header', False) \
-        .csv(s3_temp_dir)
+        .csv(stage_ref_loc)
 
-    combined = spark.read.csv(s3_temp_dir)
-    combined.coalesce(1).write.csv(s3_concat_dir)
+    spark.stop()
+    print('File rename to {}'.format(ref_file_name))
+    stg_file_name = [f for f in hdfs_utils.get_files_from_hdfs_path('hdfs://' + stage_ref_loc)
+                     if not f.startswith('.') and f != "_SUCCESS" and f.endswith('.csv.gz')][0]
+    hdfs_utils.rename_file_hdfs(stage_ref_loc + stg_file_name, stage_ref_loc + ref_file_name)
 
-    source_bucket, source_key = parse_s3_path(S3_CONCAT_PATH)
+    print('File transferred from hdfs {} to local {}'.format(stage_ref_loc + ref_file_name, ref_file_name))
+    subprocess.check_call(['hdfs', 'dfs', '-get', '-f', stage_ref_loc + ref_file_name, ref_file_name])
 
-    upload_psv_to_s3(source_bucket, source_key, S3_DESTINATION['Bucket'], S3_DESTINATION['Key'])
+    print('File transferred from local {} to prod s3 {}'.format(ref_file_name, S3_CONF))
+    s3.meta.client.upload_file(ref_file_name, **S3_CONF)
+
+    print('Done')
 
 
 if __name__ == "__main__":
