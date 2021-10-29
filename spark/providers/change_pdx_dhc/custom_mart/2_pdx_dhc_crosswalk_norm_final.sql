@@ -22,3 +22,6 @@ SELECT
 	END                                                                                         AS part_best_date
 from
     pdx_dhc_crosswalk_norm norm
+WHERE NOT EXISTS (SELECT 1 FROM _temp_rxtoken_nb hist
+                        WHERE norm.claim_id = hist.claim_id
+                            )

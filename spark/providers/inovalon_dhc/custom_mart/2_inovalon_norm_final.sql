@@ -10,3 +10,6 @@ SELECT
 
 from
     inovalon_norm_dedupe norm
+WHERE NOT EXISTS (SELECT 1 FROM _temp_rxtoken_nb hist
+                        WHERE norm.claim_id = hist.claim_id
+                            )

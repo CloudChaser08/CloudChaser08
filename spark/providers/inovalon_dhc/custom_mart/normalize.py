@@ -6,6 +6,8 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.datamart.dhc.custom import schemas as dhc_custom_schemas
 import spark.helpers.postprocessor as postprocessor
 import spark.common.utility.logger as logger
+import os
+from spark.providers.inmar_dhc.custom_mart.dhc_utils import dhc_hist_record_loader
 
 hasDeliveryPath = True
 
@@ -13,6 +15,7 @@ if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'inovalon_dhc'
+    dhc_schema = dhc_custom_schemas['rx_token_bridge_v1']
     output_table_names_to_schemas = {
         'inovalon_norm_final': dhc_custom_schemas['rx_token_bridge_v1']
     }
@@ -59,6 +62,12 @@ if __name__ == "__main__":
     cleaned_matching_payload_df = (
         postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df)) \
         .createOrReplaceTempView("matching_payload")
+
+    logger.log('Loading previous history for deduplication')
+
+    hist_path = os.path.join(driver.output_path, dhc_schema.output_directory
+                               , 'part_provider={}/part_file_date={}/'.format(provider_partition_name, date_input))
+    dhc_hist_record_loader(driver, hist_path, date_input)
 
     logger.log('Start transform')
     driver.transform()
