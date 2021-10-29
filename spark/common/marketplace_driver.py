@@ -353,7 +353,6 @@ class MarketplaceDriver(object):
             output_location = self.output_path
 
         logger.log('Copying data to the output location: {}'.format(output_location))
-
         if not self.test and not self.end_to_end_test:
             hadoop_time = normalized_records_unloader.timed_distcp(output_location)
             RunRecorder().record_run_details(additional_time=hadoop_time)
@@ -372,4 +371,3 @@ class MarketplaceDriver(object):
         
         subprocess.check_call(['aws', 's3', 'rm', '--recursive', backup_location])
         subprocess.check_call(['aws', 's3', 'mv', '--recursive', output_location, backup_location])
-        

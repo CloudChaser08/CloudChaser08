@@ -271,7 +271,8 @@ def partition_custom(
 def distcp(dest,
            src=constants.hdfs_staging_dir,
            server_side_encryption=True,
-           file_chunk_size=1000):
+           file_chunk_size=1000,
+           deleteOnSuccess = True):
     """Uses s3-dist-cp to copy files from hdfs to s3.
     In the case that more than `file_chunk_size` files are to be copied, then these files will
     be uploaded in chunks. Where each chunk consists of no more than the value set
@@ -284,6 +285,8 @@ def distcp(dest,
         server_side_encryption (bool, optional): Determines whether or
             not the copied files should be encrypted once they're copied
             to their target destination. Default is, Ture.
+        deleteOnSuccess (bool, optional): Determines whether files should be
+            deleted once they're copyied. Default is True.
 
             Note:
                 server_side_encryption only works when copying files over to
@@ -305,6 +308,9 @@ def distcp(dest,
         '--dest', dest
     ]
 
+    if not deleteOnSuccess:
+        dist_cp_command.remove('--deleteOnSuccess')
+
     if get_hdfs_file_count(src) > file_chunk_size:
         if not server_side_encryption:
             dist_cp_command.remove('--s3ServerSideEncryption')
@@ -324,7 +330,8 @@ def distcp(dest,
 def timed_distcp(dest,
                  src=constants.hdfs_staging_dir,
                  server_side_encryption=True,
-                 file_chunk_size=5000):
+                 file_chunk_size=5000,
+                 deleteOnSuccess = True):
     """Uses s3-dist-cp to copy files from hdfs to s3 and returns the commands runtime.
     In the case that more than `file_chunk_size` files are to be copied, then these files will
     be uploaded in chunks. Where each chunk consists of no more than the value set
@@ -351,7 +358,7 @@ def timed_distcp(dest,
     """
 
     start = time.time()
-    distcp(dest, src, server_side_encryption, file_chunk_size)
+    distcp(dest, src, server_side_encryption, file_chunk_size, deleteOnSuccess)
 
     return time.time() - start
 
