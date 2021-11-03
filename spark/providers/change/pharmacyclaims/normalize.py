@@ -17,6 +17,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     provider_name = 'change'
     provider_partition_name = 'emdeon'
     opportunity_id = 'definitive_hv002886'
+    CAP_NBR_OF_DAYS = 1
 
     existing_output = RESTRICTED_PATH
     schema = pharma_schemas['schema_v11']
@@ -63,7 +64,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     driver.spark.read.parquet(os.path.join(existing_output,
                                            schema.output_directory, 'part_provider=emdeon/'))\
         .createOrReplaceTempView('_temp_pharmacyclaims_nb')
-
+    v_sql = "select cast({} as int) as cap_day_cnt".format(CAP_NBR_OF_DAYS)
+    driver.spark.sql(v_sql).createOrReplaceTempView('_temp_cap_day')
     driver.load()
     driver.transform()
     driver.save_to_disk()
