@@ -164,13 +164,13 @@ class MarketplaceDriver(object):
             self.spark, self.sql_context = init(context_name, self.test, conf_parameters)
             self.runner = Runner(self.sql_context)
 
-    def run(self, conf_parameters=None):
+    def run(self, conf_parameters=None, additional_variables = None):
         """
         Run all driver steps in the appropriate order
         """
         self.init_spark_context(conf_parameters)
         self.load()
-        self.transform()
+        self.transform(additional_variables)
         self.save_to_disk()
         self.stop_spark()
         self.log_run()
@@ -220,7 +220,7 @@ class MarketplaceDriver(object):
                                                            self.vdr_feed_id,
                                                            'EARLIEST_VALID_DIAGNOSIS_DATE',
                                                            get_as_string=True)
-    def transform(self):
+    def transform(self, additional_variables = None):
         """
         Transform the loaded data
         """
@@ -230,8 +230,19 @@ class MarketplaceDriver(object):
                      ['AVAILABLE_START_DATE', self.available_start_date, False],
                      ['EARLIEST_SERVICE_DATE', self.earliest_service_date, False],
                      ['EARLIEST_DIAGNOSIS_DATE', self.earliest_diagnosis_date, False]]
+        
+        if not additional_variables :
+            additional_variables = []
+        
+        filtered_variables = []
+        for additional_variable in additional_variables:
 
-        self.runner.run_all_spark_scripts(variables, directory_path=self.provider_directory_path,
+            if len(additional_variable) == 3:
+                filtered_variables.append([str(additional_variable[0]),str(additional_variable[1]),additional_variable[2]])
+                
+        total_variables = variables + filtered_variables
+
+        self.runner.run_all_spark_scripts(total_variables, directory_path=self.provider_directory_path,
                                           count_transform_sql=self.count_transform_sql)
 
     def apply_schema(self, data_frame, schema_obj):
