@@ -61,15 +61,14 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
     )
 
     script_path = __file__
-
     if test:
         driver.input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/amazingcharts/emr/resources/input/'
-        )
+        ) + '/'
 
         driver.matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/amazingcharts/emr/resources/payload/'
-        )
+        ) + '/'
     elif end_to_end_test:
         driver.input_path = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/input/{}/'.format(
             date_input.replace('-', '/')
