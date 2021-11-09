@@ -118,7 +118,7 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
                     '[^A-Z0-9]',
                     ' '    
                 )
-            ) AS proc_cd,
+            ) AS proc_cd
         FROM 
             f_encounter enc
         WHERE LENGTH(TRIM(COALESCE(enc.cpt_code, ''))) != 0
