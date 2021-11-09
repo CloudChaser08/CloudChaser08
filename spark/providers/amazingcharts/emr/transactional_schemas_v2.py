@@ -130,7 +130,7 @@ TABLE_CONF = {
             'race_description'
         ]
     ),
-    'd_provider ': SourceTable(
+    'd_provider': SourceTable(
         'csv',
         separator='|',
         columns=[
