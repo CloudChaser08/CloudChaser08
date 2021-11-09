@@ -58,25 +58,25 @@ def test_init(spark):
         provider_order_results, vital_sign_results
 
     clinical_observation_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/clinical_observation/*/*')
+        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/clinical_observation/*/*')
     ).collect()
     lab_result_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/lab_result/*/*')
+        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/lab_result/*/*')
     ).collect()
     encounter_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/encounter/*/*')
+        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/encounter/*/*')
     ).collect()
     medication_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/medication/*/*')
+        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/medication/*/*')
     ).collect()
     procedure_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/procedure/*/*')
+        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/procedure/*/*')
     ).collect()
     diagnosis_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/diagnosis/*/*')
+        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/diagnosis/*/*')
     ).collect()
     vital_sign_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/vital_sign/*/*')
+        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/vital_sign/*/*')
     ).collect()
 
 
