@@ -17,7 +17,8 @@ from spark.common.emr.vital_sign import schemas as vital_sign_schemas
 import spark.providers.amazingcharts.emr.transactional_schemas_v1 as transactional_schemas_v1
 import spark.providers.amazingcharts.emr.transactional_schemas_v2 as transactional_schemas_v2
 
-from pyspark.sql.functions import col, split, explode
+from pyspark.sql.window import Window
+from pyspark.sql.functions import col, lit, row_number, split, explode
 
 
 def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
@@ -52,7 +53,8 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
         source_table_schemas,
         output_table_names_to_schemas,
         date_input,
-        end_to_end_test,
+        end_to_end_test=end_to_end_test,
+        test=test,
         load_date_explode=False,
         unload_partition_count=10,
         vdr_feed_id=5,
@@ -68,6 +70,9 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
 
         driver.matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/amazingcharts/emr/resources/payload/'
+        ) + '/'
+        driver.output_path = file_utils.get_abs_path(
+            script_path, '../../../test/providers/amazingcharts/emr/resources/output/'
         ) + '/'
     elif end_to_end_test:
         driver.input_path = 's3://salusv/testing/dewey/airflow/e2e/amazingcharts/input/{}/'.format(
@@ -138,9 +143,9 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
 
     driver.transform()
     driver.save_to_disk()
-    driver.stop_spark()
 
     if not test:
+        driver.stop_spark()
         driver.log_run()
         driver.copy_to_output_path()
     logger.log('Done')

@@ -17,6 +17,7 @@ script_path = __file__
 
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('ref_gen_ref')
+    spark['sqlContext'].dropTempTable('gen_ref_whtlst')
 
     try:
         shutil.rmtree(file_utils.get_abs_path(script_path, './resources/output/'))
@@ -58,25 +59,26 @@ def test_init(spark):
         provider_order_results, vital_sign_results
 
     clinical_observation_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/clinical_observation/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/clinical_observation/*')
     ).collect()
+
     lab_result_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/lab_result/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/lab_result/*')
     ).collect()
     encounter_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/encounter/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/encounter/*')
     ).collect()
     medication_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/medication/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/medication/*')
     ).collect()
     procedure_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/procedure/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/procedure/*')
     ).collect()
     diagnosis_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/diagnosis/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/diagnosis/*')
     ).collect()
     vital_sign_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './test/marketplace/resources/output/vital_sign/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/vital_sign/*')
     ).collect()
 
 
