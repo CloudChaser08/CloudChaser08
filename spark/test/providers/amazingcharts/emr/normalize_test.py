@@ -42,7 +42,16 @@ def test_init(spark):
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
-    amazingcharts_emr.run(spark['spark'], spark['runner'], '2018-12-01', test=True)
+    spark['spark'].sparkContext.parallelize([
+        Row(
+            gen_ref_nm='diag_snomed_cd',
+            gen_ref_domn_nm='SNOMED',
+            gen_ref_whtlst_flg='Y'
+        )
+    ]).toDF().createOrReplaceTempView('gen_ref_whtlst')
+
+    amazingcharts_emr.run(
+        date_input='2018-12-01', test=True, end_to_end_test=False, spark=spark['spark'], runner=spark['runner'])
 
     global clinical_observation_results, lab_result_results, encounter_results, \
         medication_results, procedure_results, diagnosis_results, \
