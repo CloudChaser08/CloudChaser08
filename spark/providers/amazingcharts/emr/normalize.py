@@ -137,10 +137,10 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
             driver.runner.sqlContext, 'dw', 'gen_ref_whtlst', 'gen_ref_whtlst')
 
     driver.transform()
+    driver.save_to_disk()
+    driver.stop_spark()
 
     if not test:
-        driver.save_to_disk()
-        driver.stop_spark()
         driver.log_run()
         driver.copy_to_output_path()
     logger.log('Done')
