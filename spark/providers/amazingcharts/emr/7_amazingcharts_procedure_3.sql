@@ -166,7 +166,7 @@ SELECT
 	    WHEN 0 = LENGTH(
 	    COALESCE(
             CAP_DATE(
-                CAST(EXTRACT_DATE(SUBSTR(inj.date_given, 1, 10), '%Y-%m-%d') AS DATE),
+                CAST(EXTRACT_DATE(SUBSTR(prc.date_performed, 1, 10), '%Y-%m-%d') AS DATE),
                 CAST(COALESCE('{AVAILABLE_START_DATE}', '{EARLIEST_SERVICE_DATE}') AS DATE),
                 CAST('{VDR_FILE_DT}' AS DATE)
                 ),
