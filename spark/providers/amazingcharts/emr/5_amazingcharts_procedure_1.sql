@@ -16,7 +16,7 @@ SELECT
 	'12'                                                                        AS mdl_vrsn_num,
     CONCAT(
         'AmazingCharts_HV_{VDR_FILE_DT}_',
-        SPLIT(alg.input_file_name, '/')[SIZE(SPLIT(alg.input_file_name, '/')) - 1]
+        SPLIT(enc.input_file_name, '/')[SIZE(SPLIT(enc.input_file_name, '/')) - 1]
         )                                                                       AS data_set_nm,
     CAST(NULL AS STRING) AS src_vrsn_id,
 	5                                                                           AS hvm_vdr_id,

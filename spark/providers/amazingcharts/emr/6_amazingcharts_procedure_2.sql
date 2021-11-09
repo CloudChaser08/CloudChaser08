@@ -14,7 +14,7 @@ SELECT
 	'12'                                                                        AS mdl_vrsn_num,
     CONCAT(
         'AmazingCharts_HV_{VDR_FILE_DT}_',
-        SPLIT(alg.input_file_name, '/')[SIZE(SPLIT(alg.input_file_name, '/')) - 1]
+        SPLIT(inj.input_file_name, '/')[SIZE(SPLIT(inj.input_file_name, '/')) - 1]
         )                                                                       AS data_set_nm,
     CAST(NULL AS STRING) AS src_vrsn_id,
 	5                                                                           AS hvm_vdr_id,
@@ -27,12 +27,12 @@ SELECT
     pay.hvid                                                                    AS hvid,
     CAP_YEAR_OF_BIRTH(
         pay.age,
-        CAST(EXTRACT_DATE(SUBSTR(prc.date_performed, 1, 10), '%Y-%m-%d') AS DATE),
+        CAST(EXTRACT_DATE(SUBSTR(inj.date_given, 1, 10), '%Y-%m-%d') AS DATE),
         COALESCE(SUBSTR(ptn.birth_year, 1, 4),  pay.yearOfBirth)
     )                                                                           AS ptnt_birth_yr,
     VALIDATE_AGE(
         pay.age,
-        CAST(EXTRACT_DATE(SUBSTR(prc.date_performed, 1, 10), '%Y-%m-%d') AS DATE),
+        CAST(EXTRACT_DATE(SUBSTR(inj.date_given, 1, 10), '%Y-%m-%d') AS DATE),
         COALESCE(SUBSTR(ptn.birth_year, 1, 4),  pay.yearOfBirth)
     )                                                                           AS ptnt_age_num,
     CAST(NULL AS STRING) AS ptnt_lvg_flg,
