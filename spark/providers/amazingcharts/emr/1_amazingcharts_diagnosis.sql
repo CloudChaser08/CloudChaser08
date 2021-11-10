@@ -101,7 +101,10 @@ SELECT
         WHEN dig.icd_type = '10' THEN '02'
         ELSE NULL
     END                                                                         AS diag_cd_qual,
-    UPPER(dig.snomed)                                                           AS diag_snomed_cd,
+    CASE
+        WHEN UPPER(ref.gen_ref_cd) IS NOT NULL THEN UPPER(dig.snomed)
+        ELSE NULL
+    END                                                                         AS diag_snomed_cd,
     UPPER(dig.record_type)                                                      AS data_src_cd,
     EXTRACT_DATE(
         SUBSTR(dig.date_row_added, 1, 10),
@@ -133,6 +136,6 @@ LEFT OUTER JOIN d_patient ptn ON dig.patient_key = ptn.patient_key
 LEFT OUTER JOIN matching_payload pay ON ptn.patient_key = pay.personid
 LEFT OUTER JOIN d_provider prv ON dig.provider_key = prv.provider_key
 LEFT OUTER JOIN gen_ref_whtlst ref ON
-    UPPER(dig.snomed) = UPPER(ref.gen_ref_nm) AND ref.gen_ref_domn_nm = 'SNOMED' AND ref.gen_ref_whtlst_flg ='Y'
+    UPPER(dig.snomed) = UPPER(ref.gen_ref_cd) AND ref.gen_ref_domn_nm = 'SNOMED' AND ref.gen_ref_whtlst_flg ='Y'
 WHERE
     TRIM(UPPER(COALESCE(dig.practice_key, 'empty'))) <> 'PRACTICE_KEY'
