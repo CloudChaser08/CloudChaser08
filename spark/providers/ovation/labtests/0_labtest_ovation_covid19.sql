@@ -124,4 +124,4 @@ SELECT
 
 
 FROM txn
-LEFT OUTER JOIN matching_payload pay ON txn.hvjoinkey  = pay.hvJoinKey 
+LEFT OUTER JOIN matching_payload pay ON txn.hvjoinkey  = pay.hvJoinKey
