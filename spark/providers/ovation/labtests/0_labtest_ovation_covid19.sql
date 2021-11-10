@@ -125,4 +125,3 @@ SELECT
 
 FROM txn
 LEFT OUTER JOIN matching_payload pay ON txn.hvjoinkey  = pay.hvJoinKey
-WHERE substr(pay.input_file_name,17,8) = substr(txn.input_file_name,19,8)

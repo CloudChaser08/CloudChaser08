@@ -47,6 +47,6 @@ if __name__ == "__main__":
         vdr_feed_id=188,
         use_ref_gen_values=True,
         unload_partition_count=5,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
     driver.run()
