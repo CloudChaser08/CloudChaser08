@@ -1,4 +1,4 @@
-"""delivery humana 000458 exatract humana"""
+"""delivery radio 005061 extract"""
 #! /usr/bin/python
 import argparse
 import time
@@ -12,10 +12,10 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import pyspark.sql.functions as F
 import boto3
 
-from spark.delivery.humana_000468 import extract_medicalclaims
-from spark.delivery.humana_000468 import extract_pharmacyclaims
-from spark.delivery.humana_000468 import extract_enrollmentrecords
-# from spark.delivery.humana_000468 import prepare_emr
+from spark.delivery.radion_005061 import extract_medicalclaims
+from spark.delivery.radion_005061 import extract_pharmacyclaims
+from spark.delivery.radion_005061 import extract_enrollmentrecords
+# from spark.delivery.radion_005061 import prepare_emr
 
 
 def get_extract_summary(df):
@@ -75,17 +75,17 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     if airflow_test:
         output_path_template = '/staging/{}/'
         matching_path_template = \
-            's3a://salusv/testing/dewey/airflow/e2e/humana/hv000468/payload/{}/'
+            's3a://salusv/testing/dewey/airflow/e2e/radion/hv005061/payload/{}/'
         list_cmd = ['hadoop', 'fs', '-ls']
         move_cmd = ['hadoop', 'fs', '-mv']
     elif test:
         output_path_template = file_utils.get_abs_path(
-            __file__, '../../test/delivery/humana/hv000468/out/{}/'
+            __file__, '../../test/delivery/radion/hv005061/out/{}/'
         ) + '/'
         for group_id in group_ids:
             subprocess.check_call(['mkdir', '-p', output_path_template.format(group_id)])
         matching_path_template = file_utils.get_abs_path(
-            __file__, '../../test/delivery/humana/hv000468/resources/matching/{}/'
+            __file__, '../../test/delivery/radion/hv005061/resources/matching/{}/'
         ) + '/'
         list_cmd = ['find']
         move_cmd = ['mv']
@@ -95,7 +95,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
         ts = 1524690702.12345
     else:
         output_path_template = '/staging/{}/'
-        matching_path_template = 's3a://salusv/matching/payload/custom/humana/hv000468/{}/'
+        matching_path_template = 's3a://salusv/matching/payload/custom/radion/hv005061/{}/'
         list_cmd = ['hadoop', 'fs', '-ls']
         move_cmd = ['hadoop', 'fs', '-mv']
 
@@ -126,11 +126,11 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     if today.day > 15:
         end = (today.replace(day=15) - timedelta(days=30)).replace(day=1)
         # The 1st about 1.5 months back
-        start = (end - timedelta(days=455)).replace(day=1)  # 15 months before end
+        start = (end - timedelta(days=545)).replace(day=1)  # 18 months before end
     else:
         end = (today.replace(day=15) - timedelta(days=60)).replace(day=15)
         # The 15th about 1.5 months back
-        start = (end - timedelta(days=455)).replace(day=15)  # 15 months before end
+        start = (end - timedelta(days=545)).replace(day=15)  # 18 months before end
 
     group_all_patient_count = \
         {r.humana_group_id: r['count'] for r in all_patients.groupBy('humana_group_id').count().collect()}
@@ -147,7 +147,7 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
     group_patient_w_records_count = {}
     summary = None
     if valid_groups:
-        # This is comented out until Humana wants us to turn synthetic claims back on
+        # This is comented out until Radion wants us to turn synthetic claims back on
         # prepare_emr.prepare(runner, matched_patients, start, is_prod)
         medical_extract = extract_medicalclaims.extract(
             runner, matched_patients, ts,
@@ -248,21 +248,21 @@ def run(spark, runner, group_ids, test=False, airflow_test=False, is_prod=False)
 
 def main(args):
     # init
-    spark, sql_context = init("Extract for Humana")
+    spark, sql_context = init("Extract for Radion")
 
     # initialize runner
     runner = Runner(sql_context)
 
     if args.airflow_test:
-        output_path = 's3a://salusv/testing/dewey/airflow/e2e/humana/hv000468/deliverable/'
+        output_path = 's3a://salusv/testing/dewey/airflow/e2e/radion/hv005061/deliverable/'
         in_queue = 'https://queue.amazonaws.com/581191604223/humana-inbox-test'
         out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-test'
     elif args.is_prod:
-        output_path = 's3a://salusv/deliverable/humana/hv000468/'
+        output_path = 's3a://salusv/deliverable/radion/hv005061/'
         in_queue = 'https://queue.amazonaws.com/581191604223/humana-inbox-prod'
         out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-prod'
     else:
-        output_path = 's3a://salusv/deliverable/humana/hv000468/'
+        output_path = 's3a://salusv/deliverable/radion/hv005061/'
         in_queue = 'https://queue.amazonaws.com/581191604223/humana-inbox-uat'
         out_queue = 'https://queue.amazonaws.com/581191604223/humana-outbox-uat'
 
@@ -292,7 +292,7 @@ def main(args):
         for m in set([m[0] for m in msgs]):
             client.send_message(QueueUrl=out_queue, MessageBody=m)
 
-        spark, sql_context = init("Extract for Humana")
+        spark, sql_context = init("Extract for Radion")
         runner = Runner(sql_context)
 
     spark.stop()

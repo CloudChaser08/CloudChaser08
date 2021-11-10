@@ -4,7 +4,7 @@ from datetime import timedelta
 
 
 def extract(spark, runner, hvids, timestamp, start_dt, end_dt, pharmacy_extract):
-    t1 = runner.sqlContext.table('enrollmentrecords')
+    t1 = runner.sqlContext.table('dw.hvm_enrollment_v06')
     t2 = runner.sqlContext.table('dw.ref_vdr_feed')
     t2 = t2[t2.hvm_vdr_feed_id.isin(*SUPPLIER_FEED_IDS)]
 
@@ -27,7 +27,7 @@ def extract(spark, runner, hvids, timestamp, start_dt, end_dt, pharmacy_extract)
         .select(t1['hvid'], 'calendar_date', 'hvm_vdr_feed_id', FN.lit('Y').alias('enrolled_flag'), 'humana_group_id')
 
     # Hashing
-    ext = ext.withColumn('hvid', FN.md5(FN.concat(t1['hvid'], FN.lit('hvid'), FN.lit('hv000468')
+    ext = ext.withColumn('hvid', FN.md5(FN.concat(t1['hvid'], FN.lit('hvid'), FN.lit('hv005061')
                                                   , FN.lit(repr(timestamp)), FN.col('humana_group_id'))))
 
     # Rename columns
@@ -45,9 +45,11 @@ EXTRACT_COLUMNS = [
     'humana_group_id'
 ]
 
-# Feed tile names as of 09/05
+# Feed tile names as of 11/09/21
 SUPPLIER_FEED_IDS = [
     '61',  # Private Source 17
     '36',  # Private Source 22
-    '65'  # PDX, Inc.
+    '147', # Private Source 33
+    '177', # Private Source 20
+    '86'   # Kroger
 ]

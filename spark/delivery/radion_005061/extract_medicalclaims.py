@@ -4,8 +4,7 @@ import pyspark.sql.functions as F
 
 def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
                        filter_by_part_processdate=False):
-    claims = runner.sqlContext.table(claims_table).where(
-        "part_provider != 'xifin' and part_provider != 'inovalon'")
+    claims = runner.sqlContext.table(claims_table).where("part_provider != 'xifin'")
     ref_vdr_feed = runner.sqlContext.table('dw.ref_vdr_feed')
     ref_vdr_feed = ref_vdr_feed[ref_vdr_feed.hvm_vdr_feed_id.isin(*SUPPLIER_FEED_IDS)]
 
@@ -28,19 +27,19 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
     # Hashing
     ext = ext \
         .withColumn('hvid', F.md5(
-            F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468'), F.lit(repr(timestamp))
+            F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv005061'), F.lit(repr(timestamp))
                     , F.col('humana_group_id')))) \
         .withColumn('prov_rendering_npi', F.md5(F.concat(F.col('prov_rendering_npi'), F.lit('npi')
-                                                         , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                         , F.lit('hv005061'), F.lit(repr(timestamp))
                                                          , F.col('humana_group_id')))) \
         .withColumn('prov_billing_npi',
-                    F.md5(F.concat(F.col('prov_billing_npi'), F.lit('npi'), F.lit('hv000468')
+                    F.md5(F.concat(F.col('prov_billing_npi'), F.lit('npi'), F.lit('hv005061')
                                    , F.lit(repr(timestamp)), F.col('humana_group_id')))) \
         .withColumn('prov_referring_npi', F.md5(F.concat(F.col('prov_referring_npi'), F.lit('npi')
-                                                         , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                         , F.lit('hv005061'), F.lit(repr(timestamp))
                                                          , F.col('humana_group_id')))) \
         .withColumn('prov_facility_npi', F.md5(F.concat(F.col('prov_facility_npi'), F.lit('npi')
-                                                        , F.lit('hv000468'), F.lit(repr(timestamp))
+                                                        , F.lit('hv005061'), F.lit(repr(timestamp))
                                                         , F.col('humana_group_id'))))
 
     # Rename columns
@@ -57,7 +56,7 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
 
 def extract(runner, hvids, timestamp, start_dt, end_dt):
     return extract_from_table(runner, hvids, timestamp, start_dt, end_dt,
-                              'dw.hvm_medicalclaims_v08', True)
+                              'dw.hvm_medicalclaims_v11', True)
     # NOTE: 2019-11-04 - Removing synthetic claims until told to turn back on.
     # .union(extract_from_table(runner, hvids, timestamp,
     # start_dt, end_dt, 'synthetic_medicalclaims', False))
@@ -210,14 +209,13 @@ EXTRACT_COLUMNS = [
     'humana_group_id'
 ]
 
-# Feed tile names as of 09/05
+# Feed tile names as of 11/09/21
 SUPPLIER_FEED_IDS = [
-    '26',  # Veradigm Health
-    '25',  # Veradigm Health
     '22',  # Private Source 12
     '15',  # Private Source 14
-    '24',  # Private Source 34
-    '35'  # Private Source 42
+    '155', # Private Source 17
+    '176', # Private Source 20
+    '24'   # Private Source 34
 ]
 
 NULL_COLUMNS = [
@@ -231,12 +229,6 @@ NULL_COLUMNS = [
     'payer_org_name',
     'payer_plan_name',
     'prov_rendering_vendor_id',
-    'prov_rendering_tax_id',
-    'prov_rendering_dea_id',
-    'prov_rendering_ssn',
-    'prov_rendering_state_license',
-    'prov_rendering_upin',
-    'prov_rendering_commercial_id',
     'prov_rendering_name_1',
     'prov_rendering_name_2',
     'prov_rendering_address_1',
@@ -247,12 +239,6 @@ NULL_COLUMNS = [
     'prov_rendering_std_taxonomy',
     'prov_rendering_vendor_specialty',
     'prov_billing_vendor_id',
-    'prov_billing_tax_id',
-    'prov_billing_dea_id',
-    'prov_billing_ssn',
-    'prov_billing_state_license',
-    'prov_billing_upin',
-    'prov_billing_commercial_id',
     'prov_billing_name_1',
     'prov_billing_name_2',
     'prov_billing_address_1',
@@ -263,12 +249,6 @@ NULL_COLUMNS = [
     'prov_billing_std_taxonomy',
     'prov_billing_vendor_specialty',
     'prov_referring_vendor_id',
-    'prov_referring_tax_id',
-    'prov_referring_dea_id',
-    'prov_referring_ssn',
-    'prov_referring_state_license',
-    'prov_referring_upin',
-    'prov_referring_commercial_id',
     'prov_referring_name_1',
     'prov_referring_name_2',
     'prov_referring_address_1',
@@ -279,12 +259,6 @@ NULL_COLUMNS = [
     'prov_referring_std_taxonomy',
     'prov_referring_vendor_specialty',
     'prov_facility_vendor_id',
-    'prov_facility_tax_id',
-    'prov_facility_dea_id',
-    'prov_facility_ssn',
-    'prov_facility_state_license',
-    'prov_facility_upin',
-    'prov_facility_commercial_id',
     'prov_facility_name_1',
     'prov_facility_name_2',
     'prov_facility_address_1',

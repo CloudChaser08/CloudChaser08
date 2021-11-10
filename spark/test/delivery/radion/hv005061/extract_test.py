@@ -12,7 +12,7 @@ GROUP2 = 'test0000' # Invalid group, 20 patients, 1 valid
 GROUP3 = 'test4321'
 GROUP4 = 'test0001' # Invalid group, 5 patients, 5 valid
 DW_TABLES = ['hvm_emr_diag_v08', 'hvm_emr_proc_v10', 'hvm_emr_medctn_v09', 'hvm_emr_enc_v08', 'ref_vdr_feed',
-             'ref_gen_ref', 'hvm_pharmacyclaims_v07', 'hvm_medicalclaims_v08']
+             'ref_gen_ref', 'hvm_pharmacyclaims_v11', 'hvm_medicalclaims_v11', 'hvm_enrollment_v06']
 
 HASHED_FIELDS = ['hvid', 'prov_rendering_npi', 'prov_billing_npi', 'prov_referring_npi', 'prov_facility_npi']
 
@@ -33,9 +33,9 @@ def _transformation_results(spark):
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/ref_vdr_feed.json')).createOrReplaceTempView('ref_vdr_feed')
-    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/pharma_sample.json')).createOrReplaceTempView('hvm_pharmacyclaims_v07')
-    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/med_sample.json')).createOrReplaceTempView('hvm_medicalclaims_v08')
-    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/enroll_sample.json')).createOrReplaceTempView('enrollmentrecords')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/pharma_sample.json')).createOrReplaceTempView('hvm_pharmacyclaims_v11')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/med_sample.json')).createOrReplaceTempView('hvm_medicalclaims_v11')
+    spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/enroll_sample.json')).createOrReplaceTempView('hvm_enrollment_v06')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_diag_sample.json')).createOrReplaceTempView('hvm_emr_diag_v08')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_proc_sample.json')).createOrReplaceTempView('hvm_emr_proc_v10')
     spark['spark'].read.json(file_utils.get_abs_path(__file__, 'resources/emr_medctn_sample.json')).createOrReplaceTempView('hvm_emr_medctn_v09')
@@ -64,16 +64,16 @@ def test_hashing(_transformation_results):
     pharmacy_extract = _transformation_results['pharmacy_extract']
 
     med_row = [r for r in medical_extract if r['claim_id'] == '365255892'][0]
-    assert med_row['hvid'] == '137cceaa255a472621476d361c8cc040'
-    assert med_row['prov_rendering_npi'] == 'c596079048b796c7f4443662ea0470b9'
-    assert med_row['prov_billing_npi'] == 'c1128648fadc3692af85544eb6115729'
-    assert med_row['prov_referring_npi'] == '63d0f298ddf0a528b84f99e9e01c425a'
-    assert med_row['prov_facility_npi'] == 'c1128648fadc3692af85544eb6115729'
+    assert med_row['hvid'] == '1c4b4114140e1821f06d34df7c434ddb'
+    assert med_row['prov_rendering_npi'] == '556c489925ed4768bb8cebaaea1ea59f'
+    assert med_row['prov_billing_npi'] == '523d01c91b3132466e1484d512d70bba'
+    assert med_row['prov_referring_npi'] == '60069eeceaf28421855b6291ce60371c'
+    assert med_row['prov_facility_npi'] == '523d01c91b3132466e1484d512d70bba'
 
     pharma_row = [r for r in pharmacy_extract if r['claim_id'] == '749993504'][0]
-    assert pharma_row['hvid'] == 'c37a8baebde81fcce7b0bb79925fbdb4'
-    assert pharma_row['pharmacy_npi'] == '04fe3b9cd69c583baab0936f4317bdee'
-    assert pharma_row['prov_prescribing_npi'] == '7d69a4611b5a96ee5dcd8db96f855fa1'
+    assert pharma_row['hvid'] == '338e0260c048a500e6354583e6995102'
+    assert pharma_row['pharmacy_npi'] == '2f57f3fda311de612db96a6906d6000f'
+    assert pharma_row['prov_prescribing_npi'] == '9affa63663efe7488da81c2f3b9f7968'
 
 def test_different_hashing_differnt_groups(_transformation_results):
     """Ensure that two identical groups have identical data except for the

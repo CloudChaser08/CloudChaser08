@@ -26,22 +26,22 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
 
     # Hashing
     ext = ext \
-        .withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv000468')
+        .withColumn('hvid', F.md5(F.concat(F.col('hvid'), F.lit('hvid'), F.lit('hv005061')
                                            , F.lit(repr(timestamp)), F.col('humana_group_id')))) \
         .withColumn('pharmacy_npi',
-                    F.md5(F.concat(F.col('pharmacy_npi'), F.lit('npi'), F.lit('hv000468')
+                    F.md5(F.concat(F.col('pharmacy_npi'), F.lit('npi'), F.lit('hv005061')
                                    , F.lit(repr(timestamp)), F.col('humana_group_id')))) \
         .withColumn('prov_dispensing_npi', F.md5(F.concat(F.col('prov_dispensing_npi'), F.lit('npi')
-                                                          , F.lit('hv000468'),
+                                                          , F.lit('hv005061'),
                                                           F.lit(repr(timestamp))
                                                           , F.col('humana_group_id')))) \
         .withColumn('prov_prescribing_npi',
                     F.md5(F.concat(F.col('prov_prescribing_npi'), F.lit('npi')
-                                   , F.lit('hv000468'), F.lit(repr(timestamp))
+                                   , F.lit('hv005061'), F.lit(repr(timestamp))
                                    , F.col('humana_group_id')))) \
         .withColumn('prov_primary_care_npi',
                     F.md5(F.concat(F.col('prov_primary_care_npi'), F.lit('npi')
-                                   , F.lit('hv000468'), F.lit(repr(timestamp))
+                                   , F.lit('hv005061'), F.lit(repr(timestamp))
                                    , F.col('humana_group_id'))))
 
     # Rename columns
@@ -58,7 +58,7 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
 
 def extract(runner, hvids, timestamp, start_dt, end_dt):
     return extract_from_table(runner, hvids, timestamp, start_dt, end_dt,
-                              'dw.hvm_pharmacyclaims_v07', True)
+                              'dw.hvm_pharmacyclaims_v11', True)
     # NOTE: 2019-11-04 - Removing synthetic claims until told to turn back on. .union(
     # extract_from_table(runner, hvids, timestamp, start_dt, end_dt, 'synthetic_pharmacyclaims',
     # False))
@@ -183,13 +183,13 @@ EXTRACT_COLUMNS = [
     'humana_group_id'
 ]
 
-# Feed tile names as of 09/05
+# Feed tile names as of 11/09/21
 SUPPLIER_FEED_IDS = [
     '16',  # Private Source 17
+    '147', # Private Source 33
+    '177', # Private Source 20
     '36',  # Private Source 22
-    '65',  # PDX, Inc.
-    '25',  # Veradigm Health
-    '35'  # Private Source 42
+    '86'   # Kroger
 ]
 
 NULL_COLUMNS = [
