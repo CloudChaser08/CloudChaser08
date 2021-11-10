@@ -28,7 +28,8 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
-    if date_input >= '2021-05-03':  # changed schema to support 2 new client columns
+    if date_input == '2021-05-03':  # changed schema to support 2 new client columns, this is one
+        # time schema change for the data of 05/3rd
         source_table_schemas = source_schema_v3
     elif date_input >= '2020-09-21':  # changed schema to support 4 new client columns
         source_table_schemas = source_schema_v2
@@ -44,6 +45,8 @@ if __name__ == "__main__":
         date_input,
         end_to_end_test,
         vdr_feed_id=188,
-        use_ref_gen_values=True
+        use_ref_gen_values=True,
+        unload_partition_count=5,
+        output_to_transform_path=True
     )
     driver.run()
