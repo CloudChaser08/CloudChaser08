@@ -17,6 +17,7 @@ script_path = __file__
 
 def cleanup(spark):
     spark['sqlContext'].dropTempTable('ref_gen_ref')
+    spark['sqlContext'].dropTempTable('gen_ref_whtlst')
 
     try:
         shutil.rmtree(file_utils.get_abs_path(script_path, './resources/output/'))
@@ -42,32 +43,43 @@ def test_init(spark):
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
-    amazingcharts_emr.run(spark['spark'], spark['runner'], '2018-12-01', test=True)
+    spark['spark'].sparkContext.parallelize([
+        Row(
+            gen_ref_cd='',
+            gen_ref_nm='diag_snomed_cd',
+            gen_ref_domn_nm='SNOMED',
+            gen_ref_whtlst_flg='Y'
+        )
+    ]).toDF().createOrReplaceTempView('gen_ref_whtlst')
+
+    amazingcharts_emr.run(
+        date_input='2018-12-01', test=True, end_to_end_test=False, spark=spark['spark'], runner=spark['runner'])
 
     global clinical_observation_results, lab_result_results, encounter_results, \
         medication_results, procedure_results, diagnosis_results, \
         provider_order_results, vital_sign_results
 
     clinical_observation_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/clinical_observation/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/clinical_observation/*')
     ).collect()
+
     lab_result_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/lab_result/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/lab_result/*')
     ).collect()
     encounter_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/encounter/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/encounter/*')
     ).collect()
     medication_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/medication/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/medication/*')
     ).collect()
     procedure_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/procedure/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/procedure/*')
     ).collect()
     diagnosis_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/diagnosis/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/diagnosis/*')
     ).collect()
     vital_sign_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/vital_sign/*/*')
+        file_utils.get_abs_path(script_path, './resources/output/emr/*/vital_sign/*')
     ).collect()
 
 
