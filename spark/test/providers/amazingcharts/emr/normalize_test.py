@@ -45,6 +45,7 @@ def test_init(spark):
 
     spark['spark'].sparkContext.parallelize([
         Row(
+            gen_ref_cd='',
             gen_ref_nm='diag_snomed_cd',
             gen_ref_domn_nm='SNOMED',
             gen_ref_whtlst_flg='Y'
