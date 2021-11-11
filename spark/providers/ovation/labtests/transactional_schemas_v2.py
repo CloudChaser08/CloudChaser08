@@ -30,7 +30,6 @@ TABLE_CONF = {
             'target_name',
             'result',
             'requisition_id',
-            'lab_id',
             'instrument',
             'kit_name',
             'loinc_code',

@@ -34,6 +34,7 @@ TABLE_CONF = {
             'instrument',
             'kit_name',
             'loinc_code',
+            'column28',
             'hvjoinkey'
         ]
     )
