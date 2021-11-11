@@ -69,8 +69,6 @@ if __name__ == "__main__":
         source_table_schemas = source_schema_v1
     elif is_schema_v2:
         source_table_schemas = source_schema_v2
-    elif is_schema_v3:
-        source_table_schemas = source_schema_v3
     elif is_schema_v4:
         source_table_schemas = source_schema_v4
     elif is_schema_v5:
@@ -90,10 +88,20 @@ if __name__ == "__main__":
         end_to_end_test,
         vdr_feed_id=188,
         use_ref_gen_values=True,
-        unload_partition_count=5,
+        unload_partition_count=2,
         output_to_transform_path=False
     )
     driver.init_spark_context()
+
+    column_length = len(driver.spark.read.csv(driver.input_path, sep='|').columns)
+    logger.log("-transactions data have {} columns".format(column_length))
+    if column_length == 27:
+        driver.source_table_schemas = source_schema_v3
+    elif column_length == 29:
+        driver.source_table_schemas = source_schema_v6
+    else:
+        raise ValueError('Unexpected column length in transaction: {}'.format(str(column_length)))
+
     driver.load()
     if is_schema_v1:
         logger.log('Adding missing columns for Schema Version 1')
