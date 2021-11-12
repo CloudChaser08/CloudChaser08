@@ -43,16 +43,16 @@ def test_tilde_r(spark):
     """
     Check `=16~R`
     """
-    eval_test('=16~R', '=', '16', 'R', '', spark)
-    eval_test('= 16~R', '=', '16', 'R', '', spark)
-    eval_test('=16 ~R', '=', '16', 'R', '', spark)
+    eval_test('<=16~R', '<=', '16', 'R', '', spark)
+    eval_test('<= 16~R', '<=', '16', 'R', '', spark)
+    eval_test('<=16 ~R', '<=', '16', 'R', '', spark)
 
 
 def test_tilde_s(spark):
     """
     Check `=.023~S`
     """
-    eval_test('=.023~S', '=', '0.023', 'S', '', spark)
+    eval_test('>=.023~S', '>=', '0.023', 'S', '', spark)
 
 
 # noinspection PyPep8Naming
@@ -78,6 +78,7 @@ def test_date_negative_M_D_YYYY(spark):
 
 
 # noinspection PyPep8Naming
+@pytest.mark.skip("No longer the standard per phase 5.")
 def test_date_neg_M_slash_YYYY(spark):
     """
     Check `10/2014- neg`

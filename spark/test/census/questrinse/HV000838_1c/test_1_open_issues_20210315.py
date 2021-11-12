@@ -129,6 +129,7 @@ def test_17(spark):
     eval_test('<1 IN 5000 (PSEUDORISK)', '<', '1 IN 5000', 'PSEUDORISK', '', spark)
 
 
+@pytest.mark.skip("No longer the standard per phase 5.")
 def test_18(spark):
     """
     3.4
@@ -136,6 +137,7 @@ def test_18(spark):
     eval_test('1 IN 462', '', '', '', '1 IN 462', spark)
 
 
+@pytest.mark.skip("No longer the standard per phase 5.")
 def test_19(spark):
     """
     3.4
@@ -143,6 +145,7 @@ def test_19(spark):
     eval_test('1 IN 4958', '', '', '', '1 IN 4958', spark)
 
 
+@pytest.mark.skip("No longer the standard per phase 5.")
 def test_20(spark):
     """
     3.4

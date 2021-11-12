@@ -77,6 +77,7 @@ def test_fraction(spark):
     eval_test('1/200', '', '1/200', '', '', spark)
 
 
+@pytest.mark.skip("No longer the standard per phase 5.")
 def test_range_no_operator(spark):
     """
     Entire range must be in numeric HV field, only with operator
@@ -99,8 +100,10 @@ def test_scientific_notation(spark):
 
     eval_test('10E3', '', '10000', '', '', spark)
     eval_test('>10E3', '>', '10000', '', '', spark)
+
     # This is not a valid Scientific Notation.
-    eval_test('5265-E1', '', '5265', '-E1', '', spark)
+    eval_test('5265-E1', '', '', '', '5265-E1', spark)
+
     eval_test('5265E-1', '', '526.5', '', '', spark)
 
 
@@ -117,29 +120,29 @@ def test_alpha_parenthesis(spark):
     """
     Remove () from the Alpha HV field
     """
-    eval_test('10,000 (FOOBARS)', '', '10000', 'FOOBARS', '', spark)
+    eval_test('<10,000 (FOOBARS)', '<', '10000', 'FOOBARS', '', spark)
 
 
 def test_alpha_tilde(spark):
     """
     Remove ~ from the Alpha HV field
     """
-    eval_test('10,000 ~FOOBARS', '', '10000', 'FOOBARS', '', spark)
+    eval_test('<10,000 ~FOOBARS', '<', '10000', 'FOOBARS', '', spark)
 
 
 def test_alpha_not_quantified(spark):
     """
     Remove Not Quantified from Alpha HV field
     """
-    eval_test('10,000 NOT QUANTIFIED', '', '10000', '', '', spark)
+    eval_test('>10,000 NOT QUANTIFIED', '>', '10000', '', '', spark)
 
 
 def test_alpha_no_case_change(spark):
     """
     Do not change case on Alpha HV field
     """
-    eval_test('10,000 FooBar', '', '10000', 'FooBar', '', spark)
-    eval_test('10,000 FOOBAR', '', '10000', 'FOOBAR', '', spark)
+    eval_test('>=10,000 FooBar', '>=', '10000', 'FooBar', '', spark)
+    eval_test('<=10,000 FOOBAR', '<=', '10000', 'FOOBAR', '', spark)
 
 
 def test_zero_leading_trailing_remain(spark):
@@ -265,6 +268,7 @@ def test_697(spark):
     eval_test('<1.18 Not Detected', '<', '1.18', 'NOT DETECTED', '', spark)
 
 
+@pytest.mark.skip("No longer the standard per phase 5.")
 def test_701(spark):
     """
     Case leave as-is for Alpha
@@ -366,7 +370,7 @@ def test_835(spark):
     """
     Remove () from Alpha column
     """
-    eval_test('R (>=32)', '>=', '32', 'R', '', spark)
+    eval_test('>=32 (R)', '>=', '32', 'R', '', spark)
 
 
 def test_849(spark):
@@ -390,6 +394,7 @@ def test_852(spark):
     eval_test('>100.0E7', '>', '1000000000', '', '', spark)
 
 
+@pytest.mark.skip("No longer the standard per phase 5.")
 def test_853(spark):
     """
     Remove () from Alpha column
