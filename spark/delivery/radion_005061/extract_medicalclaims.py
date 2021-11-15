@@ -133,12 +133,6 @@ EXTRACT_COLUMNS = [
     'payer_plan_name',  # NULL per Austin
     'payer_type',
     'prov_rendering_vendor_id',  # NULL per Austin
-    'prov_rendering_tax_id',  # NULL per Austin
-    'prov_rendering_dea_id',  # NULL per Austin
-    'prov_rendering_ssn',  # NULL per Austin
-    'prov_rendering_state_license',  # NULL per Austin
-    'prov_rendering_upin',  # NULL per Austin
-    'prov_rendering_commercial_id',  # NULL per Austin
     'prov_rendering_name_1',  # NULL per Austin
     'prov_rendering_name_2',  # NULL per Austin
     'prov_rendering_address_1',  # NULL per Austin
@@ -149,12 +143,6 @@ EXTRACT_COLUMNS = [
     'prov_rendering_std_taxonomy',  # NULL per Austin
     'prov_rendering_vendor_specialty',  # NULL per Austin
     'prov_billing_vendor_id',  # NULL per Austin
-    'prov_billing_tax_id',  # NULL per Austin
-    'prov_billing_dea_id',  # NULL per Austin
-    'prov_billing_ssn',  # NULL per Austin
-    'prov_billing_state_license',  # NULL per Austin
-    'prov_billing_upin',  # NULL per Austin
-    'prov_billing_commercial_id',  # NULL per Austin
     'prov_billing_name_1',  # NULL per Austin
     'prov_billing_name_2',  # NULL per Austin
     'prov_billing_address_1',  # NULL per Austin
@@ -165,12 +153,6 @@ EXTRACT_COLUMNS = [
     'prov_billing_std_taxonomy',  # NULL per Austin
     'prov_billing_vendor_specialty',  # NULL per Austin
     'prov_referring_vendor_id',  # NULL per Austin
-    'prov_referring_tax_id',  # NULL per Austin
-    'prov_referring_dea_id',  # NULL per Austin
-    'prov_referring_ssn',  # NULL per Austin
-    'prov_referring_state_license',  # NULL per Austin
-    'prov_referring_upin',  # NULL per Austin
-    'prov_referring_commercial_id',  # NULL per Austin
     'prov_referring_name_1',  # NULL per Austin
     'prov_referring_name_2',  # NULL per Austin
     'prov_referring_address_1',  # NULL per Austin
@@ -181,12 +163,6 @@ EXTRACT_COLUMNS = [
     'prov_referring_std_taxonomy',  # NULL per Austin
     'prov_referring_vendor_specialty',  # NULL per Austin
     'prov_facility_vendor_id',  # NULL per Austin
-    'prov_facility_tax_id',  # NULL per Austin
-    'prov_facility_dea_id',  # NULL per Austin
-    'prov_facility_ssn',  # NULL per Austin
-    'prov_facility_state_license',  # NULL per Austin
-    'prov_facility_upin',  # NULL per Austin
-    'prov_facility_commercial_id',  # NULL per Austin
     'prov_facility_name_1',  # NULL per Austin
     'prov_facility_name_2',  # NULL per Austin
     'prov_facility_address_1',  # NULL per Austin
