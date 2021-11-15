@@ -14,8 +14,7 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
         .where(hvids['hvid'].isNotNull())
 
     if filter_by_date_partition:
-        ext = ext \
-            .where(claims['part_best_date'] >= start_dt.isoformat())
+        ext = ext.where(claims['part_mth'] >= start_dt.isoformat()[:7])
 
     # Some claims do not have a date_service, only date_written
     ext = ext \

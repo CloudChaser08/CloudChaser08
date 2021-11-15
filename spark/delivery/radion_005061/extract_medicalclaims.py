@@ -15,8 +15,7 @@ def extract_from_table(runner, hvids, timestamp, start_dt, end_dt, claims_table,
         .where(hvids['hvid'].isNotNull())
 
     if filter_by_part_processdate:
-        ext = ext \
-            .where(claims['part_best_date'] >= start_dt.isoformat())
+        ext = ext.where(claims['part_mth'] >= start_dt.isoformat()[:7])
 
     ext = ext \
         .where((claims['date_service'] <= end_dt.isoformat()) & (
