@@ -37,7 +37,7 @@ TABLE_CONF = {
             'drg_mdc_desc',
             'effective_date',
             'expiration_date',
-            'extra_col'
+            'unknown_col08'
         ]
     ),
     'master_ms_drg': SourceTable(
@@ -51,25 +51,9 @@ TABLE_CONF = {
             'ms_drg_mdc_desc',
             'effective_date',
             'expiration_date',
-            'extra_col'
+            'unknown_col08'
         ]
     ),
-    #    'cpt': SourceTable(
-    #        'csv',
-    #        separator='|',
-    #        columns=[
-    #            'cpt_code',
-    #           'cpt_desc'
-    #        ]
-    #    ),
-    #    'mod': SourceTable(
-    #        'csv',
-    #        separator='|',
-    #        columns=[
-    #            'cpt_modifier_code',
-    #            'cpt_modifier_desc'
-    #        ]
-    #    ),
     'chargemaster': SourceTable(
         'csv',
         separator='|',
@@ -84,8 +68,8 @@ TABLE_CONF = {
             'chg_in_time',
             'effective_date',
             'end_date',
-            'extra_col',
-            'icu_indicator'
+            'icuindicator',
+            'unknown_col12'
         ]
     ),
     'standard_chargemaster': SourceTable(
@@ -107,7 +91,7 @@ TABLE_CONF = {
             'manuf_name',
             'manuf_cat_num',
             'manuf_descr',
-            'extra_col'
+            'unknown_col16'
         ]
     ),
     'providers': SourceTable(
@@ -126,7 +110,7 @@ TABLE_CONF = {
             'geo_division',
             'geo_division_desc',
             'rcc',
-            'extra_col'
+            'unknown_col13'
         ]
     ),
     'provider_county': SourceTable(
@@ -217,7 +201,7 @@ TABLE_CONF = {
             'payer_desc',
             'ins_plan_desc',
             'payer_cat',
-            'extra_col'
+            'unknown_col08'
         ]
     ),
     'patient_charges': SourceTable(
@@ -230,8 +214,7 @@ TABLE_CONF = {
             'cpt_code',
             'cpt_modifier',
             'units',
-            'charge',
-            'extra_col'
+            'charge'
         ]
     ),
     'patient_diagnosis': SourceTable(
@@ -265,7 +248,7 @@ TABLE_CONF = {
             'ahrq_version',
             'procedure_day',
             'procedure_order',
-            'extra_col'
+            'unknown_col09'
         ]
     ),
     'patient_cpt': SourceTable(
@@ -279,7 +262,7 @@ TABLE_CONF = {
             'cpt_modifier3',
             'procedure_day',
             'procedure_order',
-            'extra_col'
+            'unknown_col08'
         ]
     ),
     'weights': SourceTable(

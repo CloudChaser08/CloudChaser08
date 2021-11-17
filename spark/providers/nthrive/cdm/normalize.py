@@ -17,10 +17,11 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'nthrive'
     v_cutoff_date = "2021-03-10"
+
     output_table_names_to_schemas = {
         'nthrive_norm01_encounter': encounter_schema['schema_v2'],
         'nthrive_norm02_diagnosis': diagnosis_schema['schema_v2'],
-        'nthrive_norm06_encounter_detail': encounter_detail_schema['schema_v1'],
+        'nthrive_norm06_encounter_detail': encounter_detail_schema['schema_v4'],    # > cutoffdate
         'nthrive_norm07_encounter_provider': encounter_provider_schema['schema_v1']
     }
     provider_partition_name = '149'
@@ -38,10 +39,13 @@ if __name__ == "__main__":
     if datetime.strptime(date_input, '%Y-%m-%d') < datetime.strptime(v_cutoff_date, '%Y-%m-%d'):
         logger.log('Historic Load schema')
         source_table_schemas = transactional_schemas
+        output_table_names_to_schemas['nthrive_norm06_encounter_detail']\
+            = encounter_detail_schema['schema_v2']
+
     else:
         logger.log('Future Load using new schema with icu_indicator column')
         source_table_schemas = transactional_schemas_v1
-    
+
     # Create and run driver
     driver = MarketplaceDriver(
         provider_name,

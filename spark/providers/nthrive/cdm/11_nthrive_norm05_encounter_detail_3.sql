@@ -1,6 +1,6 @@
-SELECT 
+SELECT
     /* hv_enc_dtl_id */
-    CASE 
+    CASE
         WHEN COALESCE(epi.provider_id, epi.record_id) IS NOT NULL
             THEN CONCAT
                     (
@@ -12,7 +12,7 @@ SELECT
         ELSE NULL
     END                                                                                     AS hv_enc_dtl_id,
     CURRENT_DATE()                                                                          AS crt_dt,
-	'02'                                                                                    AS mdl_vrsn_num,
+	'04'                                                                                    AS mdl_vrsn_num,
     SPLIT(ptn_cpt.input_file_name, '/')[SIZE(SPLIT(ptn_cpt.input_file_name, '/')) - 1]      AS data_set_nm,
 	492                                                                                     AS hvm_vdr_id,
 	149                                                                                     AS hvm_vdr_feed_id,
@@ -21,13 +21,13 @@ SELECT
     /* hvid */
     COALESCE
         (
-            pay.hvid, 
+            pay.hvid,
             CONCAT
                 (
-                    '492_', 
+                    '492_',
                     COALESCE
                         (
-                            epi.unique_patient_id, 
+                            epi.unique_patient_id,
                             ptn.unique_patient_id
                         )
                 )
@@ -36,21 +36,23 @@ SELECT
 	CAP_YEAR_OF_BIRTH
 	    (
             COALESCE(epi.age, pay.age),
-            to_date(epi.discharge_dt, 'yyyyMMdd'),
+            CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
             SUBSTR(COALESCE(ptn.patientdob, pay.yearofbirth), 1, 4)
         )                                                                                   AS ptnt_birth_yr,
     /* ptnt_age_num */
 	VALIDATE_AGE
 	    (
             COALESCE(epi.age, pay.age),
-            to_date(epi.discharge_dt, 'yyyyMMdd'),
+            CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
             SUBSTR(COALESCE(ptn.patientdob, pay.yearofbirth), 1, 4)
 	    )                                                                                   AS ptnt_age_num,
 	/* ptnt_gender_cd */
 	CASE
-	    WHEN SUBSTR(UPPER(epi.gender), 1, 1) IN ('F', 'M')
+	    WHEN epi.gender IS NULL AND pay.gender IS NULL
+	        THEN NULL
+	    WHEN SUBSTR(UPPER(epi.gender), 1, 1) IN ('F', 'M','U')
 	        THEN SUBSTR(UPPER(epi.gender), 1, 1)
-	    WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M')
+	    WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M','U')
 	        THEN SUBSTR(UPPER(pay.gender), 1, 1)
 	    ELSE 'U'
 	END                                                                                     AS ptnt_gender_cd,
@@ -70,7 +72,7 @@ SELECT
                 )
         )                                                                                   AS ptnt_zip3_cd,
     /* hv_enc_id */
-    CASE 
+    CASE
         WHEN COALESCE(epi.provider_id, epi.record_id) IS NOT NULL
             THEN CONCAT
                     (
@@ -84,14 +86,14 @@ SELECT
 	/* enc_start_dt */
 	CAP_DATE
 	    (
-            to_date(epi.admit_dt, 'yyyyMMdd'),
+            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE),
             CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_start_dt,
 	/* enc_end_dt */
 	CAP_DATE
 	    (
-            to_date(epi.discharge_dt, 'yyyyMMdd'),
+            CAST(EXTRACT_DATE(epi.discharge_dt, '%Y%m%d') AS DATE),
             CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )                                                                                   AS enc_end_dt,
@@ -101,16 +103,16 @@ SELECT
     (
 	CASE
 	    WHEN CAST(COALESCE(ptn_cpt.procedure_day, 'X') AS INTEGER) IS NULL                           THEN NULL
-	    WHEN CAST(ptn_cpt.procedure_day AS INTEGER) = 0 OR CAST(ptn_cpt.procedure_day AS INTEGER) = 1  THEN TO_DATE(epi.admit_dt, 'yyyyMMdd') 
+	    WHEN CAST(ptn_cpt.procedure_day AS INTEGER) = 0 OR CAST(ptn_cpt.procedure_day AS INTEGER) = 1  THEN TO_DATE(epi.admit_dt, 'yyyyMMdd')
 	    WHEN CAST(ptn_cpt.procedure_day AS INTEGER) > 1                                              THEN DATE_ADD(TO_DATE(epi.admit_dt, 'yyyyMMdd'), CAST(ptn_cpt.procedure_day AS INTEGER)-1)
 	    WHEN CAST(ptn_cpt.procedure_day AS INTEGER) < 1                                              THEN DATE_ADD(TO_DATE(epi.admit_dt, 'yyyyMMdd'), CAST(ptn_cpt.procedure_day AS INTEGER))
 	ELSE NULL
 	END,
 	CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
     CAST('{VDR_FILE_DT}' AS DATE)
-    )                                                                                       AS proc_dt,	
+    )                                                                                       AS proc_dt,
 
-	
+
     CLEAN_UP_PROCEDURE_CODE(ptn_cpt.cpt_code)                                               AS proc_cd,
     ptn_cpt.cpt_modifier1                                                                   AS proc_cd_1_modfr,
     ptn_cpt.cpt_modifier2                                                                   AS proc_cd_2_modfr,
@@ -128,12 +130,14 @@ SELECT
     CAST(NULL AS STRING)                                                                    AS std_chg_desc,
     CAST(NULL AS STRING)                                                                    AS cdm_manfctr_txt,
     'patient_cpt'                                                                           AS prmy_src_tbl_nm,
+     /* icu_ccu_flg */
+    CAST('N' AS STRING)                                                                  AS icu_ccu_flg,
 	'149'                                                                                   AS part_hvm_vdr_feed_id,
 	/* part_mth */
 	CASE
 	    WHEN 0 = LENGTH(TRIM(COALESCE(CAP_DATE
                                         (
-                                            to_date(epi.admit_dt, 'yyyyMMdd'),
+                                            CAST(EXTRACT_DATE(epi.admit_dt, '%Y%m%d') AS DATE),
                                             COALESCE(CAST('{AVAILABLE_START_DATE}' AS DATE), CAST('{EARLIEST_SERVICE_DATE}' AS DATE)),
                                             CAST('{VDR_FILE_DT}' AS DATE)
                                         ), '')))
@@ -151,6 +155,7 @@ SELECT
    ON COALESCE(epi.record_id, 'EMPTY') = COALESCE(ptn.record_id, 'DUMMY')
  LEFT OUTER JOIN matching_payload pay
    ON COALESCE(ptn.hvjoinkey, 'EMPTY') = COALESCE(pay.hvjoinkey, 'DUMMY')
+
 /* Eliminate column headers. */
 WHERE UPPER(COALESCE(ptn_cpt.record_id, '')) <> 'RECORD_ID'
 /* Only load records that haven't already been loaded from patient_charges... */
@@ -171,3 +176,4 @@ WHERE UPPER(COALESCE(ptn_cpt.record_id, '')) <> 'RECORD_ID'
           AND COALESCE(ptn_cpt.procedure_day, 'DUMMY') = ptn_prc.procedure_day
           AND COALESCE(ptn_cpt.cpt_code, 'DUMMY') = ptn_prc.icd_procedure_code
     )
+--limit 10
