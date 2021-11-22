@@ -19,7 +19,7 @@ v1_to_v3_cutoff_date = '2020-09-21'
 v2_cuttoff_start_date = '2020-12-04'
 v2_cuttoff_end_date = '2021-02-16'
 v2_cuttoff_special_date = ['2021-03-01']
-v4_cutoff_date = ['2021-02-17']
+v4_cutoff_date = ['2021-02-17','2021-11-21']
 v5_cutoff_date = ['2021-02-18']
 v6_cutoff_date = ['2021-05-03', '2021-05-06', '2021-05-11']
 
