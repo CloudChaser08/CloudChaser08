@@ -17,6 +17,9 @@ pipeline {
         // Namespaces docker-compose to not compete with concurrent builds
         COMPOSE_PROJECT_NAME = "dewey-spark-ci-${env.BRANCH_NAME}-${currentBuild.id}"
 
+        // The lowest-allowable pylint score
+        PYLINT_THRESHOLD="4.80"
+
         // AWS Settings
         AWS_DEFAULT_REGION = 'us-east-1'
         AWS_ACCESS_KEY_ID = sh(script: "curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/jenkins_worker | jq -r '.AccessKeyId'", , returnStdout: true).trim()
@@ -50,28 +53,6 @@ pipeline {
     }
 
     post {
-
-        success {
-            when { environment name: 'STAGE', value: 'dev' }
-            slackSend (color: '#00FF00',
-                message: "SUCCESSFUL\nJob: '${env.BUILD_TAG}'\nStage: ${env.STAGE}\nView build: (${env.BUILD_URL})",
-                channel: "${SLACK_CHANNEL}")
-        }
-
-        failure {
-            when { environment name: 'STAGE', value: 'dev' }
-            slackSend (color: '#FF0000',
-                message: "FAILED\nJob: '${env.BUILD_TAG}'\nStage: ${env.STAGE}\nView build: (${env.BUILD_URL})",
-                channel: "${SLACK_CHANNEL}")
-        }
-
-        aborted {
-            when { environment name: 'STAGE', value: 'dev' }
-            slackSend (color: '#FF9500',
-                message: "ABORTED\nJob: '${env.BUILD_TAG}'\nStage: ${env.STAGE}\nView build: (${env.BUILD_URL})",
-                channel: "${SLACK_CHANNEL}")
-        }
-
         cleanup {
             cleanWs();
         }
