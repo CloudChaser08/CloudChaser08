@@ -25,7 +25,7 @@ from spark.common.emr.clinical_observation import schemas as clinical_observatio
 
 LOAD_OUTPUT_OPP_DW = False
 LOAD_INTO_TRANSFORM = True   # After full autmation, we can switch to prod
-FEED_ID = 136
+FEED_ID = '136'
 FNULL = open(os.devnull, 'w')
 
 MODEL_SCHEMA = {
