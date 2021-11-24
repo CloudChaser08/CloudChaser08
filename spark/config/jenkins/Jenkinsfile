@@ -12,7 +12,7 @@ pipeline {
 
     environment {
         STAGE = getStageName()
-        SLACK_CHANNEL = '#alerts-data-platform'
+        SLACK_CHANNEL = '#data_platform'
 
         // Namespaces docker-compose to not compete with concurrent builds
         COMPOSE_PROJECT_NAME = "dewey-spark-ci-${env.BRANCH_NAME}-${currentBuild.id}"
@@ -47,6 +47,33 @@ pipeline {
                     steps {
                         sh 'cd spark && make lint-python'
                     }
+                }
+            }
+        }
+
+        stage('Build package') {
+            when { environment name: "STAGE", value: "dev" }
+            steps {
+                sh 'make package-spark'
+            }
+        }
+
+        stage('Upload to S3') {
+            when { environment name: "STAGE", value: "dev" }
+            steps {
+                sh 'aws s3 cp dewey_spark.tar.gz healthverityreleases/dewey --sse'
+                sh 'aws s3 cp spark/target/dewey.zip healthverityreleases/dewey --sse'
+            }
+            post {
+                success {
+                    slackSend (color: '#00FF00',
+                        message: "SUCCESSFUL\nJob: '${env.BUILD_TAG}'\nView build: (${env.BUILD_URL})",
+                        channel: "${SLACK_CHANNEL}")
+                }
+                unsuccessful {
+                    slackSend (color: '#FF0000',
+                        message: "FAILED\nJob: '${env.BUILD_TAG}'\nView build: (${env.BUILD_URL})",
+                        channel: "${SLACK_CHANNEL}")
                 }
             }
         }
