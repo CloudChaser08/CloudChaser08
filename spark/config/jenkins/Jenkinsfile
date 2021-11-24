@@ -61,8 +61,8 @@ pipeline {
         stage('Upload to S3') {
             when { environment name: "STAGE", value: "dev" }
             steps {
-                sh 'aws s3 cp dewey_spark.tar.gz healthverityreleases/dewey --sse'
-                sh 'aws s3 cp spark/target/dewey.zip healthverityreleases/dewey --sse'
+                sh 'aws s3 cp --sse AES256 dewey_spark.tar.gz s3://healthverityreleases/dewey/dewey_spark.tar.gz'
+                sh 'aws s3 cp --sse AES256 spark/target/dewey.zip s3://healthverityreleases/dewey/dewey.zip'
             }
             post {
                 success {
