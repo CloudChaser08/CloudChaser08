@@ -188,7 +188,6 @@ EXTRACT_COLUMNS = [
 SUPPLIER_FEED_IDS = [
     '22',  # Private Source 12
     '15',  # Private Source 14
-    '155', # Private Source 17
     '176', # Private Source 20
     '24'   # Private Source 34
 ]

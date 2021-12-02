@@ -184,7 +184,6 @@ EXTRACT_COLUMNS = [
 
 # Feed tile names as of 11/09/21
 SUPPLIER_FEED_IDS = [
-    '16',  # Private Source 17
     '147', # Private Source 33
     '177', # Private Source 20
     '36',  # Private Source 22
