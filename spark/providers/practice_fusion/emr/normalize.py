@@ -363,7 +363,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                     logger.log('.....{} custom process has been completed for {} '.format(mdl, key))
                 for clean_table in [tmp_location, constants.hdfs_staging_dir]:
                     hdfs_utils.clean_up_output_hdfs(clean_table)
-                logger.log('.....{} all done '.format(mdl))
+                logger.log('.....{} all done ....................'.format(mdl))
             elif mdl == 'diagnosis':
                 #  'diagnosis' - multiple chunks (diagnosis1)
                 #  'encounter' - no chunks  (diagnosis2)
@@ -476,7 +476,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
 
                 for clean_table in [tmp_location, constants.hdfs_staging_dir]:
                     hdfs_utils.clean_up_output_hdfs(clean_table)
-                logger.log('.....{} all done '.format(mdl))
+                logger.log('.....{} all done ....................'.format(mdl))
             elif mdl == 'encounter':
                 # 'transcript' - no chunks (encounter1)
                 #  'appointment' - multiple chunks (encounter2)
@@ -544,14 +544,11 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
 
                         partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
 
-                        cmn_tables = ['transcript', 'patient', 'provider', 'practice', 'specialty']
-                        if key == 1:
-                            cmn_tables.extend(['encounter', 'enctype', 'enccat'])
-                        elif key == 2:
-                            cmn_tables.extend(['appointment'])
-                            logger.log('Loading external table: gen_ref_whtlst')
-                            external_table_loader.load_analytics_db_table(
-                                driver.runner.sqlContext, 'dw', 'gen_ref_whtlst', 'gen_ref_whtlst')
+                        cmn_tables = ['transcript', 'patient', 'provider', 'practice', 'specialty',
+                                      'encounter', 'enctype', 'enccat', 'appointment']
+                        logger.log('Loading external table: gen_ref_whtlst')
+                        external_table_loader.load_analytics_db_table(
+                            driver.runner.sqlContext, 'dw', 'gen_ref_whtlst', 'gen_ref_whtlst')
 
                         logger.log('Apply custom nullify trimmify')
                         apply_trimmy_nullify('matching_payload', driver.spark, partitions)
@@ -599,7 +596,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                     logger.log('.....{} custom process has been completed for {} '.format(mdl, key))
                 for clean_table in [tmp_location, constants.hdfs_staging_dir]:
                     hdfs_utils.clean_up_output_hdfs(clean_table)
-                logger.log('.....{} all done '.format(mdl))
+                logger.log('.....{} all done ....................'.format(mdl))
             elif mdl in ['lab_test', 'procedure']:
                 #  no chunks
                 #  'lab_test.laborder' --lab_test
