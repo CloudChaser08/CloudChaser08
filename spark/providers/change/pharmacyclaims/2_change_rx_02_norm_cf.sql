@@ -52,7 +52,7 @@ SELECT
         (
             CAST(EXTRACT_DATE(txn.date_service, '%Y%m%d') AS DATE),
             CAST('{EARLIEST_SERVICE_DATE}'  AS DATE),
-            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , cap.cap_day_cnt)
+            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , CAST('{CAP_NBR_OF_DAYS}' AS INT))
         )                                                                                   AS date_service,
 
     /* date_written */
@@ -60,7 +60,7 @@ SELECT
         (
             CAST(EXTRACT_DATE(txn.date_written, '%Y%m%d') AS DATE),
             CAST('{EARLIEST_SERVICE_DATE}'  AS DATE),
-            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , cap.cap_day_cnt)
+            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , CAST('{CAP_NBR_OF_DAYS}' AS INT))
         )                                                                                   AS date_written,
 
     /* year_of_injury */
@@ -68,7 +68,7 @@ SELECT
         (
             CAST(EXTRACT_DATE(txn.date_injury, '%Y%m%d') AS DATE),
             CAST('{EARLIEST_SERVICE_DATE}'  AS DATE),
-            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , cap.cap_day_cnt)
+            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , CAST('{CAP_NBR_OF_DAYS}' AS INT))
         )                                                                                   AS year_of_injury,
 
     /* date_authorized */
@@ -76,7 +76,7 @@ SELECT
         (
             CAST(EXTRACT_DATE(txn.date_authorized, '%Y%m%d') AS DATE),
             CAST('{EARLIEST_SERVICE_DATE}'  AS DATE),
-            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , cap.cap_day_cnt)
+            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , CAST('{CAP_NBR_OF_DAYS}' AS INT))
         )                                                                                   AS date_authorized,
 
     /* time_authorized */
@@ -546,7 +546,7 @@ SELECT
         (
             CAST(EXTRACT_DATE(txn.other_payer_date, '%Y%m%d') AS DATE),
             CAST('{EARLIEST_SERVICE_DATE}'  AS DATE),
-            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , cap.cap_day_cnt)
+            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , CAST('{CAP_NBR_OF_DAYS}' AS INT))
         )                                                                                   AS other_payer_date,
 
     /* other_payer_coverage_code */
@@ -576,7 +576,7 @@ SELECT
                                         (
                                             CAST(EXTRACT_DATE(txn.date_service, '%Y%m%d') AS DATE),
                                             COALESCE(CAST('{AVAILABLE_START_DATE}'  AS DATE), CAST('{EARLIEST_SERVICE_DATE}'  AS DATE)),
-                                            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , cap.cap_day_cnt)
+                                            DATE_ADD(CAST('{VDR_FILE_DT}' AS DATE) , CAST('{CAP_NBR_OF_DAYS}' AS INT))
                                         ),
                                     ''
                                 ))
@@ -589,4 +589,3 @@ SELECT
 	END                                                                                     AS part_best_date
 
 FROM change_rx_00_dedup txn
-    CROSS JOIN _temp_cap_day cap
