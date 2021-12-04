@@ -544,8 +544,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
 
                         partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
 
-                        cmn_tables = ['transcript', 'patient', 'provider', 'practice', 'specialty']
-                        cmn_tables.extend(['encounter', 'enctype', 'enccat'], ['appointment'])
+                        cmn_tables = ['transcript', 'patient', 'provider', 'practice', 'specialty',
+                                      'encounter', 'enctype', 'enccat', 'appointment']
                         logger.log('Loading external table: gen_ref_whtlst')
                         external_table_loader.load_analytics_db_table(
                             driver.runner.sqlContext, 'dw', 'gen_ref_whtlst', 'gen_ref_whtlst')
