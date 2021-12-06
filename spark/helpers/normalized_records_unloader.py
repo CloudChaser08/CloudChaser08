@@ -399,3 +399,17 @@ def unload_delimited_file(
             new_name = \
                 template.format(part_num=re.match('''part-([0-9]+)[.-].*''', filename).group(1))
             rename_file(output_path + filename, output_path + new_name)
+
+
+def custom_rename(spark, staging_dir, partition_name_prefix):
+    """
+    Unload custom data into partitions based on a date column
+    """
+    part_files_cmd = ['hadoop', 'fs', '-ls', '-R', staging_dir]
+
+    part_files = subprocess.check_output(part_files_cmd).decode().strip().split("\n")
+
+    spark.sparkContext.parallelize(part_files).repartition(1000).foreach(
+        mk_move_file(partition_name_prefix)
+    )
+
