@@ -26,8 +26,8 @@ def qa_run(runner, date_col, model, model_version, part_provider, part_date):
 
     table_cols = ["field_name", "field_value", "model", "model_version", "provider", "dataset", "part_date", "source_qa", "output_qa", "errors", "create_date"]
     qa_columns = qa_df.columns
-    source_qa = qa(qa_columns)
-    output_qa = qa(qa_columns)
+    source_qa = qa(qa_columns, "source")
+    output_qa = qa(qa_columns, "output")
 
     json_df = qa_df.rdd.map(lambda x : (date_col, x[date_col], model, model_version, part_provider, x["data_set"], part_date, source_qa(x), output_qa(x))).toDF(table_cols)
 
