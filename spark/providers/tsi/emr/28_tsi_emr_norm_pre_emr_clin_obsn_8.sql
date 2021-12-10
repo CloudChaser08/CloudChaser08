@@ -26,7 +26,7 @@ SELECT
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
         WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex 
-        ELSE NULL
+        ELSE NULL 
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
     --------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ SELECT
                     soc.alcohol_amount_per_day
                     )[clin_obsn_typ_cd_explode.n]                   
     END                                                                                     AS clin_obsn_msrmt,
-
+    CAST(NULL AS STRING)                                                                    AS clin_obsn_uom,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_grp_txt,
     soc.enterprise_id                                                                       AS data_src_cd,
 
@@ -156,5 +156,5 @@ WHERE
             )[clin_obsn_typ_cd_explode.n] IS NOT NULL
     )
 -- Remove header records
-    AND TRIM(lower(COALESCE(soc.patient_id, 'empty'))) <> 'patientid'  
+    AND TRIM(lower(COALESCE(soc.patient_id, 'empty'))) <> 'patientid'
 -- LIMIT 10

@@ -117,7 +117,7 @@ SELECT
                     symp.weight_loss
                     )[clin_obsn_typ_cd_explode.n]                   
     END                                                                                     AS clin_obsn_msrmt,
-
+    CAST(NULL AS STRING)                                                                    AS clin_obsn_uom,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_grp_txt,
     symp.enterprise_id                                                                      AS data_src_cd,
 

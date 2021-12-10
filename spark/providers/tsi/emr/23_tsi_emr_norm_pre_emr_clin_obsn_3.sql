@@ -25,8 +25,8 @@ SELECT
     END																			            AS hvid,
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
-        WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex 
-        ELSE NULL 
+        WHEN pln.sex IN ('F', 'M', 'U', 'null') THEN pln.sex 
+        ELSE 'U' 
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
     --------------------------------------------------------------------------------------------------
@@ -323,10 +323,9 @@ SELECT
                     mdhaq.patient_reported_pain_right_wrist
                     )[pat_resp_explode.n]                   
     END                                                                                     AS clin_obsn_msrmt,
-
+    CAST(NULL AS STRING)                                                                    AS clin_obsn_uom,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_grp_txt,
-    mdhaq.enterprise_id                                                                     AS data_src_cd,
-
+    CAST(mdhaq.enterprise_id AS STRING)                                                     AS data_src_cd,
     --------------------------------------------------------------------------------------------------
     --  data_captr_dt
     --------------------------------------------------------------------------------------------------
@@ -401,5 +400,5 @@ WHERE
             )[pat_resp_explode.n] IS NOT NULL
     )
 -- Remove header records
-    AND TRIM(lower(COALESCE(mdhaq.patient_id, 'empty'))) <> 'patientid'
+    AND mdhaq.patient_id <> 'PatientID'
 -- LIMIT 10

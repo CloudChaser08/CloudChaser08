@@ -25,8 +25,8 @@ SELECT
     END																			            AS hvid,
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
-        WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex 
-        ELSE NULL
+        WHEN pln.sex IN ('F', 'M', 'U', 'null') THEN pln.sex 
+        ELSE 'U' 
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
     --------------------------------------------------------------------------------------------------
@@ -109,6 +109,7 @@ SELECT
     alg.allergy_code_local                                                                  AS clin_obsn_alt_cd,
     'LOCAL_ALLERGY_CODE'                                                                    AS clin_obsn_alt_cd_qual,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_msrmt,
+    CAST(NULL AS STRING)                                                                    AS clin_obsn_uom,
     CONCAT
         (
             'ALLERGY_REACTION: ',           alg.allergy_reaction, ' | ',
@@ -151,6 +152,6 @@ LEFT OUTER JOIN plainout pln
 LEFT OUTER JOIN matching_payload pay
                 ON pay.hvjoinkey = pln.hvjoinkey
 
-WHERE  TRIM(lower(COALESCE(alg.patient_id, 'empty'))) <> 'patientid'
+WHERE  alg.patient_id <> 'PatientID'
 -- Remove header records
 -- LIMIT 10
