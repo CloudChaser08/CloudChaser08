@@ -48,7 +48,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
 
     daily_staging_dir = constants.hdfs_staging_dir + 'daily/'
     provider_output_directory = '{}/part_provider={}/'.format(schema.output_directory, provider_partition_name)
-    daily_output_path = os.path.join(driver.output_path, opportunity_id + '/daily/')
+    daily_output_path = os.path.join(driver.output_path.replace('restricted', 'datamart'), opportunity_id + '/daily/')
 
     # ------------------------ Provider specific run sequence -----------------------
     # # init
