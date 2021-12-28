@@ -183,7 +183,7 @@ LEFT OUTER JOIN medication med ON COALESCE(agy.medication_id, 'NULL') = COALESCE
 LEFT OUTER JOIN transcript_allergy tal ON COALESCE(agy.allergy_id, 'empty') = COALESCE(tal.allergy_id, 'NULL')
 LEFT OUTER JOIN transcript trs ON COALESCE(tal.transcript_id, 'NULL') = COALESCE(trs.transcript_id, 'empty')
 
-LEFT OUTER JOIN patient ptn    ON COALESCE(trs.patient_id, 'NULL') = COALESCE(ptn.patient_id, 'empty')
+LEFT OUTER JOIN patient ptn    ON COALESCE(agy.patient_id, 'NULL') = COALESCE(ptn.patient_id, 'empty')
 LEFT OUTER JOIN provider prv   ON COALESCE(trs.provider_id, 'NULL') = COALESCE(prv.provider_id, 'empty')
 LEFT OUTER JOIN practice prc   ON COALESCE(prv.practice_id, 'NULL') = COALESCE(prc.practice_id, 'empty')
 LEFT OUTER JOIN specialty spc  ON COALESCE(prv.primary_specialty_id, 'NULL') = COALESCE(spc.specialty_id, 'empty')

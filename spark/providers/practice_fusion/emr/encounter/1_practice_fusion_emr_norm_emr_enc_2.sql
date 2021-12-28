@@ -179,9 +179,9 @@ SELECT
 	END																					    AS part_mth
 FROM appointment apt
 LEFT OUTER JOIN transcript trs  ON COALESCE(apt.transcript_id, 'NULL')     = COALESCE(trs.transcript_id, 'empty')
-LEFT OUTER JOIN patient ptn     ON COALESCE(trs.patient_id, 'NULL')        = COALESCE(ptn.patient_id, 'empty')
+LEFT OUTER JOIN patient ptn     ON COALESCE(apt.patient_id, 'NULL')        = COALESCE(ptn.patient_id, 'empty')
 LEFT OUTER JOIN matching_payload pay     ON LOWER(COALESCE(ptn.patient_id, 'NULL')) = COALESCE(pay.claimid, 'empty')
-LEFT OUTER JOIN provider prv    ON COALESCE(trs.provider_id, 'NULL')       = COALESCE(prv.provider_id, 'empty')
+LEFT OUTER JOIN provider prv    ON COALESCE(apt.provider_id, 'NULL')       = COALESCE(prv.provider_id, 'empty')
 LEFT OUTER JOIN practice prc    ON COALESCE(prv.practice_id, 'NULL')       = COALESCE(prc.practice_id, 'empty')
 LEFT OUTER JOIN specialty spc   ON COALESCE(prv.primary_specialty_id, 'NULL') = COALESCE(spc.specialty_id, 'empty')
 LEFT OUTER JOIN gen_ref_whtlst ref ON UPPER(apt.appointment_type) = UPPER(ref.gen_ref_nm) AND gen_ref_domn_nm = 'emr_enc.enc_typ_nm' AND gen_ref_whtlst_flg ='Y'
