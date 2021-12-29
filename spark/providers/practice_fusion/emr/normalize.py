@@ -259,8 +259,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
 
                     # # init
                     conf_parameters = {
-                        'spark.executor.memoryOverhead': 1024,
-                        'spark.driver.memoryOverhead': 1024
+                        'spark.executor.memoryOverhead': 4096,
+                        'spark.driver.memoryOverhead': 4096
                     }
 
                     this_ref_location = (ref_location + mdl + '/' + master_tbl + '/')
@@ -274,7 +274,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
 
                     chunk_message = ''
                     for i in chunks:
-                        rng = [str(chunk).zfill(2) for chunk in range(i, i + top) if chunk < max_chunk]
+                        rng = [str(chunk).zfill(1) for chunk in range(i, i + top) if chunk < max_chunk]
                         if len(chunks) > 1:
                             chunk_message = 'Custom chunk={}'.format(str(rng))
                             logger.log('{}processing for {}'.format(chunk_message, mdl))
@@ -491,17 +491,22 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                     master_tbl = sql_list[key][1]
 
                     # # init
+                    # conf_parameters = {
+                    #     'spark.default.parallelism': 1000,
+                    #     'spark.sql.shuffle.partitions': 1000,
+                    #     'spark.executor.memoryOverhead': 1024,
+                    #     'spark.driver.memoryOverhead': 1024,
+                    #     'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
+                    #     'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
+                    #     'spark.sql.autoBroadcastJoinThreshold': 104857600,
+                    #     'spark.shuffle.sasl.timeout': 60000,
+                    #     'spark.task.maxFailures': 8,
+                    #     'spark.max.executor.failures': 800
+                    # }
+
                     conf_parameters = {
-                        'spark.default.parallelism': 1000,
-                        'spark.sql.shuffle.partitions': 1000,
                         'spark.executor.memoryOverhead': 1024,
-                        'spark.driver.memoryOverhead': 1024,
-                        'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
-                        'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
-                        'spark.sql.autoBroadcastJoinThreshold': 104857600,
-                        'spark.shuffle.sasl.timeout': 60000,
-                        'spark.task.maxFailures': 8,
-                        'spark.max.executor.failures': 800
+                        'spark.driver.memoryOverhead': 1024
                     }
 
                     this_ref_location = (ref_location + mdl + '/' + master_tbl + '/')
@@ -538,7 +543,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                             if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
                         driver.provider_directory_path = driver.provider_directory_path + mdl + '/'
 
-                        driver.init_spark_context()
+                        driver.init_spark_context(conf_parameters=conf_parameters)
 
                         driver.load(cache_tables=False)
 
@@ -612,8 +617,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
 
                 # init
                 conf_parameters = {
-                    'spark.executor.memoryOverhead': 1024,
-                    'spark.driver.memoryOverhead': 1024
+                    'spark.executor.memoryOverhead': 2048,
+                    'spark.driver.memoryOverhead': 2048
                 }
 
                 this_ref_location = {}
@@ -728,8 +733,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                 master_tbl = 'prescription'
                 # init
                 conf_parameters = {
-                    'spark.executor.memoryOverhead': 1024,
-                    'spark.driver.memoryOverhead': 1024
+                    'spark.executor.memoryOverhead': 4096,
+                    'spark.driver.memoryOverhead': 4096
                 }
 
                 this_ref_location = ref_location + mdl + '/' + master_tbl + '/'
