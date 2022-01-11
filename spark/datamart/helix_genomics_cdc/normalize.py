@@ -16,6 +16,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 helix_stg_loc = '/staging/helix_extract/'
 helix_provider_stg_loc = '/staging/helix_provider_extract/part_provider={}/'
+helic_provider_extract_loc = '/staging/helix_provider_extract/'
 s3_helix_cdc_loc = 's3://salusv/warehouse/datahub/cdc_genomics/overlap/helix/'
 s3_helix_ops_loc = "s3://salusv/warehouse/datahub/prodops/cdc_genomics_overlap/helix_hv004689/ops_dt={date_input}/"
 helix_cdc_stg_loc = '/staging/{}/'
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     df_pay = payload_loader.load(runner, payload_batches, cache=True, return_output=True)
     logger.log('........extract process started')
 
-    df_trans.join(df_pay, ['hvjoinkey']).select(
+    temp_df = df_trans.join(df_pay, ['hvjoinkey']).select(
         df_trans.claimid, df_trans.hvjoinkey, df_pay.hvid).distinct().repartition(2).write.parquet(
         helix_stg_loc, compression='gzip', mode='overwrite')
 
@@ -86,7 +87,6 @@ if __name__ == "__main__":
         df_helix_stg.join(df_prov, ['hvid']).select(
             df_helix_stg.hvid, df_prov.part_best_date).distinct().repartition(1).write.parquet(
             helix_provider_stg_loc.format(part_provider), compression='gzip', mode='overwrite')
-
         additional_data_clmn = additional_data_clmn + """,ols.{provider}""".format(provider=part_provider)
         overlap_select_sql = overlap_select_sql + select_stmnt.format(provider=part_provider)
 
@@ -98,8 +98,8 @@ if __name__ == "__main__":
         
     logger.log('........crosswalk process completed')
 
-    df_helix_stg.createOrReplceTempView('helix_stg')
-    spark.read.parquet(helix_provider_stg_loc).createOrReplceTempView('helix_provider_stg')
+    df_helix_stg.createOrReplaceTempView('helix_stg')
+    spark.read.parquet(helic_provider_extract_loc).createOrReplaceTempView('helix_provider_stg')
     additional_data_clmn = additional_data_clmn.strip(',')
 
     overlap_sql = """SELECT DISTINCT ols.claimid, ols.hvid, 
