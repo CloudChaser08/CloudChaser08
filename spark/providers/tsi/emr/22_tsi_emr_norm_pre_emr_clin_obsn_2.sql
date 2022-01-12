@@ -25,8 +25,8 @@ SELECT
     END																			            AS hvid,
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
-        WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex 
-        ELSE NULL 
+        WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex
+        ELSE NULL
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
     --------------------------------------------------------------------------------------------------
@@ -88,10 +88,9 @@ SELECT
     CAST(NULL AS STRING)                                                                    AS clin_obsn_alt_cd,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_alt_cd_qual,
     haq.haq_ii_score                                                                        AS clin_obsn_msrmt,
+    CAST(NULL AS STRING)                                                                    AS clin_obsn_uom,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_grp_txt,
     haq.enterprise_id                                                                       AS data_src_cd,
-
-
     --------------------------------------------------------------------------------------------------
     --  data_captr_dt
     --------------------------------------------------------------------------------------------------
@@ -127,4 +126,5 @@ LEFT OUTER JOIN plainout pln
 LEFT OUTER JOIN matching_payload pay
                 ON pay.hvjoinkey = pln.hvjoinkey
 WHERE TRIM(lower(COALESCE(haq.patient_id, 'empty'))) <> 'patientid'
+
 -- LIMIT 10
