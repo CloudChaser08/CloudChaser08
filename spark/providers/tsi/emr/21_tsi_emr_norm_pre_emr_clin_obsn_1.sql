@@ -25,7 +25,7 @@ SELECT
     END																			            AS hvid,
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
-        WHEN pln.sex IN ('F', 'M', 'U','null') THEN pln.sex 
+        WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex
         ELSE 'U' 
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
@@ -808,5 +808,5 @@ WHERE
             )[clin_obsn_typ_cd_explode.n] IS NOT NULL
     )
 -- Remove header records
-    AND jnt3.patient_id <> 'PatientID'
+    AND TRIM(lower(COALESCE(jnt3.patient_id, 'empty'))) <> 'patientid'
 -- LIMIT 10

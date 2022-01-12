@@ -25,7 +25,7 @@ SELECT
     END																			            AS hvid,
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
-        WHEN pln.sex IN ('F', 'M', 'U', 'null') THEN pln.sex 
+        WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex
         ELSE 'U' 
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
@@ -152,6 +152,7 @@ LEFT OUTER JOIN plainout pln
 LEFT OUTER JOIN matching_payload pay
                 ON pay.hvjoinkey = pln.hvjoinkey
 
-WHERE  alg.patient_id <> 'PatientID'
+WHERE  TRIM(lower(COALESCE(alg.patient_id, 'empty'))) <> 'patientid'
+
 -- Remove header records
 -- LIMIT 10
