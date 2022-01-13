@@ -12,7 +12,7 @@ pipeline {
 
     environment {
         STAGE = getStageName()
-        SLACK_CHANNEL = '#data_platform'
+        SLACK_CHANNEL = 'CQFP972J3'
 
         // Namespaces docker-compose to not compete with concurrent builds
         COMPOSE_PROJECT_NAME = "dewey-spark-ci-${env.BRANCH_NAME}-${currentBuild.id}"
@@ -36,7 +36,7 @@ pipeline {
         }
 
         stage('QA') {
-            parallel {  
+            parallel {
                 stage('Unit tests') {
                     steps {
                         sh 'cd spark && make test-python3'
