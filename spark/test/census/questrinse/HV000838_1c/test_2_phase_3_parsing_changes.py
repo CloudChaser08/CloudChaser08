@@ -162,11 +162,3 @@ def test_whitespace_normalization(spark):
     eval_test('     Space     Test', '', '', '', 'Space Test', spark)
     eval_test('Space     Test', '', '', '', 'Space Test', spark)
     eval_test('  Space\t       Test \t ', '', '', '', 'Space Test', spark)
-
-
-
-# TODO: OTHER Rules
-# remove extra spaces before/after transformation
-# comma must be removed from numeric field after transformation.
-# ',Not Quantified' is removed from HV alpha field
-#

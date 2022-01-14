@@ -17,16 +17,15 @@ Steps:
     6. Declare Numeric Patterns
     7. Scientific Notation Handler
     8. Main Matching Step
-    9. Reverse Matching Step
-    10. Process match groups
+    9. Process match groups
         a. Clean numerics
         b. Return as passthrough for certain numerics (ex 1 in 100 *no operator)
         c. Clean alphas
         d. Substitute Alphas
         e. Coalesce nulls as empty strings
-    11. Specific string substitutions
-    12. Failsafe return original string if no elements
-    13. Return parsed elements
+    10. Specific string substitutions
+    11. Failsafe return original string if no elements
+    12. Return parsed elements
 
 Quick regex review:
 \b word boundaries - \b matches before and after an alphanumeric sequence
@@ -99,14 +98,13 @@ REPLACEMENT_LOOKUP = {
     "NEGATI": "NEGATIVE"
 }
 
-
 # Specialty patterns
 GENETIC_PATTERN = r'[ACGT]>[ACGT]\s*[ACGT]/[ACGT]'
 SCIENTIFIC_PATTERN = r'(?:\d+(?:\.\d{1,10})?[eE]-?\d{1,3})'  # ex 1e10, 1.00023-E5
 DIGIT_IN_DIGIT = r'\d+\s*in\s*\d+'  # ex. 1 in 300, 1 IN 10000
 DASH_RANGE = r'\d+\s*-\s*\d+'  # ex. 1-300, 1 - 10000
 COLON_RANGE = r'\d+\s*:\s*\d+'  # ex. 1:300, 1:10000
-NUMBERLIKE = r'(?:\.\d[\d]*|\d[\d.,]*)'
+NUMBERLIKE = r'(?:\.\d[\d]*|[\d.,]*\d)'
 OPERATOR = r'(?:[><]=?|=)'
 ALPHA = r'[^\d]+.*'
 CFU_pattern = r'\d+\s?-\s?\d+ CFU/mL'
@@ -115,9 +113,10 @@ SPACE_DECIMALS = DECIMALS + r'\s*'
 START_DECIMALS = r'^' + SPACE_DECIMALS
 MEASUREMENTS = START_DECIMALS + r'(ml|mg)\b'
 OTHER_DECIMALS = START_DECIMALS + r'x\s*' + SPACE_DECIMALS + r'x\s*' + DECIMALS + r'\b'
-MULTIPLE_SEPARATORS = r'\w.+?([-;.])\s*\w.+?\1\s*\w'
+MULTIPLE_SEPARATORS = r'\d.*([-;.])\s*\d[^/]*\1\s*\d'
 HASHLIKE = r'(?:[0-9a-f]{16}|[0-9a-f]{32}|[0-9a-f]{64})'
 AM_PM_TIME = r'\b\d?\d:\d{2}\s*(?:a|p)m'
+RHS_NUMBER_BOUNDARY = r'(?=\b|[^0-9])'
 
 
 def pad(check):
@@ -163,6 +162,10 @@ def clean_numeric(value):
         if re.search(DASH_RANGE, value):
             lhs, rhs = value.split('-')
             return '-'.join([clean_numeric(lhs), clean_numeric(rhs)])
+
+        if re.search(COLON_RANGE, value):
+            lhs, rhs = value.split(':')
+            return ':'.join([clean_numeric(lhs), clean_numeric(rhs)])
 
         if re.search(r'\d+/\d+/\d+', value):
             return value
@@ -228,10 +231,10 @@ def parse_value(result):
         # Don't want to passthru modified version
         original = result
 
-####################################################################################################
-# Operator Cleanup and Normalizations
-# Converts Word comparators (MORE THAN, LESS THAN etc) to symbols (>, <)
-####################################################################################################
+        ####################################################################################################
+        # Operator Cleanup and Normalizations
+        # Converts Word comparators (MORE THAN, LESS THAN etc) to symbols (>, <)
+        ####################################################################################################
         # cleanup all weird ><= variants
         # match > or <
         # followed by OR or / or whitespace
@@ -240,21 +243,20 @@ def parse_value(result):
         result = re.sub(r'([><])(\s*OR\s*|\s+)=', r'\1=', result, count=0, flags=re.IGNORECASE)
 
         # replace all variants of spacing and LESS THAN with <
-        result = re.sub(r'\bLESS\s*THAN\b', r'<', result, flags=re.IGNORECASE)
+        result = re.sub(r'\bLESS\s*THAN(?=\b|[^a-zA-Z])', r'<', result, flags=re.IGNORECASE)
 
         # replace all variants of spacing and MORE THAN with >
-        result = re.sub(r'\b(MORE|GREATER)\s*THAN\b', r'>', result, flags=re.IGNORECASE)
+        result = re.sub(r'\b(MORE|GREATER)\s*THAN(?=\b|[^a-zA-Z])', r'>', result,
+                        flags=re.IGNORECASE)
 
-
-####################################################################################################
-# Pass Through Matching Patterns
-# Anything that matches one of these patterns will be returned with only minimal whitespace changes
-####################################################################################################
+        ####################################################################################################
+        # Pass Through Matching Patterns
+        # Anything that matches one of these patterns will be returned with only minimal whitespace changes
+        ####################################################################################################
         passthru_regexes = [
-            re.search(MULTIPLE_SEPARATORS, result), # Multiple groups of characters separated by ;-.
             re.search(r'^[><]=?.+[><]', result),  # multiple gt,lt signs
             re.search(r'^[^<>=]+\d{1,2}([-/])\d{1,2}\1\d{2}(?!\sunits)',
-                      result, flags=re.IGNORECASE),     # test_gt_slash_numeric_units
+                      result, flags=re.IGNORECASE),  # test_gt_slash_numeric_units
             re.fullmatch(r'^\d{1,2}([-/])\d{1,2}\1\d{2}(\d{2})?\sNEG(ative)?$',
                          result, flags=re.IGNORECASE),  # Test test_date_neg_M_D_YY
             re.fullmatch(r'^\d{1,2}([-/])\d{1,2}\W+'
@@ -272,33 +274,24 @@ def parse_value(result):
             re.fullmatch(r'36336 Patient <6', result),  # Test 934
             re.fullmatch(r'PULLED NOT ENOUGH (LESS THAN|<) .1ML', result),  # Test 940
             re.fullmatch(r'\d?\.\d+\s?-\s?\d?\.\d+\s?equivocal', result, flags=re.IGNORECASE),
-            re.search(HASHLIKE, result, flags=re.IGNORECASE),       # Hashlike number passthrough
-            re.search(AM_PM_TIME, result, flags=re.IGNORECASE),     # AM PM time
+            re.search(HASHLIKE, result, flags=re.IGNORECASE) and re.search(r'[a-f]', str.lower(
+                re.search(r'(' + HASHLIKE + r')', result, flags=re.IGNORECASE).group(0))),
+            # Hashlike number passthrough
             re.search(CFU_pattern, result, re.IGNORECASE)
         ]
 
         if any(passthru_regexes):
             return operator, numeric, alpha, original
 
-        # Special multiple separator problem
-        # 123,456,789 is a valid number. 123,45,6789 is not
-        # This checks all digits between commas are three digits.
-        if ',' in result and re.search(r'[\d,. ]+', result):
-            matches = re.findall(r'\d[\d,. ]*', result)
-
-            # all numeric groups must be [nn,nn]n[.nn] format [optional]
-            if any(map(lambda x: not re.fullmatch(r'\d{1,3}(,\d{3})*(.\d+)?', x.strip()), matches)):
-                    return operator, numeric, alpha, original
-
-####################################################################################################
-# Generic result substitutions
-#   - TEST NOT PERFORMED
-#   - DO NOT REPORT
-#   - NOT GIVEN
-#   - CULTURE INDICATED
-#   - INDICATED
-# These will match generic patterns and immediately return the value in ALPHA
-####################################################################################################
+        ####################################################################################################
+        # Generic result substitutions
+        #   - TEST NOT PERFORMED
+        #   - DO NOT REPORT
+        #   - NOT GIVEN
+        #   - CULTURE INDICATED
+        #   - INDICATED
+        # These will match generic patterns and immediately return the value in ALPHA
+        ####################################################################################################
         # TNP or #/TNP
         if re.search(r'^(\d+/)?TNP(/.+)?$', result, flags=re.IGNORECASE) \
                 or re.fullmatch(r'[^\d]*(test )?not performed[^\d]*', result, flags=re.IGNORECASE) \
@@ -307,7 +300,7 @@ def parse_value(result):
             return operator, numeric, alpha, passthru
 
         # DNR or #/DNR
-        if re.search(r'^(\d+/)?DNR$', result, flags=re.IGNORECASE)\
+        if re.search(r'^(\d+/)?DNR$', result, flags=re.IGNORECASE) \
                 or re.fullmatch(r'[^\d]*do not report[^\d]*', result, flags=re.IGNORECASE):
             alpha = 'DO NOT REPORT'
             return operator, numeric, alpha, passthru
@@ -328,25 +321,25 @@ def parse_value(result):
             alpha = 'INDICATED'
             return operator, numeric, alpha, passthru
 
-####################################################################################################
-# Numeric Pattern Declarations
-# These will be used to find any of these forms in the main matching step
-####################################################################################################
+        ####################################################################################################
+        # Numeric Pattern Declarations
+        # These will be used to find any of these forms in the main matching step
+        ####################################################################################################
         numerics = [
-            r'(?:\d+/\d+/\d+\s)(?=units)',   # unit descriptor test_gt_slash_numeric_units
-            r'(?:\d+/\d+/\d+/\d+/\d+/\d+)',
-            DIGIT_IN_DIGIT,     # digits in digits
-            DASH_RANGE,         # Number - Number
-            COLON_RANGE,        # Number:Number
-            NUMBERLIKE + pad(r'/') + NUMBERLIKE,  # numeric over numeric
-            r'-?' + NUMBERLIKE,  # negative numeric
-            r'\+?' + NUMBERLIKE,  # positive numeric
+            r'(?:\d+/\d+/\d+\s)(?=units)',  # unit descriptor test_gt_slash_numeric_units
+            r'(?:\d+/\d+/\d+/\d+/\d+/\d+)' + RHS_NUMBER_BOUNDARY,
+            DIGIT_IN_DIGIT + RHS_NUMBER_BOUNDARY,  # digits in digits
+            DASH_RANGE + RHS_NUMBER_BOUNDARY,  # Number - Number
+            COLON_RANGE + RHS_NUMBER_BOUNDARY,  # Number:Number
+            NUMBERLIKE + pad(r'/') + NUMBERLIKE + RHS_NUMBER_BOUNDARY,  # numeric over numeric
+            r'-?' + NUMBERLIKE + RHS_NUMBER_BOUNDARY,  # negative numeric
+            r'\+?' + NUMBERLIKE + RHS_NUMBER_BOUNDARY,  # positive numeric
         ]
 
-####################################################################################################
-# Scientific Notation
-# Detects and processes numbers in scientific notation.
-####################################################################################################
+        ####################################################################################################
+        # Scientific Notation
+        # Detects and processes numbers in scientific notation.
+        ####################################################################################################
         # Evaluate scientific notations.
         if re.search(SCIENTIFIC_PATTERN, result):
             match_result = re.search(r'(\d+(?:\.\d{1,10})?)([eE])(-?\d{1,3})', result)
@@ -357,23 +350,23 @@ def parse_value(result):
         # Clean parentheses
         result_no_parens = re.sub(r'[()]', r'', result)
 
-####################################################################################################
-# Main Matching Step
-# Looks for
-#   - Operators + Numerics + Alpha
-#   - Numerics + Alpha
-#   - Operators + Numerics
-#   - Numerics (ONLY)
-####################################################################################################
+        ####################################################################################################
+        # Main Matching Step
+        # Looks for
+        #   - Operators + Numerics + Alpha
+        #   - Numerics + Alpha
+        #   - Operators + Numerics
+        #   - Numerics (ONLY)
+        ####################################################################################################
         # operator? + numerics + alpha?
         full_check = optional(group(OPERATOR)) \
-            + pad(or_group(numerics)) \
-            + optional(group(ALPHA))
+                     + pad(or_group(numerics)) \
+                     + optional(group(ALPHA))
         match = re.fullmatch(full_check, result_no_parens, flags=re.IGNORECASE)
 
-####################################################################################################
-# Process match groups
-####################################################################################################
+        ####################################################################################################
+        # Process match groups
+        ####################################################################################################
         # consume the whole string
         if match:
             operator, numeric, alpha = match.groups()
@@ -383,6 +376,21 @@ def parse_value(result):
                 operator = ''
             elif operator and operator.strip() == '=':
                 return '', '', '', original
+
+            # generic multiple separator problem
+            if re.search(MULTIPLE_SEPARATORS, numeric):
+                return '', '', '', original
+
+            # Special multiple separator problem
+            # 123,456,789 is a valid number. 123,45,6789 is not
+            # This checks all digits between commas are three digits.
+            if ',' in numeric and re.search(r'[\d,. ]+', numeric):
+                matches = re.findall(r'\d[\d,. ]*', numeric)
+
+                # all numeric groups must be [nn,nn]n[.nn] format [optional]
+                if any(map(lambda x: not re.fullmatch(r'\d{1,3}(,\d{3})*(\.\d+)?', x.strip()),
+                           matches)):
+                    return '', '', '', original
 
             # clean up results
             numeric = clean_numeric(numeric)
@@ -400,23 +408,22 @@ def parse_value(result):
                 alpha = re.sub(r',?\s*not quantified', r'', alpha, flags=re.IGNORECASE)
                 alpha = alpha.strip()
 
-
-####################################################################################################
-# Alpha field substitutions
-#   - TEST NOT PERFORMED
-#   - DO NOT REPORT
-#   - NOT GIVEN
-# These will match generic patterns and substitute the existing ALPHA column
-# Similar to the "Generic result substitutions" above
-####################################################################################################
+                ####################################################################################################
+                # Alpha field substitutions
+                #   - TEST NOT PERFORMED
+                #   - DO NOT REPORT
+                #   - NOT GIVEN
+                # These will match generic patterns and substitute the existing ALPHA column
+                # Similar to the "Generic result substitutions" above
+                ####################################################################################################
                 # TNP prefix, NT prefix, TNP text throughout, NP text throughout,
-                if re.search(r'^TNP.*', alpha)\
-                        or re.search(r'(test )?not performed', alpha, flags=re.IGNORECASE)\
+                if re.search(r'^TNP.*', alpha) \
+                        or re.search(r'(test )?not performed', alpha, flags=re.IGNORECASE) \
                         or re.fullmatch(r'NT', alpha):
                     alpha = 'TEST NOT PERFORMED'
 
                 # DNR prefix, DNR text throughout
-                if re.search(r'^DNR.*', alpha)\
+                if re.search(r'^DNR.*', alpha) \
                         or re.search(r'do not report', alpha, flags=re.IGNORECASE):
                     alpha = 'DO NOT REPORT'
 
@@ -426,6 +433,7 @@ def parse_value(result):
                     alpha = 'NOT GIVEN'
 
                 if numeric and not operator:
+
                     if re.fullmatch(r'(H{1,2}|L{1,2}|\*{1,2}|A)', alpha.strip(), re.IGNORECASE):
                         return '', numeric, '', ''
                     else:
@@ -437,6 +445,8 @@ def parse_value(result):
                                                count=1,
                                                flags=re.IGNORECASE)
                                 return '', numeric, alpha, ''
+                        if alpha in REPLACEMENT_LOOKUP.values():
+                            return empty(operator, numeric, alpha, '')
                         return '', '', '', original
                 elif numeric and operator:
                     for key in REPLACEMENT_LOOKUP.keys():
@@ -456,7 +466,8 @@ def parse_value(result):
             ########################################################################################
             for key in REPLACEMENT_LOOKUP.keys():
                 if result_no_parens.lower() == key.lower():
-                    alpha = re.sub(r'(\b|^)' + re.escape(key) + r'(\b)', r'\1' + REPLACEMENT_LOOKUP[key] +
+                    alpha = re.sub(r'(\b|^)' + re.escape(key) + r'(\b)',
+                                   r'\1' + REPLACEMENT_LOOKUP[key] +
                                    r'\2',
                                    result_no_parens,
                                    count=1,
@@ -465,9 +476,9 @@ def parse_value(result):
         # convert `None`s to empty strings
         operator, numeric, alpha, passthru = empty(operator, numeric, alpha, passthru)
 
-####################################################################################################
-# Failsafe return original
-####################################################################################################
+        ####################################################################################################
+        # Failsafe return original
+        ####################################################################################################
         if not (operator or numeric or alpha):
             passthru = original
 
