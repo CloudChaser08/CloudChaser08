@@ -26,10 +26,10 @@ select
         (
             SUBSTR(COALESCE(txn.zip_code, pay.threedigitzip), 1, 3)
         )                                                                                   AS patient_zip3,
-    CASE
-        WHEN geo.geo_state_pstl_cd is null THEN NULL
-        ELSE VALIDATE_STATE_CODE(geo.geo_state_pstl_cd)
-    END                                                                                     AS patient_state,
+    VALIDATE_STATE_CODE
+       (
+           UPPER(COALESCE(geo.geo_state_pstl_cd, pay.state,''))
+       )                                                                                     AS patient_state,
     CASE
          WHEN txn.gender IS NULL AND pay.gender IS NULL THEN NULL
          WHEN SUBSTR(UPPER(txn.gender), 1, 1) IN ('F', 'M', 'U') THEN SUBSTR(UPPER(txn.gender), 1, 1)
@@ -51,11 +51,12 @@ select
     'DOSE_NUMBER'                                                                           AS event_val_uom,
     txn.dose_amount                                                                         AS event_units,
     CAP_DATE
-    (
+        (
         CAST(EXTRACT_DATE(txn.date_administered, '%m/%d/%Y') AS DATE),
-        CAST('{EARLIEST_SERVICE_DATE}'                       AS DATE),
-        CAST('{VDR_FILE_DT}'                                 AS DATE)
-    )                                                                                       AS event_date,
+        CAST('{EARLIEST_SERVICE_DATE}'                  AS DATE),
+        CAST('{VDR_FILE_DT}'                                  AS DATE)
+
+        )                                                                                 AS event_date,
     CASE
         WHEN txn.date_administered IS NOT NULL THEN 'DATE_ADMINISTERED'
     END                                                                                     AS event_date_qual,
