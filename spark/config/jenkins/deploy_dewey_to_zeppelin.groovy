@@ -12,7 +12,7 @@ pipeline {
     agent { node { label 'ubuntu-18.04-worker' } }
 
     environment {
-        SLACK_CHANNEL = '#data_platform'
+        SLACK_CHANNEL = 'CQFP972J3'
 
         // Namespaces docker-compose to not compete with concurrent builds
         COMPOSE_PROJECT_NAME = "dewey-zeppelin-deploy-${env.BRANCH_NAME}-${currentBuild.id}"
