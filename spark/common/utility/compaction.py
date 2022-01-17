@@ -18,8 +18,6 @@
                 "rename_path": rename_path,
                 "compact_path": compact_path
         }
-
-    ~ Douglas King <dhking@healthverity.com>
 """
 
 import subprocess
