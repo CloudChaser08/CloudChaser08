@@ -47,7 +47,7 @@ if __name__ == "__main__":
         unload_partition_count=40,
         vdr_feed_id=179,
         use_ref_gen_values=True,
-        output_to_transform_path=False  # Inform James Barker when changing
+        output_to_transform_path=False
     )
 
     driver.run()
