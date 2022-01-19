@@ -27,18 +27,14 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'amazingcharts'
 
-    # output_table_names_to_schemas = {
-    #     'amazingcharts_clin_obsn_final_norm': clinical_observation_schemas['schema_v7'],
-    #     'amazingcharts_diagnosis_final_norm': diagnosis_schemas['schema_v7'],
-    #     'amazingcharts_encounter_final_norm': encounter_schemas['schema_v7'],
-    #     'amazingcharts_lab_result_final_norm': lab_result_schema['schema_v7'],
-    #     'amazingcharts_medication_final_norm': medication_schemas['schema_v7'],
-    #     'amazingcharts_procedure_final_norm': procedure_schemas['schema_v8']
-    #  }
-
     output_table_names_to_schemas = {
+        'amazingcharts_clin_obsn_final_norm': clinical_observation_schemas['schema_v7'],
+        'amazingcharts_diagnosis_final_norm': diagnosis_schemas['schema_v7'],
+        'amazingcharts_encounter_final_norm': encounter_schemas['schema_v7'],
+        'amazingcharts_lab_result_final_norm': lab_result_schema['schema_v7'],
+        'amazingcharts_medication_final_norm': medication_schemas['schema_v7'],
         'amazingcharts_procedure_final_norm': procedure_schemas['schema_v8']
-    }
+     }
 
     provider_partition_name = '5'
 
@@ -65,7 +61,7 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
         unload_partition_count=20,
         vdr_feed_id=5,
         use_ref_gen_values=True,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     script_path = __file__
