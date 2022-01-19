@@ -1,9 +1,9 @@
 SELECT
-    MONOTONICALLY_INCREASING_ID()                                                       AS row_id,
     CURRENT_DATE()                                                                      AS crt_dt,
-	'11'                                                                                AS mdl_vrsn_num,
-    concat('AmazingCharts_HV_{VDR_FILE_DT}', '-',
-    SPLIT(med.input_file_name, '/')[SIZE(SPLIT(med.input_file_name, '/')) - 1])         AS data_set_nm,
+	'07'                                                                                AS mdl_vrsn_num,
+    CONCAT(
+        'AmazingCharts_HV_','{VDR_FILE_DT}', '_' ,
+        SPLIT(med.input_file_name, '/')[SIZE(SPLIT(med.input_file_name, '/')) - 1])     AS data_set_nm,
 	5                                                                                   AS hvm_vdr_id,
 	5                                                                                   AS hvm_vdr_feed_id,
     CONCAT(
@@ -20,7 +20,7 @@ SELECT
     med.practice_key                                                                    AS vdr_org_id,
     pay.hvid                                                                            AS hvid,
     COALESCE(
-        SUBSTR(ptn.birth_year, 1, 4),
+        SUBSTR(ptn.birth_date, 5, 4),
         pay.yearOfBirth
     )                                                                                   AS ptnt_birth_yr,
     pay.age                                                                             AS ptnt_age_num,
@@ -109,24 +109,25 @@ SELECT
     -------------------------------------------------------------------------------------------------------------------------
     --  part_mth
     -------------------------------------------------------------------------------------------------------------------------
+
     CASE
-	    WHEN 0 = LENGTH(
-	    COALESCE(
-            CAP_DATE(
-                CAST(EXTRACT_DATE(SUBSTR(med.date_initiated, 1, 10), '%Y-%m-%d') AS DATE),
-                CAST(COALESCE('{AVAILABLE_START_DATE}', '{EARLIEST_SERVICE_DATE}') AS DATE),
-                CAST('{VDR_FILE_DT}' AS DATE)
-                ),
-                ''
-            )
-        ) THEN '0_PREDATES_HVM_HISTORY'
+	    WHEN CAP_DATE
+	            (
+                    CAST(EXTRACT_DATE(SUBSTR(med.date_initiated, 1, 10), '%Y-%m-%d') AS DATE),
+                    CAST('{AVAILABLE_START_DATE}' AS DATE),
+                    CAST('{VDR_FILE_DT}' AS DATE)
+                )
+                    IS NULL THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(med.date_initiated, 1, 7)
-	END                                                                                 AS part_mth
+	END                                                                         AS part_mth
+
 FROM f_medication med
 LEFT OUTER JOIN d_patient ptn ON med.patient_key = ptn.patient_key
 LEFT OUTER JOIN matching_payload pay ON ptn.patient_key = pay.personid
 LEFT OUTER JOIN d_provider prv ON med.provider_key = prv.provider_key
-LEFT OUTER JOIN d_drug drg ON med.drug_key = drg.drug_key
-LEFT OUTER JOIN d_multum_to_ndc ndc ON drg.drug_id = ndc.multum_id
+LEFT OUTER JOIN d_drug drg ON med.drug_key = drg.drug_id
+LEFT OUTER JOIN raw.amazingcharts_d_multum_to_ndc ndc ON drg.drug_id = ndc.multum_id
+-- LEFT OUTER JOIN d_multum_to_ndc ndc ON drg.drug_id = ndc.multum_id
 WHERE
     TRIM(UPPER(COALESCE(med.practice_key, 'empty'))) <> 'PRACTICE_KEY'
+-- LIMIT 10

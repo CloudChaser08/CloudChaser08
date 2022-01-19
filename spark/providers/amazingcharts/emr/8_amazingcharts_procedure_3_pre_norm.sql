@@ -11,9 +11,9 @@ SELECT
         prc.patient_key
     )                                                                           AS hv_proc_id,
     CURRENT_DATE()                                                              AS crt_dt,
-	'12'                                                                        AS mdl_vrsn_num,
+	'08'                                                                        AS mdl_vrsn_num,
     CONCAT(
-        'AmazingCharts_HV_{VDR_FILE_DT}_',
+        'AmazingCharts_HV_','{VDR_FILE_DT}', '_' ,
         SPLIT(prc.input_file_name, '/')[SIZE(SPLIT(prc.input_file_name, '/')) - 1]
         )                                                                       AS data_set_nm,
 	CAST(NULL AS STRING) AS src_vrsn_id,
@@ -28,12 +28,12 @@ SELECT
     CAP_YEAR_OF_BIRTH(
         pay.age,
         CAST(EXTRACT_DATE(SUBSTR(prc.date_performed, 1, 10), '%Y-%m-%d') AS DATE),
-        COALESCE(SUBSTR(ptn.birth_year, 1, 4),  pay.yearOfBirth)
+        COALESCE(SUBSTR(ptn.birth_date, 5, 4),  pay.yearOfBirth)
     )                                                                           AS ptnt_birth_yr,
     VALIDATE_AGE(
         pay.age,
         CAST(EXTRACT_DATE(SUBSTR(prc.date_performed, 1, 10), '%Y-%m-%d') AS DATE),
-        COALESCE(SUBSTR(ptn.birth_year, 1, 4),  pay.yearOfBirth)
+        COALESCE(SUBSTR(ptn.birth_date, 5, 4),  pay.yearOfBirth)
     )                                                                           AS ptnt_age_num,
     CAST(NULL AS STRING) AS ptnt_lvg_flg,
     CAST(NULL AS STRING) AS ptnt_dth_dt,
@@ -182,3 +182,4 @@ LEFT OUTER JOIN d_provider prv ON prc.provider_key = prv.provider_key
 LEFT OUTER JOIN d_cpt cpt ON prc.cpt_key = cpt.cpt_key
 WHERE
     TRIM(UPPER(COALESCE(prc.practice_key, 'empty'))) <> 'PRACTICE_KEY'
+--LIMIT 100

@@ -11,9 +11,9 @@ SELECT
         inj.patient_key
     )                                                                           AS hv_proc_id,
     CURRENT_DATE()                                                              AS crt_dt,
-	'12'                                                                        AS mdl_vrsn_num,
+	'08'                                                                        AS mdl_vrsn_num,
     CONCAT(
-        'AmazingCharts_HV_{VDR_FILE_DT}_',
+        'AmazingCharts_HV_','{VDR_FILE_DT}', '_' ,
         SPLIT(inj.input_file_name, '/')[SIZE(SPLIT(inj.input_file_name, '/')) - 1]
         )                                                                       AS data_set_nm,
     CAST(NULL AS STRING) AS src_vrsn_id,
@@ -28,12 +28,12 @@ SELECT
     CAP_YEAR_OF_BIRTH(
         pay.age,
         CAST(EXTRACT_DATE(SUBSTR(inj.date_given, 1, 10), '%Y-%m-%d') AS DATE),
-        COALESCE(SUBSTR(ptn.birth_year, 1, 4),  pay.yearOfBirth)
+        COALESCE(SUBSTR(ptn.birth_date, 5, 4),  pay.yearOfBirth)
     )                                                                           AS ptnt_birth_yr,
     VALIDATE_AGE(
         pay.age,
         CAST(EXTRACT_DATE(SUBSTR(inj.date_given, 1, 10), '%Y-%m-%d') AS DATE),
-        COALESCE(SUBSTR(ptn.birth_year, 1, 4),  pay.yearOfBirth)
+        COALESCE(SUBSTR(ptn.birth_date, 5, 4),  pay.yearOfBirth)
     )                                                                           AS ptnt_age_num,
     CAST(NULL AS STRING) AS ptnt_lvg_flg,
     CAST(NULL AS STRING) AS ptnt_dth_dt,
@@ -192,19 +192,18 @@ SELECT
     -------------------------------------------------------------------------------------------------------------------------
     --  part_mth
     -------------------------------------------------------------------------------------------------------------------------
+
     CASE
-	    WHEN 0 = LENGTH(
-	    COALESCE(
-            CAP_DATE(
-                CAST(EXTRACT_DATE(SUBSTR(inj.date_given, 1, 10), '%Y-%m-%d') AS DATE),
-                CAST(COALESCE('{AVAILABLE_START_DATE}', '{EARLIEST_SERVICE_DATE}') AS DATE),
-                CAST('{VDR_FILE_DT}' AS DATE)
-                ),
-                ''
-            )
-        ) THEN '0_PREDATES_HVM_HISTORY'
+	    WHEN CAP_DATE
+	            (
+                    CAST(EXTRACT_DATE(SUBSTR(inj.date_given, 1, 10), '%Y-%m-%d') AS DATE),
+                    CAST('{AVAILABLE_START_DATE}' AS DATE),
+                    CAST('{VDR_FILE_DT}' AS DATE)
+                )
+                    IS NULL THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(inj.date_given, 1, 7)
 	END                                                                         AS part_mth
+
 FROM f_injection inj
     LEFT OUTER JOIN d_patient ptn ON inj.patient_key = ptn.patient_key
     LEFT OUTER JOIN matching_payload pay ON ptn.patient_key = pay.personid
@@ -224,3 +223,4 @@ WHERE
         COALESCE(inj.cpt, vcx.cpt_code) IS NULL
         AND proc_2_exploder.n = 0
     )
+-- LIMIT 100

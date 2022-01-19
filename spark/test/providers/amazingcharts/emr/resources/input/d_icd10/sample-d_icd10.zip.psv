@@ -1,10 +1,10 @@
-183475|1|A00|False|Cholera|Cholera|False
-183476|2|A00.0|True|Cholera due to Vibrio cholerae 01, biovar cholerae|Cholera due to Vibrio cholerae 01, biovar cholerae|True
-183477|3|A00.1|True|Cholera due to Vibrio cholerae 01, biovar eltor|Cholera due to Vibrio cholerae 01, biovar eltor|True
-183478|4|A00.9|True|Cholera, unspecified|Cholera, unspecified|True
-183479|5|A01|False|Typhoid and paratyphoid fevers|Typhoid and paratyphoid fevers|False
-183480|6|A01.0|False|Typhoid fever|Typhoid fever|False
-183481|7|A01.00|True|Typhoid fever, unspecified|Typhoid fever, unspecified|True
-183482|8|A01.01|True|Typhoid meningitis|Typhoid meningitis|True
-183483|9|A01.02|True|Typhoid fever with heart involvement|Typhoid fever with heart involvement|True
-183484|10|A01.03|True|Typhoid pneumonia|Typhoid pneumonia|True
+S62.335P|true|Disp fx of nk of 4th MC bone, l hand, subs for fx w malunion|Displaced fracture of neck of fourth metacarpal bone, left hand, subsequent encounter for fracture with malunion|true
+R11.1|false|Vomiting|Vomiting|false
+Q99|false|Other chromosome abnormalities, not elsewhere classified|Other chromosome abnormalities, not elsewhere classified|false
+S62.353G|true|Nondisp fx of shaft of 3rd MC bone, l hand, 7thG|Nondisplaced fracture of shaft of third metacarpal bone, left hand, subsequent encounter for fracture with delayed healing|true
+S62.354A|true|Nondisp fx of shaft of fourth MC bone, right hand, init|Nondisplaced fracture of shaft of fourth metacarpal bone, right hand, initial encounter for closed fracture|true
+R29.70|false|NIHSS score 0-9|NIHSS score 0-9|false
+R39.83|true|Unilateral non-palpable testicle|Unilateral non-palpable testicle|true
+T39.2|false|Pyrazolone derivatives|Poisoning by, adverse effect of and underdosing of pyrazolone derivatives|false
+T40.2X4A|true|Poisoning by other opioids, undetermined, initial encounter|Poisoning by other opioids, undetermined, initial encounter|true
+R87.623|true|High grade intrepith lesion cyto smr vagn (HGSIL)|High grade squamous intraepithelial lesion on cytologic smear of vagina (HGSIL)|true

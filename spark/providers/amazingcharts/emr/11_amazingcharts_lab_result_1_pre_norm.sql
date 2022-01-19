@@ -1,9 +1,8 @@
 SELECT
-    MONOTONICALLY_INCREASING_ID()                                               AS row_id,
     CURRENT_DATE()                                                              AS crt_dt,
-	'08'                                                                        AS mdl_vrsn_num,
+	'07'                                                                        AS mdl_vrsn_num,
     CONCAT(
-        'AmazingCharts_HV_{VDR_FILE_DT}_',
+        'AmazingCharts_HV_','{VDR_FILE_DT}', '_' ,
         SPLIT(lab.input_file_name, '/')[SIZE(SPLIT(lab.input_file_name, '/')) - 1]
         )                                                                       AS data_set_nm,
 	5                                                                           AS hvm_vdr_id,
@@ -17,21 +16,23 @@ SELECT
         lab.patient_key
     )                                                                           AS hv_lab_result_id,
     lab.practice_key                                                            AS vdr_org_id,
-    lab.lab_test_id                                                             AS vdr_lab_test_id,
+--    lab.lab_test_id                                                             AS vdr_lab_test_id,
+    lab.lab_test_key                                                            AS vdr_lab_test_id,
     CASE
-        WHEN lab.lab_test_id IS NULL THEN NULL
+--        WHEN lab.lab_test_id IS NULL THEN NULL
+        WHEN lab.lab_test_key IS NULL THEN NULL
         ELSE 'LAB_TEST_ID'
     END                                                                         AS vdr_lab_test_id_qual,
     pay.hvid                                                                    AS hvid,
     CAP_YEAR_OF_BIRTH(
         pay.age,
         CAST(EXTRACT_DATE(SUBSTR(lab.specimen_collected_dt, 1, 10), '%Y-%m-%d') AS DATE),
-        COALESCE(SUBSTR(ptn.birth_year, 1, 4),  pay.yearOfBirth)
+        COALESCE(SUBSTR(ptn.birth_date, 5, 4),  pay.yearOfBirth)
     )                                                                           AS ptnt_birth_yr,
     VALIDATE_AGE(
         pay.age,
         CAST(EXTRACT_DATE(SUBSTR(lab.specimen_collected_dt, 1, 10), '%Y-%m-%d') AS DATE),
-        COALESCE(SUBSTR(ptn.birth_year, 1, 4),  pay.yearOfBirth)
+        COALESCE(SUBSTR(ptn.birth_date, 5, 4),  pay.yearOfBirth)
     )                                                                           AS ptnt_age_num,
     COALESCE(ptn.gender, pay.gender)                                            AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(
@@ -110,7 +111,7 @@ SELECT
         WHEN lbd.test_code IS NULL THEN NULL
         ELSE 'PRACTICE_KEY_TEST_CODE'
     END                                                                         AS lab_test_vdr_cd_qual,
-    lbd2.test_name                                                              AS lab_result_nm,
+    lbd.test_name                                                              AS lab_result_nm,
     lab.observation_value                                                       AS lab_result_msrmt,
     lab.uom                                                                     AS lab_result_uom,
     CASE
@@ -162,24 +163,23 @@ SELECT
     --  part_mth
     -------------------------------------------------------------------------------------------------------------------------
     CASE
-	    WHEN 0 = LENGTH(
-	    COALESCE(
-            CAP_DATE(
-                CAST(EXTRACT_DATE(SUBSTR(lab.sign_off_date, 1, 10), '%Y-%m-%d') AS DATE),
-                CAST(COALESCE('{AVAILABLE_START_DATE}', '{EARLIEST_SERVICE_DATE}') AS DATE),
-                CAST('{VDR_FILE_DT}' AS DATE)
-                ),
-                ''
-            )
-        ) THEN '0_PREDATES_HVM_HISTORY'
+	    WHEN CAP_DATE
+	            (
+                    CAST(EXTRACT_DATE(SUBSTR(lab.sign_off_date, 1, 10), '%Y-%m-%d') AS DATE),
+                    CAST('{AVAILABLE_START_DATE}' AS DATE),
+                    CAST('{VDR_FILE_DT}' AS DATE)
+                )
+                    IS NULL THEN '0_PREDATES_HVM_HISTORY'
 	    ELSE SUBSTR(lab.sign_off_date, 1, 7)
 	END                                                                         AS part_mth
+
 FROM f_lab lab
 LEFT OUTER JOIN d_patient ptn ON lab.patient_key = ptn.patient_key
 LEFT OUTER JOIN matching_payload pay ON ptn.patient_key = pay.personid
 LEFT OUTER JOIN d_provider prv1 ON lab.ordering_provider_id = prv1.provider_key
 LEFT OUTER JOIN d_provider prv2 ON lab.sign_off_id = prv2.provider_key
-LEFT OUTER JOIN d_lab_directory lbd ON lab.lab_directory_key = lbd.lab_directory_key AND lab.practice_key = lbd.practice_key
-LEFT OUTER JOIN d_lab_directory lbd2 ON lab.lab_test_code_lrd = lbd2.test_code AND lbd.lab_company = lbd2.lab_company AND lab.practice_key = lbd2.practice_key
+LEFT OUTER JOIN d_lab_directory lbd ON lab.lab_directory_key = lbd.lab_directory_key -- AND lab.practice_key = lbd.practice_key
+--LEFT OUTER JOIN d_lab_directory lbd2 ON lab.lab_test_code_lrd = lbd2.test_code AND lbd.lab_company = lbd2.lab_company AND lab.practice_key = lbd2.practice_key
 WHERE
     TRIM(UPPER(COALESCE(lab.practice_key, 'empty'))) <> 'PRACTICE_KEY'
+-- LIMIT 100
