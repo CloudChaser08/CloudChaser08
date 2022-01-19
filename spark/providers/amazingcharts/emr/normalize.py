@@ -117,31 +117,31 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
         postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
     cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
-    v_proc_sql = """
-        SELECT
-            enc.*,
-            TRIM(
-                REGEXP_REPLACE(
-                    REGEXP_REPLACE(
-                        UPPER(cpt_code),
-                        '(\\([^)]*\\))|(\\bLOW\\b)|(\\bMEDIUM\\b)|(\\bHIGH\\b)|(\\bCOMPLEXITY\\b)|\\<|\\>',
-                        ''
-                    ),
-                    '[^A-Z0-9]',
-                    ' '
-                )
-            ) AS proc_cd
-        FROM
-            f_encounter enc
-        WHERE LENGTH(TRIM(COALESCE(enc.cpt_code, ''))) != 0
-            AND
-            TRIM(UPPER(COALESCE(enc.practice_key, 'empty'))) <> 'PRACTICE_KEY'
-    """
-    normalized_procedure_1 = \
-        driver.spark.sql(v_proc_sql).withColumn('proc_cd', explode(split(col('proc_cd'), '\s+'))). \
-            where("length(proc_cd) != 0").cache()
-
-    normalized_procedure_1.createOrReplaceTempView('f_encounter_explode')
+    # v_proc_sql = """
+    #     SELECT
+    #         enc.*,
+    #         TRIM(
+    #             REGEXP_REPLACE(
+    #                 REGEXP_REPLACE(
+    #                     UPPER(cpt_code),
+    #                     '(\\([^)]*\\))|(\\bLOW\\b)|(\\bMEDIUM\\b)|(\\bHIGH\\b)|(\\bCOMPLEXITY\\b)|\\<|\\>',
+    #                     ''
+    #                 ),
+    #                 '[^A-Z0-9]',
+    #                 ' '
+    #             )
+    #         ) AS proc_cd
+    #     FROM
+    #         f_encounter enc
+    #     WHERE LENGTH(TRIM(COALESCE(enc.cpt_code, ''))) != 0
+    #         AND
+    #         TRIM(UPPER(COALESCE(enc.practice_key, 'empty'))) <> 'PRACTICE_KEY'
+    # """
+    # normalized_procedure_1 = \
+    #     driver.spark.sql(v_proc_sql).withColumn('proc_cd', explode(split(col('proc_cd'), '\s+'))). \
+    #         where("length(proc_cd) != 0").cache()
+    #
+    # normalized_procedure_1.createOrReplaceTempView('f_encounter_explode')
 
     if not test:
         logger.log('Loading external table: gen_ref_whtlst')

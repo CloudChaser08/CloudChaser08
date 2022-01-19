@@ -126,8 +126,7 @@ LEFT OUTER JOIN d_patient ptn ON med.patient_key = ptn.patient_key
 LEFT OUTER JOIN matching_payload pay ON ptn.patient_key = pay.personid
 LEFT OUTER JOIN d_provider prv ON med.provider_key = prv.provider_key
 LEFT OUTER JOIN d_drug drg ON med.drug_key = drg.drug_id
-LEFT OUTER JOIN raw.amazingcharts_d_multum_to_ndc ndc ON drg.drug_id = ndc.multum_id
--- LEFT OUTER JOIN d_multum_to_ndc ndc ON drg.drug_id = ndc.multum_id
+LEFT OUTER JOIN d_multum_to_ndc ndc ON drg.drug_id = ndc.multum_id
 WHERE
     TRIM(UPPER(COALESCE(med.practice_key, 'empty'))) <> 'PRACTICE_KEY'
 -- LIMIT 10

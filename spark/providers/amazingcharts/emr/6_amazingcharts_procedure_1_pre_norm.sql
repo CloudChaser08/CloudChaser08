@@ -147,30 +147,17 @@ SELECT
     CAST(NULL AS STRING) AS proc_rndrg_prov_addr_2_txt,
     UPPER(COALESCE(prv.state, ''))                                              AS proc_rndrg_prov_state_cd,
     CAST(NULL AS STRING) AS proc_rndrg_prov_zip_cd,
-    --    TRIM(
-    --        REGEXP_REPLACE(
-    --            REGEXP_REPLACE(
-    --                UPPER(cpt_code),
-    --                '(\\([^)]*\\))|(\\bLOW\\b)|(\\bMEDIUM\\b)|(\\bHIGH\\b)|(\\bCOMPLEXITY\\b)|\\<|\\>',
-    --                ''
-    --            ),
-    --            '[^A-Z0-9]',
-    --            ' '
-    --        )
-    --    )                                                                           AS proc_cd,
-    -- cln.proc_cd,
     TRIM(
-        REGEXP_REPLACE  (
+        REGEXP_REPLACE(
             REGEXP_REPLACE(
                 UPPER(cpt_code),
                 '(\\([^)]*\\))|(\\bLOW\\b)|(\\bMEDIUM\\b)|(\\bHIGH\\b)|(\\bCOMPLEXITY\\b)|\\<|\\>',
                 ''
-                    ),
+            ),
             '[^A-Z0-9]',
-            ' '    
-            )
-        )                                                                       AS proc_cd,                                                                     
-
+            ' '
+        )
+    )                                                                           AS proc_cd,
     CASE
         WHEN cln.cpt_code IS NULL THEN NULL
         ELSE 'CPT_CODE'

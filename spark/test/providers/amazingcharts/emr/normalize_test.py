@@ -54,7 +54,7 @@ def test_init(spark):
     ]).toDF().createOrReplaceTempView('gen_ref_whtlst')
     print("--------------------------------start test--------------------------------")
     amazingcharts_emr.run(
-        date_input='2021-08-01', test=True, end_to_end_test=False, spark=spark['spark'],
+        date_input='2021-08-31', test=True, end_to_end_test=False, spark=spark['spark'],
         runner=spark['runner'])
     print("--------------------------------result collect--------------------------------")
     global clinical_observation_results, lab_result_results, encounter_results, \
@@ -79,9 +79,9 @@ def test_init(spark):
     diagnosis_results = spark['sqlContext'].read.parquet(
         file_utils.get_abs_path(script_path, './resources/output/emr/*/diagnosis/*')
     ).collect()
-    vital_sign_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/emr/*/vital_sign/*')
-    ).collect()
+    # vital_sign_results = spark['sqlContext'].read.parquet(
+    #     file_utils.get_abs_path(script_path, './resources/output/emr/*/vital_sign/*')
+    # ).collect()
 
 
 def test_something():
@@ -91,4 +91,4 @@ def test_something():
     print(len(medication_results))
     print(len(procedure_results))
     print(len(diagnosis_results))
-    print(len(vital_sign_results))
+    # print(len(vital_sign_results))
