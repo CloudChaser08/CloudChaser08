@@ -15,7 +15,7 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.hdfs_utils as hdfs_utils
 
 
-def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
+def run(date_input, end_to_end_test=False, no_daily_load=False, test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'change'
     provider_partition_name = 'emdeon'
@@ -72,20 +72,23 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
     driver.transform(additional_variables=[['CAP_NBR_OF_DAYS', CAP_NBR_OF_DAYS, False]])
     driver.save_to_disk()
 
-    logger.log(' -build daily load')
-    df = driver.spark.read.parquet(constants.hdfs_staging_dir + provider_output_directory)
-    daily_load_columns = \
-        [clmn for clmn in df.columns if clmn != daily_date_partition_column] + [daily_date_partition_column]
+    if no_daily_load:
+        logger.log(' -daily load skipped')
+    else:
+        logger.log(' -build daily load')
+        df = driver.spark.read.parquet(constants.hdfs_staging_dir + provider_output_directory)
+        daily_load_columns = \
+            [clmn for clmn in df.columns if clmn != daily_date_partition_column] + [daily_date_partition_column]
 
-    hdfs_utils.clean_up_output_hdfs(daily_staging_dir + provider_output_directory)
-    df.select(daily_load_columns).repartition(driver.unload_partition_count).write.parquet(
-        daily_staging_dir + provider_output_directory, mode='overwrite', compression='gzip',
-        partitionBy=[daily_date_partition_column])
+        hdfs_utils.clean_up_output_hdfs(daily_staging_dir + provider_output_directory)
+        df.select(daily_load_columns).repartition(driver.unload_partition_count).write.parquet(
+            daily_staging_dir + provider_output_directory, mode='overwrite', compression='gzip',
+            partitionBy=[daily_date_partition_column])
 
-    # add a prefix to part file names
-    normalized_records_unloader.custom_rename(
-        driver.spark, daily_staging_dir + provider_output_directory, str(date_input))
-    logger.log(' -daily load has been created')
+        # add a prefix to part file names
+        normalized_records_unloader.custom_rename(
+            driver.spark, daily_staging_dir + provider_output_directory, str(date_input))
+        logger.log(' -daily load has been created')
 
     driver.stop_spark()
     driver.log_run()
@@ -108,16 +111,17 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
             ['aws', 's3', 'mv', '--recursive',
              driver.output_path + provider_date_part.format(month), tmp_path + provider_date_part.format(month)]
         )
+    if not no_daily_load:
+        logger.log('Backup historical daily data')
+        backup_path = '{}{}part_file_date={}/'.format(daily_output_path.replace('salusv', 'salusv/backup'),
+                                                      provider_output_directory, date_input)
 
-    logger.log('Backup historical daily data')
-    backup_path = '{}{}part_file_date={}/'.format(daily_output_path.replace('salusv', 'salusv/backup'),
-                                                  provider_output_directory, date_input)
+        subprocess.check_call(['aws', 's3', 'mv', '--recursive',
+                               daily_output_path + provider_output_directory, backup_path])
 
-    subprocess.check_call(['aws', 's3', 'mv', '--recursive',
-                           daily_output_path + provider_output_directory, backup_path])
+        # daily delivery location should only have data from most recent run
+        normalized_records_unloader.distcp(daily_output_path, src=daily_staging_dir)
 
-    # daily delivery location should only have data from most recent run
-    normalized_records_unloader.distcp(daily_output_path, src=daily_staging_dir)
     driver.copy_to_output_path()
     logger.log('Done')
 
@@ -125,6 +129,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
+    parser.add_argument('--no_daily_load', default=False, action='store_true')
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
-    run(args.date, args.end_to_end_test)
+    run(args.date, args.end_to_end_test, args.no_daily_load)
