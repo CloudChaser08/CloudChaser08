@@ -147,17 +147,20 @@ SELECT
     CAST(NULL AS STRING) AS proc_rndrg_prov_addr_2_txt,
     UPPER(COALESCE(prv.state, ''))                                              AS proc_rndrg_prov_state_cd,
     CAST(NULL AS STRING) AS proc_rndrg_prov_zip_cd,
-    TRIM(
-        REGEXP_REPLACE(
-            REGEXP_REPLACE(
-                UPPER(cpt_code),
-                '(\\([^)]*\\))|(\\bLOW\\b)|(\\bMEDIUM\\b)|(\\bHIGH\\b)|(\\bCOMPLEXITY\\b)|\\<|\\>',
-                ''
-            ),
-            '[^A-Z0-9]',
-            ' '
-        )
-    )                                                                           AS proc_cd,
+    --begin ---this block run through normalize.py process
+    --    TRIM(
+    --        REGEXP_REPLACE(
+    --            REGEXP_REPLACE(
+    --                UPPER(cpt_code),
+    --                '(\\([^)]*\\))|(\\bLOW\\b)|(\\bMEDIUM\\b)|(\\bHIGH\\b)|(\\bCOMPLEXITY\\b)|\\<|\\>',
+    --                ''
+    --            ),
+    --            '[^A-Z0-9]',
+    --            ' '
+    --        )
+    --    )                                                                           AS proc_cd,
+    --end
+    cln.proc_cd,
     CASE
         WHEN cln.cpt_code IS NULL THEN NULL
         ELSE 'CPT_CODE'
@@ -210,7 +213,7 @@ SELECT
 	    ELSE SUBSTR(COALESCE(cln.encounter_date, cln.date_row_added), 1, 7)
 	END                                                                         AS part_mth
 
-FROM f_clinical_note cln
+FROM f_clinical_note_explode cln
 LEFT OUTER JOIN d_patient ptn ON cln.patient_key = ptn.patient_key
 LEFT OUTER JOIN matching_payload pay ON ptn.patient_key = pay.personid
 LEFT OUTER JOIN d_provider prv ON cln.provider_key = prv.provider_key

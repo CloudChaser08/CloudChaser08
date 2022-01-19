@@ -1,11 +1,11 @@
 costar_key|full_code|base_code|code_to_store|concept_name|semantic_type|base_code_onto_by_icd_9cm|representative_icd_9cm_code|icd_9cm_set|representative_icd_10cm_code|representative_icd_10cm_branch
-A07V0J|A07V0J|A07V0J|Postmyocardial infarction syndrome|disorder|true|411.0||I24.1|NULL
-A07V2V|A07V2V|A07V2V|Todd's paresis|finding|false|344.89||G83.84|NULL
-A07V2W|A07V2W|A07V2W|Cementitis|disorder|false|521.89||K03.89|NULL
-A07V2X|A07V2X|A07V2X|Phosphopenic type rickets|disorder|false|275.3||E83.31|NULL
-A07V48-A08VR7|A07V48|A07V48-A08VR7|Fracture of upper arm|disorder|false|812.20||NULL|S42.309
-A07V4T|A07V4T|A07V4T|Acquired deformity of hand|disorder|false|736.00||M21.949|NULL
-A07V4U|A07V4U|A07V4U|Infection caused by Cotylophoron|disorder|false|128.8||B66.8|NULL
-A07V4W|A07V4W|A07V4W|Infestation caused by Psorergates|disorder|false|134.8||B88.0|NULL
-A07V5D-A0ZF34|A07V5D|A07V5D-A0ZF34|Congenital absence of toe [char(124)] Congenital absence of right foot and toe(s)|disorder|false|755.39||Q72.31|NULL
-A07V5K|A07V5K|A07V5K|Fetal trimethadione syndrome|disorder|false|759.89||Q86.8|NULL
+60201|A0001X|A0001X|A0001X|Repair of retinal detachment with xenon arc photocoagulation|procedure|False||||
+60202|A0008R|A0008R|A0008R|Uncomplicated sedative, hypnotic AND/OR anxiolytic withdrawal|disorder|False|292.0||F13.930|
+60203|A000CT|A000CT|A000CT|Tracheal stenosis following tracheostomy|disorder|True|519.02||J95.03|
+60204|A000FM|A000FM|A000FM|Contusion of chest|disorder|True|922.1|||S20.219
+60205|A000J2|A000J2|A000J2|Brain stem contusion without open intracranial wound AND with prolonged loss of consciousness (more than 24 hours) AND return to pre-existing conscious level|disorder|False|851.44|||S06.385
+60206|A000KA|A000KA|A000KA|Excoriated acne|disorder|False|706.1||L70.5|
+60207|A000KA-A09VPH|A000KA|A000KA-A09VPH|Acne excoriee des jeunes filles|disorder|False|706.1||L70.5|
+60208|A000LT|A000LT|A000LT|Poisoning caused by quinoline AND/OR hydroxyquinoline derivative|disorder|True|961.3|||T37.8X1
+60223|A001YF|A001YF|A001YF|Disposal of radioactive source|procedure|False||||
+60224|A001YP|A001YP|A001YP|Herpetic infection of penis|disorder|True|054.13||A60.01|

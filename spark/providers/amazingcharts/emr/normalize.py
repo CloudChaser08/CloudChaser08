@@ -27,14 +27,18 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'amazingcharts'
 
+    # output_table_names_to_schemas = {
+    #     'amazingcharts_clin_obsn_final_norm': clinical_observation_schemas['schema_v7'],
+    #     'amazingcharts_diagnosis_final_norm': diagnosis_schemas['schema_v7'],
+    #     'amazingcharts_encounter_final_norm': encounter_schemas['schema_v7'],
+    #     'amazingcharts_lab_result_final_norm': lab_result_schema['schema_v7'],
+    #     'amazingcharts_medication_final_norm': medication_schemas['schema_v7'],
+    #     'amazingcharts_procedure_final_norm': procedure_schemas['schema_v8']
+    #  }
+
     output_table_names_to_schemas = {
-        'amazingcharts_clin_obsn_final_norm': clinical_observation_schemas['schema_v7'],
-        'amazingcharts_diagnosis_final_norm': diagnosis_schemas['schema_v7'],
-        'amazingcharts_encounter_final_norm': encounter_schemas['schema_v7'],
-        'amazingcharts_lab_result_final_norm': lab_result_schema['schema_v7'],
-        'amazingcharts_medication_final_norm': medication_schemas['schema_v7'],
         'amazingcharts_procedure_final_norm': procedure_schemas['schema_v8']
-     }
+    }
 
     provider_partition_name = '5'
 
@@ -117,31 +121,30 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
         postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
     cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
 
-    # v_proc_sql = """
-    #     SELECT
-    #         enc.*,
-    #         TRIM(
-    #             REGEXP_REPLACE(
-    #                 REGEXP_REPLACE(
-    #                     UPPER(cpt_code),
-    #                     '(\\([^)]*\\))|(\\bLOW\\b)|(\\bMEDIUM\\b)|(\\bHIGH\\b)|(\\bCOMPLEXITY\\b)|\\<|\\>',
-    #                     ''
-    #                 ),
-    #                 '[^A-Z0-9]',
-    #                 ' '
-    #             )
-    #         ) AS proc_cd
-    #     FROM
-    #         f_encounter enc
-    #     WHERE LENGTH(TRIM(COALESCE(enc.cpt_code, ''))) != 0
-    #         AND
-    #         TRIM(UPPER(COALESCE(enc.practice_key, 'empty'))) <> 'PRACTICE_KEY'
-    # """
-    # normalized_procedure_1 = \
-    #     driver.spark.sql(v_proc_sql).withColumn('proc_cd', explode(split(col('proc_cd'), '\s+'))). \
-    #         where("length(proc_cd) != 0").cache()
-    #
-    # normalized_procedure_1.createOrReplaceTempView('f_encounter_explode')
+    v_proc_sql = """
+        SELECT
+            cln.*,
+            TRIM(
+                REGEXP_REPLACE(
+                    REGEXP_REPLACE(
+                        UPPER(cpt_code),
+                        '(\\([^)]*\\))|(\\bLOW\\b)|(\\bMEDIUM\\b)|(\\bHIGH\\b)|(\\bCOMPLEXITY\\b)|\\<|\\>',
+                        ''
+                    ),
+                    '[^A-Z0-9]',
+                    ' '
+                )
+            ) AS proc_cd
+        FROM
+            f_clinical_note cln
+        WHERE LENGTH(TRIM(COALESCE(cln.cpt_code, ''))) != 0
+            AND
+            TRIM(UPPER(COALESCE(cln.practice_key, 'empty'))) <> 'PRACTICE_KEY'
+    """
+    proc_1 = driver.spark.sql(v_proc_sql).\
+        withColumn('proc_cd', explode(split(col('proc_cd'), '\s+'))).where("length(proc_cd) != 0")
+
+    proc_1.createOrReplaceTempView('f_clinical_note_explode')
 
     if not test:
         logger.log('Loading external table: gen_ref_whtlst')

@@ -120,11 +120,20 @@ SELECT
     part_mth
 FROM
 (
-SELECT * FROM amazingcharts_procedure_1_pre_norm
-UNION ALL
-SELECT * FROM amazingcharts_procedure_2_pre_norm
-UNION ALL
-SELECT * FROM amazingcharts_procedure_3_pre_norm
+    (
+    SELECT * FROM amazingcharts_procedure_1_pre_norm procedure_1
+        WHERE NOT EXISTS
+        (
+            SELECT 1 FROM amazingcharts_procedure_3_pre_norm procedure_3
+            WHERE procedure_1.proc_dt = procedure_3.proc_dt
+                AND procedure_1.hvid = procedure_3.hvid
+                AND procedure_1.proc_cd = procedure_3.proc_cd
+        )
+    )
+    UNION ALL
+    SELECT * FROM amazingcharts_procedure_2_pre_norm
+    UNION ALL
+    SELECT * FROM amazingcharts_procedure_3_pre_norm
 ) 
 GROUP BY  
     1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
