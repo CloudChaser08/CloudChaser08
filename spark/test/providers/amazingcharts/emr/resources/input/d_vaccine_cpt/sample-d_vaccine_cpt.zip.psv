@@ -1,3 +1,4 @@
+vaccine_cpt_key|vaccine_cpt_id|vaccine_name|cpt_code|vaccine_sub_component|country|cvx_code|date_last_touched|is_generic|cvx_code_unspecified_formulation|unique_id|immunity_code
 81e36c73852aa2493aaeaee1bb0e70fe|Hepatitis A, Unknown|Hepatitis A|90730|85        |US|3864505f-9bd7-451e-882e-7efdb81e280e|2011-03-03 15:11:54.593|true|85        |40468003
 8278a8c90ae13de8504e9a8174e40d57|Hepatitis B, Unknown|Hepatitis B|90731|45        |US|40e8a4b0-9fb5-472a-b6e0-ba339e9ec62e|2011-03-03 15:11:54.593|true|45        |66071002
 5d1026cd88630f20451b845f9d7e010c|JE-VAX|Japanese Encephalitis Vaccine SC|90735|39        |US|d2d10087-22df-49c5-addc-4ed5892f9e3d|2014-06-05 10:30:00.000|false|0         |NULL

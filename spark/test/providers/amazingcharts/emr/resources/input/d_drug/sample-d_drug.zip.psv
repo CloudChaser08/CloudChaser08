@@ -1,3 +1,4 @@
+drug_id|rxnorm_id|ndc|drug_sub_id_1|drug_name|drug_route_id|drug_dosage_form_id|strength|strength_uom|route|dosage_form|generic_name|dea_generic_named_code|dea_legend_code|theraputic_category|drug_info|generic_drug_name_override|manufacturer
 9016046|NULL|49452762605|NULL|Terbinafine HCl Powder|0|0|NULL|NULL|NULL|NULL|NULL|2|1|NULL|Terbinafine HCl Powder|NULL|NULL
 9017110|NULL|46144020001|NULL|Anastrozole Powder|0|0|NULL|NULL|NULL|NULL|NULL|2|1|NULL|Anastrozole Powder|NULL|NULL
 9017110|NULL|75839024805|NULL|Anastrozole Powder|0|0|NULL|NULL|NULL|NULL|NULL|2|1|NULL|Anastrozole Powder|NULL|NULL

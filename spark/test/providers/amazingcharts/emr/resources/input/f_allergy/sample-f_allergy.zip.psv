@@ -1,3 +1,4 @@
+date_key|time_key|practice_key|patient_key|allergy_key|rxnorm_id|allergy_description|reaction|comments|inactive|date_last_touched|severity
 202109230000|2206|db7ddad925e8e553080a53a8a5f60c24|034af55b010584f82063169a3ceecc09|519|4719|gemfibrozil|||false|2021-09-23 15:46:22.393|
 202109230000|2206|01472d9e9299e3ea44498626ce3a9f87|d5eb6001152ad4015e25b681a3cdb4b2|60|NULL|shellfish|||false|2021-09-23 08:31:35.250|
 202109230000|2206|3bba88346e49069f98871c3d4fc27ee7|cd5932ffb5d03ee106c90bd55aa09ae5|60|NULL|shellfish|||false|2021-09-23 12:15:47.340|

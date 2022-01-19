@@ -1,3 +1,4 @@
+cpt_key|cpt_id|cpt_code|cpt_description|cpt_short_description|cpt_common|fee|rvu
 G9245|Antiretroviral therapy prescribed|Antiviral ordered|false|NULL|NULL
 G9263|Documentation of patient survival in the hospital following endovascular aaa repair|Doc surv in hosp aaa repair|false|NULL|NULL
 G9290|Non small cell lung cancer biopsy and cytology specimen report does not document classification into specific histologic type or classified as nsclc-nos with an explanation|No doc type nsm lung ca|false|NULL|NULL

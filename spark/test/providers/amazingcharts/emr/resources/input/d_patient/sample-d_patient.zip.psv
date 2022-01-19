@@ -1,3 +1,4 @@
+patient_key|practice_key|gender|birth_date|state|zip|inactive|reason_inactive|marital_status|takes_no_meds|patient_race|language_preference|ethnicity_id|date_of_death|state_code|ethnicity_description|race_description
 9eeabc3881b0a53c64058c6f60b0490a|dcc081528272be07bbeb9af74ffdda87|M|1/1/1952|SC|295|false||M|false|||NULL|NULL|SC|NULL|Unknown
 133fe42b954543d7e1e488bea7dac249|cb8ebc7d3652126fd01f536b92bc48e1|F|1/1/2010|SC|297|false|||false|||NULL|NULL|SC|NULL|Unknown
 dd765dfd95eacc7cefe31dc1eb469dba|edaf2e9327e57f7709ada3f292fe8d6c|M|1/1/1987|NE|681|true|||true|||NULL|NULL|NE|NULL|Unknown

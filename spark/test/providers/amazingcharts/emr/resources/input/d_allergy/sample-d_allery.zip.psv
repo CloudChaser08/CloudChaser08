@@ -1,3 +1,4 @@
+allergy_key|rxnorm_id|description|multum_concept_id|multum_concept_type|status|date_last_touched
 3770|NULL|Centrum Women's|162436|NAME|A|2009-08-28 00:00:00.000
 3855|NULL|Children's Allergy|159723|NAME|A|2009-08-28 00:00:00.000
 3940|NULL|Clarifoam EF|116843|NAME|A|2009-08-28 00:00:00.000

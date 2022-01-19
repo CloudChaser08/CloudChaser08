@@ -1,3 +1,4 @@
+date_key|time_key|record_type|practice_key|patient_key|problem_icd|icd_type|date_active|date_inactive|provider_key|date_row_added|date_last_activated|date_resolved|costar_key|snomed
 202109150000|1646|billing|c453abca007aae0e9056240b18c3ec30|0e33501f88959dff961e24dcfc2889c0|G45.9|10|2021-09-15 16:08:55.000|NULL|abcc0e43510301effde454a844e0e573|2021-09-15 16:46:47.147|NULL|NULL|NULL|NULL
 202109140000|1737|billing|d377ff5e92192cebe89b498e0f6669a1|50a39a73f920e57a6af015916d41172b|M77.8|10|2021-09-13 10:32:28.000|NULL|f0cac39a01b3c5f5e355f13c8b21805b|2021-09-14 17:37:21.050|NULL|NULL|NULL|NULL
 202109150000|1044|billing|4cd098eee97c093774a3b9a27f2c59ec|9880898c72ab54f071e5f5eab66e0e20|Z68.20|10|2021-09-15 10:39:04.000|NULL|6995a911af432a18feee5b5bd93caf52|2021-09-15 10:44:36.960|NULL|NULL|NULL|NULL

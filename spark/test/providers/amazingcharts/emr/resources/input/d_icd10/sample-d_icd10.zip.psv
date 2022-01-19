@@ -1,3 +1,4 @@
+icd10_key|order_number|icd_10_code|is_complete|short_description|long_description|is_active
 S62.335P|true|Disp fx of nk of 4th MC bone, l hand, subs for fx w malunion|Displaced fracture of neck of fourth metacarpal bone, left hand, subsequent encounter for fracture with malunion|true
 R11.1|false|Vomiting|Vomiting|false
 Q99|false|Other chromosome abnormalities, not elsewhere classified|Other chromosome abnormalities, not elsewhere classified|false

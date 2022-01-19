@@ -1,3 +1,4 @@
+costar_key|full_code|base_code|code_to_store|concept_name|semantic_type|base_code_onto_by_icd_9cm|representative_icd_9cm_code|icd_9cm_set|representative_icd_10cm_code|representative_icd_10cm_branch
 A07V0J|A07V0J|A07V0J|Postmyocardial infarction syndrome|disorder|true|411.0||I24.1|NULL
 A07V2V|A07V2V|A07V2V|Todd's paresis|finding|false|344.89||G83.84|NULL
 A07V2W|A07V2W|A07V2W|Cementitis|disorder|false|521.89||K03.89|NULL
