@@ -3,15 +3,17 @@ import os
 
 import spark.providers.amazingcharts.emr.transactional_schemas_v1 as transactional_schemas_v1
 import spark.providers.amazingcharts.emr.transactional_schemas_v2 as transactional_schemas_v2
+import spark.providers.amazingcharts.emr.transactional_schemas_v3 as transactional_schemas_v3
 
 
 def get_table_conf(date_input):
-    if date_input >= '2018-01-01':
+    if date_input >= '2021-08-31':
+        source_table_schemas = transactional_schemas_v3
+    elif date_input >= '2018-01-01':
         source_table_schemas = transactional_schemas_v2
     else:
         source_table_schemas = transactional_schemas_v1
     return source_table_schemas
-
 
 def get_headers(file_name, table_name, date_input):
     table_name = table_name.lower()
@@ -33,7 +35,7 @@ def validate_file(file_name, table_name, date_input):
 def test_general_validate():
     assert validate_file(
         file_name='test/providers/amazingcharts/emr/resources/input/d_costar/sample-d_costar.zip.psv',
-        table_name='d_costar', date_input='2018-10-23')
+        table_name='d_costar', date_input='2021-08-31')
 
 
 def get_tablename_for_date(table, batch_date):
@@ -77,4 +79,4 @@ def amazing(path, exec_date):
 
 
 def test_amazing_oct():
-    assert amazing('test/providers/amazingcharts/emr/resources/input/d_costar/', '2018-10-23')
+    assert amazing('test/providers/amazingcharts/emr/resources/input/d_costar/', '2021-08-31')

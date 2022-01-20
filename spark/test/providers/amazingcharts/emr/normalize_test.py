@@ -27,8 +27,9 @@ def cleanup(spark):
 
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
+    print("--------------------------------start cleanup--------------------------------")
     cleanup(spark)
-
+    print("--------------------------------start parallelize--------------------------------")
     spark['spark'].sparkContext.parallelize([
         Row(
             hvm_vdr_feed_id='5',
@@ -51,10 +52,11 @@ def test_init(spark):
             gen_ref_whtlst_flg='Y'
         )
     ]).toDF().createOrReplaceTempView('gen_ref_whtlst')
-
+    print("--------------------------------start test--------------------------------")
     amazingcharts_emr.run(
-        date_input='2018-12-01', test=True, end_to_end_test=False, spark=spark['spark'], runner=spark['runner'])
-
+        date_input='2021-08-31', test=True, end_to_end_test=False, spark=spark['spark'],
+        runner=spark['runner'])
+    print("--------------------------------result collect--------------------------------")
     global clinical_observation_results, lab_result_results, encounter_results, \
         medication_results, procedure_results, diagnosis_results, \
         provider_order_results, vital_sign_results
@@ -62,7 +64,6 @@ def test_init(spark):
     clinical_observation_results = spark['sqlContext'].read.parquet(
         file_utils.get_abs_path(script_path, './resources/output/emr/*/clinical_observation/*')
     ).collect()
-
     lab_result_results = spark['sqlContext'].read.parquet(
         file_utils.get_abs_path(script_path, './resources/output/emr/*/lab_result/*')
     ).collect()
@@ -78,9 +79,9 @@ def test_init(spark):
     diagnosis_results = spark['sqlContext'].read.parquet(
         file_utils.get_abs_path(script_path, './resources/output/emr/*/diagnosis/*')
     ).collect()
-    vital_sign_results = spark['sqlContext'].read.parquet(
-        file_utils.get_abs_path(script_path, './resources/output/emr/*/vital_sign/*')
-    ).collect()
+    # vital_sign_results = spark['sqlContext'].read.parquet(
+    #     file_utils.get_abs_path(script_path, './resources/output/emr/*/vital_sign/*')
+    # ).collect()
 
 
 def test_something():
@@ -90,4 +91,4 @@ def test_something():
     print(len(medication_results))
     print(len(procedure_results))
     print(len(diagnosis_results))
-    print(len(vital_sign_results))
+    # print(len(vital_sign_results))

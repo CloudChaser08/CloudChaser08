@@ -1,10 +1,11 @@
-547|2|Boostrix|Tdap|90715|115       |US|{2E594247-D7E0-464F-A6B0-3291AD548E1E}|2011-03-03 15:11:54.593000000|False||
-548|3|Diphtheria Tetanus Toxoid (Ped)|DT|90702|28        |US|{0A5F649C-6C41-4F14-B843-139E69EA5953}|2011-03-03 15:11:54.593000000|False||
-549|4|Infanrix|DTaP|90700|20        |US|{E72BDBF3-6D08-40E4-9801-771D45523368}|2011-03-03 15:11:54.593000000|False||
-550|5|Menactra|D-Menincoccal|90734|114       |US|{73781DD3-1388-421B-8994-6C37BA95F842}|2011-03-03 15:11:54.593000000|False||
-551|6|Tripedia|DTaP |90700|20        |US|{4B7A1D9A-7218-4522-90BD-BAA9DE03EA0E}|2011-03-03 15:11:54.593000000|False||
-552|7|Pediarix|DTaP-Hepatitis B-IPV|90723|110       |US|{F91FE212-9C82-40E3-BA33-4EC0BE638AF6}|2011-03-03 15:11:54.593000000|False||
-553|8|Havrix|Hepatitis A, Adult|90632|52        |US|{690B1987-A0F7-4F57-B5DF-3F818E5AF975}|2011-03-03 15:11:54.593000000|False||
-554|9|Havrix|Hepatitis A, Ped/Adol 3-dose|90634|84        |US|{7DD012C1-AF78-4276-BC15-E6900C09B04B}|2017-06-20 08:30:00|False||
-555|10|Havrix|Hepatitis A, Ped/Adol 2-dose|90633|83        |US|{06B319B6-1201-4199-8133-A99C52E25BF5}|2011-03-03 15:11:54.593000000|False||
-556|11|Vaqta|Hepatitis A, Ped/Adol 2-dose|90633|83        |US|{9CE7EB49-2DED-45FA-B474-6CD04A765687}|2011-03-03 15:11:54.593000000|False||
+vaccine_cpt_key|vaccine_cpt_id|vaccine_name|cpt_code|vaccine_sub_component|country|cvx_code|date_last_touched|is_generic|cvx_code_unspecified_formulation|unique_id|immunity_code
+81e36c73852aa2493aaeaee1bb0e70fe|Hepatitis A, Unknown|Hepatitis A|90730|85        |US|3864505f-9bd7-451e-882e-7efdb81e280e|2011-03-03 15:11:54.593|true|85        |40468003
+8278a8c90ae13de8504e9a8174e40d57|Hepatitis B, Unknown|Hepatitis B|90731|45        |US|40e8a4b0-9fb5-472a-b6e0-ba339e9ec62e|2011-03-03 15:11:54.593|true|45        |66071002
+5d1026cd88630f20451b845f9d7e010c|JE-VAX|Japanese Encephalitis Vaccine SC|90735|39        |US|d2d10087-22df-49c5-addc-4ed5892f9e3d|2014-06-05 10:30:00.000|false|0         |NULL
+e41e8c9bac613e8e3de3a6f68a3b20db|Ixiaro|Japanese Encephalitis IM|90738|134       |US|7d89281b-3437-45de-877e-a918935ea9df|2011-03-03 15:11:54.593|false|0         |NULL
+9075f93661b6678e5c4b09437a8f6b69|Ceravix|HPV, Bivalent|90650|118       |US|1ceeb75b-5d95-4b55-b83f-93adb6f49459|2011-03-03 15:11:54.593|false|118       |NULL
+d687978ea94b1aebd3472eadf7378e27|Td, Unknown|Td|90714|113       |US|2ccc9101-2600-4ff9-98da-e9efc78ec76d|2011-03-03 15:11:54.593|true|139       |NULL
+df5492d1dd31f3a44a2d244eef753939|RabAvert|Rabies Virus Vaccine|90675|18        |US|e1e36e94-eb5a-479f-9cd1-869406daec6b|2011-03-03 15:11:54.593|false|90        |NULL
+d7f84c9ce9f8ec83966cf8ed66e91084|Imovax|Rabies Virus Vaccine|90675|18        |US|b8221002-56a0-4962-ad53-61dd7836fb32|2017-06-27 14:00:00.000|false|90        |NULL
+a1de3c68e639bf3aaae5a6158db388ef|Rabies|Rabies Virus Vaccine|90675|18        |US|29b521cd-211f-4e93-8763-40f601d93997|2011-03-03 15:11:54.593|false|90        |NULL
+7160bd45b61118d4fc2df62d6a1e3e77|BioThrax|Anthrax Vaccine|90581|24        |US|976b3185-e452-4254-aff6-911cfc4f1023|2011-03-03 15:11:54.593|false|24        |409498004

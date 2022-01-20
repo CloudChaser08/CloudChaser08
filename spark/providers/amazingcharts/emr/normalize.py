@@ -16,6 +16,7 @@ from spark.common.emr.procedure import schemas as procedure_schemas
 from spark.common.emr.vital_sign import schemas as vital_sign_schemas
 import spark.providers.amazingcharts.emr.transactional_schemas_v1 as transactional_schemas_v1
 import spark.providers.amazingcharts.emr.transactional_schemas_v2 as transactional_schemas_v2
+import spark.providers.amazingcharts.emr.transactional_schemas_v3 as transactional_schemas_v3
 
 from pyspark.sql.window import Window
 from pyspark.sql.functions import col, lit, row_number, split, explode
@@ -27,21 +28,22 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
     provider_name = 'amazingcharts'
 
     output_table_names_to_schemas = {
-        'amazingcharts_clinical_observation': clinical_observation_schemas['schema_v11'],
-        'amazingcharts_diagnosis': diagnosis_schemas['schema_v10'],
-        'amazingcharts_encounter': encounter_schemas['schema_v10'],
-        'amazingcharts_lab_result': lab_result_schema['schema_v8'],
-        'amazingcharts_medication': medication_schemas['schema_v11'],
-        'amazingcharts_procedure': procedure_schemas['schema_v12'],
-        'amazingcharts_vital_sign': vital_sign_schemas['schema_v7'],
-    }
+        'amazingcharts_clin_obsn_final_norm': clinical_observation_schemas['schema_v7'],
+        'amazingcharts_diagnosis_final_norm': diagnosis_schemas['schema_v7'],
+        'amazingcharts_encounter_final_norm': encounter_schemas['schema_v7'],
+        'amazingcharts_lab_result_final_norm': lab_result_schema['schema_v7'],
+        'amazingcharts_medication_final_norm': medication_schemas['schema_v7'],
+        'amazingcharts_procedure_final_norm': procedure_schemas['schema_v8']
+     }
 
     provider_partition_name = '5'
 
     # ------------------------ Common for all providers -----------------------
 
     # New layout after 2018-07-25, but we already got it once on 2018-07-24
-    if date_input >= '2018-01-01':
+    if date_input >= '2021-08-31':
+        source_table_schemas = transactional_schemas_v3
+    elif date_input >= '2018-01-01':
         source_table_schemas = transactional_schemas_v2
     else:
         source_table_schemas = transactional_schemas_v1
@@ -56,7 +58,7 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
         end_to_end_test=end_to_end_test,
         test=test,
         load_date_explode=False,
-        unload_partition_count=10,
+        unload_partition_count=20,
         vdr_feed_id=5,
         use_ref_gen_values=True,
         output_to_transform_path=False
@@ -84,8 +86,13 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
         )
 
     conf_parameters = {
-        'spark.executor.memoryOverhead': 512,
-        'spark.driver.memoryOverhead': 512
+        'spark.default.parallelism': 4000,
+        'spark.sql.shuffle.partitions': 4000,
+        'spark.executor.memoryOverhead': 1024,
+        'spark.driver.memoryOverhead': 1024,
+        'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
+        'spark.sql.autoBroadcastJoinThreshold': 10485760
     }
 
     if not test:
@@ -112,7 +119,7 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
 
     v_proc_sql = """
         SELECT
-            enc.*,
+            cln.*,
             TRIM(
                 REGEXP_REPLACE(
                     REGEXP_REPLACE(
@@ -121,20 +128,19 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
                         ''
                     ),
                     '[^A-Z0-9]',
-                    ' '    
+                    ' '
                 )
             ) AS proc_cd
-        FROM 
-            f_encounter enc
-        WHERE LENGTH(TRIM(COALESCE(enc.cpt_code, ''))) != 0
+        FROM
+            f_clinical_note cln
+        WHERE LENGTH(TRIM(COALESCE(cln.cpt_code, ''))) != 0
             AND
-            TRIM(UPPER(COALESCE(enc.practice_key, 'empty'))) <> 'PRACTICE_KEY'
+            TRIM(UPPER(COALESCE(cln.practice_key, 'empty'))) <> 'PRACTICE_KEY'
     """
-    normalized_procedure_1 = \
-        driver.spark.sql(v_proc_sql).withColumn('proc_cd', explode(split(col('proc_cd'), '\s+'))). \
-            where("length(proc_cd) != 0").cache()
+    proc_1 = driver.spark.sql(v_proc_sql).\
+        withColumn('proc_cd', explode(split(col('proc_cd'), '\s+'))).where("length(proc_cd) != 0")
 
-    normalized_procedure_1.createOrReplaceTempView('f_encounter_explode')
+    proc_1.createOrReplaceTempView('f_clinical_note_explode')
 
     if not test:
         logger.log('Loading external table: gen_ref_whtlst')

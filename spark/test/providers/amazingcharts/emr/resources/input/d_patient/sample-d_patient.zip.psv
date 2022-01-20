@@ -1,11 +1,11 @@
-patient_key|practice_key|gender|birth_year|state|zip|inactive|reason_inactive|marital_status|takes_no_meds|patient_race|language_preference|ethnicity_id|date_of_death|state_code|ethnicity_description|race_description
-48727860|9956|F|1976|WA|985|False||M|False|White||2||WA|Hispanic or Latino|White
-48727864|10032|M|2004|MD|212|False||S|False|Black Hispanic or Latino||1||MD|Refused|Black Hispanic or Latino
-48727868|10171|F|1970|CA|900|False|||False|||||CA|Unknown|Unknown
-48727871|10224|F|1958|IL|604|False||M|False|White Hispanic or Latino||1||IL|Refused|White Hispanic or Latino
-48727880|10380|F|1984|VA|230|False||S|False|White||2||VA|Hispanic or Latino|White
-48727889|11103|F|1983|WV|265|False||M|False|||||WV|Unknown|Unknown
-48727891|11207|M|1974|LA|706|False||S|False|White||2||LA|Hispanic or Latino|White
-48727895|12542|F|1965|NJ|088|False||M|False|||1||NJ|Refused|Unknown
-48727897|12669|F|1935|NY|131|False||S|False|6||2||NY|Hispanic or Latino|White
-48727911|12991|F|1983|HI|967|False||M|False|Filipino||2||HI|Hispanic or Latino|Filipino
+patient_key|practice_key|gender|birth_date|state|zip|inactive|reason_inactive|marital_status|takes_no_meds|patient_race|language_preference|ethnicity_id|date_of_death|state_code|ethnicity_description|race_description
+9eeabc3881b0a53c64058c6f60b0490a|dcc081528272be07bbeb9af74ffdda87|M|1/1/1952|SC|295|false||M|false|||NULL|NULL|SC|NULL|Unknown
+133fe42b954543d7e1e488bea7dac249|cb8ebc7d3652126fd01f536b92bc48e1|F|1/1/2010|SC|297|false|||false|||NULL|NULL|SC|NULL|Unknown
+dd765dfd95eacc7cefe31dc1eb469dba|edaf2e9327e57f7709ada3f292fe8d6c|M|1/1/1987|NE|681|true|||true|||NULL|NULL|NE|NULL|Unknown
+836886f16e3e8645aa0ea3113a55a2d6|edaf2e9327e57f7709ada3f292fe8d6c|F|1/1/1945|NE|688|true|||true|||NULL|NULL|NE|NULL|Unknown
+fad187c7706f54d55bf20c5946cb42aa|88f0e34bd6a6a32d2c1423455fb0e6ed|F|1/1/1969|SC|294|false|||true|||NULL|NULL|SC|NULL|Unknown
+c06c97c917653c741c876cc52c8ed39b|dff3b3fd967b87918148a4d1f9edafa1|M|1/1/2010|SC|296|true|||false|||NULL|NULL|SC|NULL|Unknown
+573c085b29feee1a706498b8dd3a147b|171a742445e7b57e3ee3ccad9ec09a0f|M|1/1/1952|SC|294|false|||false|||3|NULL|SC|Not Hispanic or Latino|Unknown
+7f2a77cf2aafaa1980f079bd265e2931|21db94fa3bfbd5e2a92edcca240306ca|F|1/1/1950|SC|295|false||NULL|true|||NULL|NULL|SC|NULL|Unknown
+e912023500ac1a1d9fd63cbd22687849|748eafc85c79ce1979f36944f183068e|F|1/1/1925|NV|891|false||S|true|||NULL|NULL|NV|NULL|Unknown
+eee4817927d046c3cd9b0906e0ba5069|5d488243a9424797ba3283599d3432fa|F|1/1/1956|NV|891|false|||true|||NULL|NULL|NV|NULL|Unknown

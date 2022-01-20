@@ -91,7 +91,11 @@ def init_udfs(spark):
     spark.udf.register('densify_scalar_array', densify_scalar_array, ArrayType(StringType()))
     spark.udf.register('densify_2d_array', densify_2d_array, ArrayType(ArrayType(StringType())))
     spark.udf.register('densify_2d_array_by_key', densify_2d_array_by_key, ArrayType(ArrayType(StringType())))
-    
+
+    # convert_unit measure
+    spark.udf.register('convert_celsius_to_fahrenheit', convert_celsius_to_fahrenheit)
+    spark.udf.register('convert_kg_to_lb', convert_kg_to_lb)
+    spark.udf.register('convert_cm_to_in', convert_cm_to_in)
     spark.udf.register(
         'find_descendants_recursively', 
         find_descendants_recursively, 
