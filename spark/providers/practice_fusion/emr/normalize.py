@@ -481,8 +481,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                 # 'transcript' - no chunks (encounter1)
                 #  'appointment' - multiple chunks (encounter2)
 
-                sql_list = {1: ('0_practice_fusion_emr_norm_emr_enc_1', 'transcript'),
-                            2: ('0_practice_fusion_emr_norm_emr_enc_2', 'appointment')
+                sql_list = {1: ('practice_fusion_emr_norm_emr_enc_1', 'transcript'),
+                            2: ('practice_fusion_emr_norm_emr_enc_2', 'appointment')
                             }
 
                 for key in sql_list.keys():
@@ -890,7 +890,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
 
                         if staged_cnt > 0:
                             stage_future_data(
-                                driver.spark, this_tmp_location, 'prescription_id', 1, 'prescription', date_input)
+                                driver.spark, this_tmp_location, 'prescription_id', 2, 'prescription', date_input)
                             driver.stop_spark()
                             driver.log_run()
                             driver.copy_to_output_path(output_location=this_output_location)
