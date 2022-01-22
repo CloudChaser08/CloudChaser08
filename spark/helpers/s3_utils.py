@@ -131,7 +131,7 @@ def get_file_path_size(path, recursive=False):
 
 def get_s3_file_count(path, recursive=False):
     """
-    Returns the len(number of files) of file OR all files within a directory on s3.
+    Returns the len(number of files) of path OR all files within a directory on s3.
 
     :param path: s3 path (with s3 or s3a prefix)
     :type path: str
