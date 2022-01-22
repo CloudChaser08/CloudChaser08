@@ -6,6 +6,7 @@ import spark.helpers.constants as constants
 import spark.helpers.file_utils as file_utils
 from spark.helpers.file_utils import FileSystemType
 from spark.helpers.hdfs_utils import get_hdfs_file_count, list_parquet_files, clean_up_output_hdfs
+from spark.helpers.s3_utils import get_s3_file_count, list_files
 from spark.helpers.manifest_utils import write as write_manifests
 from spark.helpers.manifest_utils import list as list_manifest_files
 from spark.helpers.manifest_utils import OUTPUT_DIR
@@ -413,3 +414,96 @@ def custom_rename(spark, staging_dir, partition_name_prefix):
         mk_move_file(partition_name_prefix)
     )
 
+
+def s3distcp(src, dest,
+             server_side_encryption=True,
+             file_chunk_size=1000,
+             deleteOnSuccess=True
+             ):
+    """Uses s3-dist-cp to copy files from s3 to s3.
+    In the case that more than `file_chunk_size` files are to be copied, then these files will
+    be uploaded in chunks. Where each chunk consists of no more than the value set
+    in `file_chunk_size`. Otherwise, all files will be uploaded in a single operation.
+
+    Args:
+        dest (str): A URI that points to where the files should be copied to.
+        src (str): A URI that points to the source directory that
+            contains the files to be copied.
+        server_side_encryption (bool, optional): Determines whether or
+            not the copied files should be encrypted once they're copied
+            to their target destination. Default is, Ture.
+        deleteOnSuccess (bool, optional): Determines whether files should be
+            deleted once they're copyied. Default is True.
+
+            Note:
+                server_side_encryption only works when copying files over to
+                s3. In addition, the target bucket must require an encryption.
+                If the above two requirements are not met, the command will
+                fail.
+        file_chunk_size (int, optional): The number of files to upload at once to s3.
+            Default is, 5000.
+    """
+
+    if src and src[-1] != '/': src = src + '/'
+    if dest[-1] != '/': dest = dest + '/'
+
+    dist_cp_command = [
+        's3-dist-cp',
+        '--s3ServerSideEncryption',
+        '--deleteOnSuccess',
+        '--src', src,
+        '--dest', dest
+    ]
+
+    if not deleteOnSuccess:
+        dist_cp_command.remove('--deleteOnSuccess')
+
+    if get_s3_file_count(src) > file_chunk_size:
+        if not server_side_encryption:
+            dist_cp_command.remove('--s3ServerSideEncryption')
+
+        files = list_files(src, recursive=True, full_path=True)
+        write_manifests(files)
+        file_names = list_manifest_files(OUTPUT_DIR)
+
+        for file_name in file_names:
+            subprocess.check_call(dist_cp_command + ['--srcPrefixesFile', file_name])
+
+        clean_up_output_hdfs(''.join(['hdfs://', OUTPUT_DIR]))
+    else:
+        subprocess.check_call(dist_cp_command)
+
+
+def timed_s3distcp(src, dest,
+                 server_side_encryption=True,
+                 file_chunk_size=5000,
+                 deleteOnSuccess = True):
+    """Uses s3-dist-cp to copy files from s3 to s3 and returns the commands runtime.
+    In the case that more than `file_chunk_size` files are to be copied, then these files will
+    be uploaded in chunks. Where each chunk consists of no more than the value set
+    in `file_chunk_size`. Otherwise, all files will be uploaded in a single operation.
+
+    Args:
+        dest (str): A URI that points to where the files should be copied to.
+        src (str): A URI that points to the source directory that
+            contains the files to be copied.
+        server_side_encryption (bool, optional): Determines whether or
+            not the copied files should be encrypted once they're copied
+            to their target destination. Default is, Ture.
+
+            Note:
+                server_side_encryption only works when copying files over to
+                s3. In addition, the target bucket must require an encryption.
+                If the above two requirements are not met, the command will
+                fail.
+        file_chunk_size (int, optional): The number of files to upload at once to s3.
+            Default is, 5000.
+
+    Returns:
+        run_time (int): The total time it took for s3-dist-cp to run in seconds.
+    """
+
+    start = time.time()
+    s3distcp(src, dest, server_side_encryption, file_chunk_size, deleteOnSuccess)
+
+    return time.time() - start
