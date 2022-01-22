@@ -129,6 +129,20 @@ def get_file_path_size(path, recursive=False):
     return sum([item[1][0] for item in list_files(path, keys=['Size'], recursive=recursive)])
 
 
+def get_s3_file_count(path, recursive=False):
+    """
+    Returns the len(number of files) of path OR all files within a directory on s3.
+
+    :param path: s3 path (with s3 or s3a prefix)
+    :type path: str
+    :param recursive: whether to list files recursively. Defaults to `False`
+    :type recursive: bool
+    :return: The number of files(count) that are within the given directory or given file
+    :rtype: int
+    """
+    return len([item[1][0] for item in list_files(path, keys=['Size'], recursive=recursive)])
+
+
 def get_list_of_2c_subdir(s3_path, include_parent_dir=False):
     """
     Returns the subdirectory paths within a directory on s3
