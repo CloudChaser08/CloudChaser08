@@ -137,7 +137,7 @@ def get_s3_file_count(path, recursive=False):
     :type path: str
     :param recursive: whether to list files recursively. Defaults to `False`
     :type recursive: bool
-    :return: The size(bytes) files that are within the given directory or given file
+    :return: The number of files(count) that are within the given directory or given file
     :rtype: int
     """
     return len([item[1][0] for item in list_files(path, keys=['Size'], recursive=recursive)])
