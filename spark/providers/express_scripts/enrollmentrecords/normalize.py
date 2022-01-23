@@ -5,7 +5,7 @@ import argparse
 import subprocess
 from math import ceil
 import datetime
-from spark.helpers.normalized_records_unloader import distcp
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from spark.common.utility import logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.enrollment import schemas as enrollment_schemas
@@ -172,25 +172,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         driver.copy_to_output_path()
         logger.log('- Saving PHI to s3: ' + S3_REF_PHI)
         # offload reference data
-        subprocess.check_call([
-            'aws',
-            's3',
-            'mv',
-            '--recursive',
-            S3_REF_PHI,
-            S3_REF_PHI_BACKUP.format(date_input=date_input)
-        ])
-        subprocess.check_call([
-            'aws',
-            's3',
-            'rm',
-            '--recursive',
-            S3_REF_PHI
-        ])
-        distcp(
-            dest=S3_REF_PHI,
-            src='hdfs://' + LOCAL_REF_PHI
-        )
+        normalized_records_unloader.s3distcp(src=S3_REF_PHI, dest=S3_REF_PHI_BACKUP.format(date_input=date_input))
+        normalized_records_unloader.distcp(dest=S3_REF_PHI, src='hdfs://' + LOCAL_REF_PHI)
     logger.log("Done")
 
 

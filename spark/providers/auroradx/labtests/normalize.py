@@ -123,6 +123,10 @@ def main(args):
     spark.stop()
 
     # the full data set is reprocessed every time
+    bk_output_path = \
+        output_path.replace('/warehouse/', '/backup/' + args.date + '/') + 'part_provider=aurora_diagnostics/'
+    normalized_records_unloader.s3distcp(src=output_path + 'part_provider=aurora_diagnostics', dest=bk_output_path)
+
     subprocess.check_output(['aws', 's3', 'rm', '--recursive',
                              output_path + 'part_provider=aurora_diagnostics'])
 

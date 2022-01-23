@@ -12,6 +12,7 @@ import spark.common.utility.logger as logger
 import spark.helpers.postprocessor as postprocessor
 from dateutil.relativedelta import relativedelta
 import spark.helpers.file_utils as file_utils
+from spark.helpers.normalized_records_unloader import s3distcp
 
 b_run_dedup = True
 
@@ -127,11 +128,8 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
             two_months_prior = (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m')
 
             for month in [current_year_month, one_month_prior, two_months_prior]:
-                subprocess.check_call(
-                    ['aws', 's3', 'mv', '--recursive',
-                     driver.output_path + 'medicalclaims/2017-02-24/' + date_part.format(month),
-                     tmp_path + date_part.format(month)]
-                )
+                s3distcp(src=driver.output_path + 'medicalclaims/2017-02-24/' + date_part.format(month),
+                         dest=tmp_path + date_part.format(month))
         else:
             logger.log('De-dupe process disabled')
         driver.copy_to_output_path()
