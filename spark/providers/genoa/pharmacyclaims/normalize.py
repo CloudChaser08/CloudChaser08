@@ -185,10 +185,8 @@ def main(args):
         ['aws', 's3', 'rm', '--recursive', '{}part_provider=genoa/'.format(backup_path)]
     )
 
-    subprocess.check_call([
-        'aws', 's3', 'mv', '--recursive', '{}part_provider=genoa/'.format(output_path),
-        '{}part_provider=genoa/'.format(backup_path)
-    ])
+    normalized_records_unloader.s3distcp(src='{}part_provider=genoa/'.format(output_path),
+                                         dest='{}part_provider=genoa/'.format(backup_path))
 
     if args.airflow_test:
         normalized_records_unloader.distcp(output_path)

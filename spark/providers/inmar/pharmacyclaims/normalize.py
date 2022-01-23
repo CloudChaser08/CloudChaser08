@@ -11,6 +11,7 @@ from spark.common.utility.output_type import DataType, RunType
 import spark.common.utility.logger as logger
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
+from spark.helpers.normalized_records_unloader import s3distcp
 
 
 if __name__ == "__main__":
@@ -94,10 +95,7 @@ if __name__ == "__main__":
         (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m-01')
 
     for month in [current_year_month, one_month_prior, two_months_prior]:
-        subprocess.check_call(
-            ['aws', 's3', 'mv', '--recursive',
-             driver.output_path + 'pharmacyclaims/2018-11-26/' + date_part.format(month),
-             tmp_path + date_part.format(month)]
-        )
+        s3distcp(src=driver.output_path + 'pharmacyclaims/2018-11-26/' + date_part.format(month),
+                 dest=tmp_path + date_part.format(month))
 
     driver.copy_to_output_path()

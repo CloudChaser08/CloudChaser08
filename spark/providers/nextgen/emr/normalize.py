@@ -622,13 +622,17 @@ def main(args):
         try:
             check_output(['hadoop', 'fs', '-ls', HDFS_ENCOUNTER_REFERENCE])
             if args.output_enc_ref.startswith('s3://'):
-                check_output(['aws', 's3', 'rm', '--recursive', args.output_enc_ref])
-                check_output(['s3-dist-cp', '--src', HDFS_ENCOUNTER_REFERENCE,
-                              '--dest', args.output_enc_ref])
+                # check_output(['aws', 's3', 'rm', '--recursive', args.output_enc_ref])
+                # check_output(['s3-dist-cp', '--src', HDFS_ENCOUNTER_REFERENCE,
+                #               '--dest', args.output_enc_ref])
+                bk_output_enc_ref = args.output_enc_ref.replace('/reference/', '/backup/reference/' + args.date + '/')
+                normalized_records_unloader.s3distcp(src=args.output_enc_ref, dest=bk_output_enc_ref)
+                normalized_records_unloader.distcp(dest=args.output_enc_ref, src=HDFS_ENCOUNTER_REFERENCE)
             elif args.output_enc_ref.startswith('hdfs://'):
                 check_output(['hadoop', 'fs', '-rm', '-r', '-f', args.output_enc_ref])
-                check_output(['s3-dist-cp', '--src', HDFS_ENCOUNTER_REFERENCE,
-                              '--dest', args.output_enc_ref])
+                # check_output(['s3-dist-cp', '--src', HDFS_ENCOUNTER_REFERENCE,
+                #               '--dest', args.output_enc_ref])
+                normalized_records_unloader.distcp(dest=args.output_enc_ref, src=HDFS_ENCOUNTER_REFERENCE)
             else:
                 raise ValueError("Unexpected protocol in encounter output path")
             check_output(['hadoop', 'fs', '-rm', '-r', '-f', HDFS_ENCOUNTER_REFERENCE])
@@ -638,13 +642,18 @@ def main(args):
         try:
             check_output(['hadoop', 'fs', '-ls', HDFS_DEMOGRAPHICS_REFERENCE])
             if args.output_enc_ref.startswith('s3://'):
-                check_output(['aws', 's3', 'rm', '--recursive', args.output_demo_ref])
-                check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
-                              '--dest', args.output_demo_ref])
+                # check_output(['aws', 's3', 'rm', '--recursive', args.output_demo_ref])
+                # check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
+                #               '--dest', args.output_demo_ref])
+
+                bk_output_demo_ref = args.output_demo_ref.replace('/reference/', '/backup/reference/' + args.date + '/')
+                normalized_records_unloader.s3distcp(src=args.output_demo_ref, dest=bk_output_demo_ref)
+                normalized_records_unloader.distcp(dest=args.output_enc_ref, src=HDFS_DEMOGRAPHICS_REFERENCE)
             elif args.output_enc_ref.startswith('hdfs://'):
                 check_output(['hadoop', 'fs', '-rm', '-r', '-f', args.output_demo_ref])
-                check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
-                              '--dest', args.output_demo_ref])
+                # check_output(['s3-dist-cp', '--src', HDFS_DEMOGRAPHICS_REFERENCE,
+                #               '--dest', args.output_demo_ref])
+                normalized_records_unloader.distcp(dest=args.output_enc_ref, src=HDFS_DEMOGRAPHICS_REFERENCE)
             else:
                 raise ValueError("Unexpected protocol in demographics output path")
             check_output(['hadoop', 'fs', '-rm', '-r', '-f', HDFS_DEMOGRAPHICS_REFERENCE])

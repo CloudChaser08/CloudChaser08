@@ -57,12 +57,15 @@ class Covid19LabTransformer:
         ops_status = True
         try:
             if len(src_path) > 0 and len(target_path) > 0:
-                if action in ['sync', 'cp', 'mv']:
-                    subprocess.\
-                        check_call(['aws', 's3', action, '--recursive', src_path, target_path])
+                if action == 'sync':
+                    subprocess.check_call(['aws', 's3', action, '--recursive', src_path, target_path])
+                elif action == 'cp':
+                    normalized_records_unloader.s3distcp(src=src_path, dest=target_path, deleteOnSuccess=False)
+                elif action == 'mv':
+                    normalized_records_unloader.s3distcp(src=src_path, dest=target_path)
                 elif action == 'sw':
                     subprocess.check_call(['aws', 's3', 'rm', '--recursive', target_path])
-                    subprocess.check_call(['aws', 's3', 'mv', '--recursive', src_path, target_path])
+                    normalized_records_unloader.s3distcp(src=src_path, dest=target_path)
             elif action == 'rm' and len(src_path) > 0:
                 subprocess.check_call(['aws', 's3', 'rm', '--recursive', src_path])
         except Exception as e:
