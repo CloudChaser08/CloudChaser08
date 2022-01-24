@@ -459,7 +459,7 @@ def s3distcp(src, dest,
         dist_cp_command.remove('--deleteOnSuccess')
 
     try:
-        files = [item[1] for item in list_files(path, recursive=recursive)]
+        files = [item for item in list_files(path, recursive=True, full_path=True)]
     except:
         files = []
 
