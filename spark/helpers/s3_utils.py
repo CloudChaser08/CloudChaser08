@@ -140,8 +140,11 @@ def get_s3_file_count(path, recursive=False):
     :return: The number of files(count) that are within the given directory or given file
     :rtype: int
     """
-    files = [list_files(path, recursive=recursive)]
-    return len(files) or 0
+    try:
+        files_cnt = len([list_files(path, recursive=recursive)])
+    except:
+        files_cnt = 0
+    return files_cnt
 
 
 def get_list_of_2c_subdir(s3_path, include_parent_dir=False):

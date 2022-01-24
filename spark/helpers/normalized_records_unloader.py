@@ -458,7 +458,8 @@ def s3distcp(src, dest,
     if not deleteOnSuccess:
         dist_cp_command.remove('--deleteOnSuccess')
 
-    if get_s3_file_count(src) > file_chunk_size:
+    s3_files_sec_cnt = get_s3_file_count(src)
+    if s3_files_sec_cnt > file_chunk_size:
         if not server_side_encryption:
             dist_cp_command.remove('--s3ServerSideEncryption')
 
@@ -470,7 +471,7 @@ def s3distcp(src, dest,
             subprocess.check_call(dist_cp_command + ['--srcPrefixesFile', file_name])
 
         clean_up_output_hdfs(''.join(['hdfs://', OUTPUT_DIR]))
-    else:
+    elif s3_files_sec_cnt > 0:
         subprocess.check_call(dist_cp_command)
 
 
