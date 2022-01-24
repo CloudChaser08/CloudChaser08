@@ -141,7 +141,7 @@ def get_s3_file_count(path, recursive=False):
     :rtype: int
     """
     try:
-        files_cnt = len([list_files(path, recursive=recursive)])
+        files_cnt = len([item[1] for item in list_files(path, recursive=recursive)])
     except:
         files_cnt = 0
     return files_cnt

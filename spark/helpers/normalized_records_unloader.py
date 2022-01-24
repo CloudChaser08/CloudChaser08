@@ -458,12 +458,15 @@ def s3distcp(src, dest,
     if not deleteOnSuccess:
         dist_cp_command.remove('--deleteOnSuccess')
 
-    s3_files_sec_cnt = get_s3_file_count(src)
-    if s3_files_sec_cnt > file_chunk_size:
+    try:
+        files = [item[1] for item in list_files(path, recursive=recursive)]
+    except:
+        files = []
+
+    if len(files) > file_chunk_size:
         if not server_side_encryption:
             dist_cp_command.remove('--s3ServerSideEncryption')
 
-        files = list_files(src, recursive=True, full_path=True)
         write_manifests(files)
         file_names = list_manifest_files(OUTPUT_DIR)
 
@@ -471,7 +474,7 @@ def s3distcp(src, dest,
             subprocess.check_call(dist_cp_command + ['--srcPrefixesFile', file_name])
 
         clean_up_output_hdfs(''.join(['hdfs://', OUTPUT_DIR]))
-    elif s3_files_sec_cnt > 0:
+    elif len(files) > 0:
         subprocess.check_call(dist_cp_command)
 
 
