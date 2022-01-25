@@ -107,14 +107,16 @@ def run(date_input, end_to_end_test=False, no_daily_load=False, test=False, spar
         (datetime.strptime(args.date, '%Y-%m-%d') - relativedelta(months=2)).strftime('%Y-%m-01')
 
     for month in [current_year_month, one_month_prior, two_months_prior]:
-        normalized_records_unloader.s3distcp(src=driver.output_path + provider_date_part.format(month),
-                                             dest=tmp_path + provider_date_part.format(month))
+        subprocess.check_call(
+            ['aws', 's3', 'mv', '--recursive',
+             driver.output_path + provider_date_part.format(month), tmp_path + provider_date_part.format(month)]
+        )
     if not no_daily_load:
         logger.log('Backup historical daily data')
         backup_path = '{}{}part_file_date={}/'.format(daily_output_path.replace('salusv', 'salusv/backup'),
                                                       provider_output_directory, date_input)
-        normalized_records_unloader.s3distcp(src=daily_output_path + provider_output_directory, dest=backup_path)
-
+        subprocess.check_call(['aws', 's3', 'mv', '--recursive',
+                               daily_output_path + provider_output_directory, backup_path])
         # daily delivery location should only have data from most recent run
         normalized_records_unloader.distcp(daily_output_path, src=daily_staging_dir)
 

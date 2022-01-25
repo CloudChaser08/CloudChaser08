@@ -157,8 +157,10 @@ def main(args):
 
     date_part = 'part_provider=pdx/part_best_date={}/'
     for yr_month in [current_year_month, prev_year_month]:
-        normalized_records_unloader.s3distcp(src=os.path.join(output_path, date_part.format(yr_month)),
-                                             dest=os.path.join(tmp_path, date_part.format(yr_month)))
+        subprocess.check_call(
+            ['aws', 's3', 'mv', '--recursive', os.path.join(output_path, date_part.format(yr_month)),
+             os.path.join(tmp_path, date_part.format(yr_month))]
+        )
 
     if args.end_to_end_test:
         normalized_records_unloader.distcp(output_path)

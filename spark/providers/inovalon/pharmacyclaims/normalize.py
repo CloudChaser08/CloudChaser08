@@ -18,7 +18,6 @@ from spark.common.pharmacyclaims import schemas as pharmacyclaims_schema
 import spark.helpers.postprocessor as postprocessor
 import spark.common.utility.logger as logger
 from dateutil.relativedelta import relativedelta
-from spark.helpers.normalized_records_unloader import s3distcp
 
 
 def run(date_input, end_to_end_test):
@@ -135,8 +134,11 @@ def run(date_input, end_to_end_test):
     two_months_prior = (driver.date_input - relativedelta(months=2)).strftime('%Y-%m-01')
 
     for month in [current_year_month, one_month_prior, two_months_prior]:
-        s3distcp(src=driver.output_path + 'pharmacyclaims/2018-11-26/' + date_part.format(month),
-                 dest=tmp_path + date_part.format(month))
+        subprocess.check_call(
+            ['aws', 's3', 'mv', '--recursive',
+             driver.output_path + 'pharmacyclaims/2018-11-26/' + date_part.format(month),
+             tmp_path + date_part.format(month)]
+        )
 
     driver.copy_to_output_path()
     logger.log('Done')

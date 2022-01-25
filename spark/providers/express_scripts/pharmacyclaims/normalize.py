@@ -15,7 +15,7 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.pharmacyclaims import schemas as pharma_schemas
 import spark.providers.express_scripts.pharmacyclaims.transactional_schemas as source_table_schemas
 import spark.helpers.postprocessor as postprocessor
-from spark.helpers.normalized_records_unloader import s3distcp
+
 
 ACCREDO_PREFIX = '10130X001_HV_ODS_Claims'
 NON_ACCREDO_PREFIX = '10130X001_HV_RX_Claims'
@@ -203,8 +203,11 @@ def run(date_input, first_run, reversal_apply_hist_months, end_to_end_test=False
                     schema.provider_partition_column, provider_partition_name)
             date_part = 'part_best_date={}/'
             for month in list_of_months.values():
-                s3distcp(src=normalized_output_provider_path + date_part.format(month),
-                         dest=tmp_path + date_part.format(month))
+                subprocess.check_call(
+                    ['aws', 's3', 'mv', '--recursive',
+                     normalized_output_provider_path + date_part.format(month)
+                        , tmp_path + date_part.format(month)]
+                )
         driver.copy_to_output_path()
         if not first_run:
             hdfs_utils.clean_up_output_hdfs(STAGE_REVERSE_TRANS_PATH)
