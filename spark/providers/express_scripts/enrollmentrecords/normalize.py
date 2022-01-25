@@ -172,7 +172,21 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         driver.copy_to_output_path()
         logger.log('- Saving PHI to s3: ' + S3_REF_PHI)
         # offload reference data
-        normalized_records_unloader.s3distcp(src=S3_REF_PHI, dest=S3_REF_PHI_BACKUP.format(date_input=date_input))
+        subprocess.check_call([
+            'aws',
+            's3',
+            'mv',
+            '--recursive',
+            S3_REF_PHI,
+            S3_REF_PHI_BACKUP.format(date_input=date_input)
+        ])
+        subprocess.check_call([
+            'aws',
+            's3',
+            'rm',
+            '--recursive',
+            S3_REF_PHI
+        ])
         normalized_records_unloader.distcp(dest=S3_REF_PHI, src='hdfs://' + LOCAL_REF_PHI)
     logger.log("Done")
 

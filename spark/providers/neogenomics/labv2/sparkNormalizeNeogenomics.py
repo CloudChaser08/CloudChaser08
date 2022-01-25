@@ -127,8 +127,10 @@ def main(args):
 
     backup_path = output_path.replace('salusv', 'salusv/backup')
 
-    normalized_records_unloader.s3distcp(src='{}part_provider=neogenomics/'.format(output_path),
-                                         dest='{}part_provider=neogenomics/'.format(backup_path))
+    subprocess.check_call([
+        'aws', 's3', 'mv', '--recursive', '{}part_provider=neogenomics/'.format(output_path),
+        '{}part_provider=neogenomics/'.format(backup_path)
+    ])
 
     if args.end_to_end_test:
         normalized_records_unloader.distcp(output_path)
