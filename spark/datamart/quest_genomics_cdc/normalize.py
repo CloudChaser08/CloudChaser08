@@ -8,28 +8,34 @@ from spark.runner import Runner
 from spark.spark_setup import init
 import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.s3_utils as s3_utils
-import spark.helpers.records_loader as records_loader
-import spark.helpers.payload_loader as payload_loader
-import spark.datamart.helix_genomics_cdc.transactional_schemas as source_table_schema
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
+# Provider
+base_part_provider = 'quest_rinse'
+
+base_extract_sql = """SELECT DISTINCT
+        substring_index(vendor_record_id,'~',1) as accession_id, hvid
+    FROM {base_part_provider_tbl}
+    WHERE lab_id = '11'
+        AND test_ordered_name like '%SARS%'
+        AND result_id in ('86030478','86030485','86030486','86029812','86029813','86029814')
+        AND hvid is not null
+    """
+
 # HDFS output locations
-stg_loc = '/staging/helix_extract/'
-provider_extract_loc = '/staging/helix_provider_extract/'
+stg_loc = '/staging/quest_extract/'
+provider_extract_loc = '/staging/quest_provider_extract/'
 cdc_stg_loc = '/staging/{}/'
 
 # S3 output locations
-s3_cdc_loc = 's3://salusv/warehouse/datahub/cdc_genomics/overlap/helix/'
-s3_ops_loc = "s3://salusv/warehouse/datahub/prodops/cdc_genomics_overlap/helix_hv004689/ops_dt={date_input}/"
+s3_cdc_loc = 's3://salusv/warehouse/datahub/cdc_genomics/overlap/quest/'
+s3_ops_loc = "s3://salusv/warehouse/datahub/prodops/cdc_genomics_overlap/quest/ops_dt={date_input}/"
 
-table_list = ['helix_hvid_overlap_all_years']
+table_list = ['quest_hvid_overlap_all_years']
 
 # Labtests warehouse data location
 labtests_loc = "s3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider={}/"
 
-# Transaction and payload location
-transaction_path = 's3://salusv/incoming/census/helix/hv004689/'
-payload_path = 's3://salusv/matching/payload/census/helix/hv004689/'
 
 # Labtests providers for crosswalk
 part_provider_list = [
@@ -38,9 +44,8 @@ part_provider_list = [
     'labcorp_covid',
     'luminate',
     'neogenomics',
-    'ovation',
-    'quest',
-    'quest_rinse']
+    'ovation'
+    ]
 
 if __name__ == "__main__":
     # Parse input arguments
@@ -48,33 +53,19 @@ if __name__ == "__main__":
     parser.add_argument('--date', type=str)
     args = parser.parse_known_args()[0]
     date_input = args.date
-    logger.log("Helix CDC Refresh- {}". format(date_input))
+    logger.log("Quest CDC Refresh- {}". format(date_input))
 
     # init
-    spark, sql_context = init("Helix CDC Refresh- {}". format(date_input.replace('/', '')))
+    spark, sql_context = init("Quest CDC Refresh- {}". format(date_input.replace('/', '')))
 
     # initialize runner
     runner = Runner(sql_context)
 
-    # list all batch locations
-    transaction_batches = [path for path in s3_utils.list_folders(transaction_path, full_path=True)]
-    payload_batches = [path for path in s3_utils.list_folders(payload_path, full_path=True)]
+    # extract from base
+    spark.read.parquet(labtests_loc.format(base_part_provider)).createOrReplaceTempView('labtests_base_provider_tbl')
 
-    logger.log('Loading the source data')
-
-    logger.log(' -loading: transactions')
-    records_loader.load_and_clean_all_v2(
-        runner, transaction_batches, source_table_schema, load_file_name=True, spark_context=spark)
-    df_trans = spark.table('txn')
-
-    logger.log(' -Loading: payload')
-    df_pay = payload_loader.load(runner, payload_batches, cache=True, return_output=True)
-    logger.log('........extract process started')
-
-    # Joining transaction and payload data, and storing result
-    df_trans.join(df_pay, ['hvjoinkey']).select(
-        df_trans.claimid, df_trans.hvjoinkey, df_pay.hvid).distinct().repartition(2).write.parquet(
-        stg_loc, compression='gzip', mode='overwrite')
+    spark.sql(base_extract_sql.format(base_part_provider_tbl='labtests_base_provider_tbl')).\
+        repartition(2).write.parquet(stg_loc, compression='gzip', mode='overwrite')
 
     # Loading stored data
     df_stg = spark.read.parquet(stg_loc)
@@ -99,14 +90,14 @@ if __name__ == "__main__":
         logger.log("...write " + provider_extract_loc + 'part_provider={}/'.format(part_provider))
 
         # Crosswalk and storing result
-        df_stg.join(df_prov, ['hvid']).select(df_stg.claimid, df_stg.hvid, df_prov.part_best_date)\
+        df_stg.join(df_prov, ['hvid']).select(df_stg.accession_id, df_stg.hvid, df_prov.part_best_date)\
             .withColumn("part_best_date", df_prov["part_best_date"].cast(StringType()))\
             .distinct().repartition(1).write.parquet(
             provider_extract_loc + 'part_provider={}/'.format(part_provider), compression='gzip', mode='overwrite')
 
         additional_data_clmn = additional_data_clmn + """,ols.{provider}""".format(provider=part_provider)
         select_sql = select_sql + select_stmnt.format(provider=part_provider)
-        join_sql = join_sql + join_stmnt.format(provider=part_provider, filter='')
+        join_sql = join_sql + join_stmnt.format(provider=part_provider)
 
         logger.log("completed {}".format(part_provider))
         
@@ -118,7 +109,7 @@ if __name__ == "__main__":
     spark.read.parquet(provider_extract_loc).createOrReplaceTempView('cdc_provider_stg_tbl')
     additional_data_clmn = 'COALESCE(' + additional_data_clmn.strip(',') + ', NULL) AS additional_data'
 
-    overlap_sql = """SELECT DISTINCT ols.claimid as identifier, ols.hvid, 
+    overlap_sql = """SELECT DISTINCT ols.accession_id, ols.hvid, 
         {additional_data} FROM (  
         SELECT  
             stg.* 
@@ -127,7 +118,6 @@ if __name__ == "__main__":
             {join_sql}
         ) ols
     """
-
     for tbl in table_list:
         logger.log('writing {}'.format(tbl))
         v_sql = overlap_sql.format(additional_data=additional_data_clmn, select_sql=select_sql, join_sql=join_sql)
