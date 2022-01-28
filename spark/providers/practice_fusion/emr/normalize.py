@@ -349,7 +349,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                                 stage_future_data(driver.spark, this_tmp_location, clmn, 1, master_tbl, date_input)
                                 driver.stop_spark()
                                 driver.log_run()
-                                driver.copy_to_output_path(output_location=driver.output_path)
+                                driver.copy_to_output_path()
                                 # Copy claims to reference location
                                 logger.log("Writing claims to the reference location for future duplication checking")
                                 normalized_records_unloader.distcp(this_ref_location, src=this_tmp_location)
@@ -461,7 +461,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                                 stage_future_data(driver.spark, this_tmp_location, clmn, 1, master_tbl, date_input)
                                 driver.stop_spark()
                                 driver.log_run()
-                                driver.copy_to_output_path(output_location=driver.output_path)
+                                driver.copy_to_output_path()
                                 # Copy claims to reference location
                                 logger.log("Writing claims to the reference location for future duplication checking")
                                 normalized_records_unloader.distcp(this_ref_location, src=this_tmp_location)
@@ -587,7 +587,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                                 stage_future_data(driver.spark, this_tmp_location, clmn, 1, master_tbl, date_input)
                                 driver.stop_spark()
                                 driver.log_run()
-                                driver.copy_to_output_path(output_location=driver.output_path)
+                                driver.copy_to_output_path()
                                 # Copy claims to reference location
                                 logger.log("Writing claims to the reference location for future duplication checking")
                                 normalized_records_unloader.distcp(this_ref_location, src=this_tmp_location)
@@ -710,7 +710,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                                     '{}_id'.format(master_tbl[p]), 1, master_tbl[p], date_input)
                             driver.stop_spark()
                             driver.log_run()
-                            driver.copy_to_output_path(output_location=driver.output_path)
+                            driver.copy_to_output_path()
                             # Copy claims to reference location
                             logger.log("Writing claims to the reference location for future duplication checking")
                             for p in master_tbl:
@@ -893,7 +893,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                                 driver.spark, this_tmp_location, 'prescription_id', 2, 'prescription', date_input)
                             driver.stop_spark()
                             driver.log_run()
-                            driver.copy_to_output_path(output_location=driver.output_path)
+                            driver.copy_to_output_path()
                             # Copy claims to reference location
                             logger.log("Writing claims to the reference location for future duplication checking")
                             normalized_records_unloader.distcp(this_ref_location, src=this_tmp_location)
@@ -951,7 +951,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                 driver.save_to_disk()
                 driver.stop_spark()
                 driver.log_run()
-                driver.copy_to_output_path(output_location=driver.output_path)
+                driver.copy_to_output_path()
 
 
 def main(args):
