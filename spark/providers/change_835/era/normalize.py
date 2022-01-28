@@ -16,7 +16,7 @@ if __name__ == "__main__":
         'change_835_normalized_detail_final': detail_schemas['schema_v6'],
         'change_835_normalized_summary_final': summary_schemas['schema_v6']
     }
-    provider_partition_name = 'change'
+    provider_partition_name = '186'
 
     # ------------------------ Common for all providers -----------------------
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         vdr_feed_id=186,
         use_ref_gen_values=True,
         output_to_delivery_path=has_delivery_path,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     conf_parameters = {
