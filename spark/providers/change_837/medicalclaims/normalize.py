@@ -56,7 +56,7 @@ if __name__ == "__main__":
         unload_partition_count=40,
         load_date_explode=False,
         output_to_delivery_path=has_delivery_path,
-        output_to_transform_path=True,
+        output_to_transform_path=False,
     )
 
     conf_parameters = {
