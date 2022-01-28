@@ -24,7 +24,7 @@ from spark.common.emr.medication import schemas as medication_schema
 from spark.common.emr.clinical_observation import schemas as clinical_observation_schema
 
 LOAD_OUTPUT_OPP_DW = False
-LOAD_INTO_TRANSFORM = True   # After full autmation, we can switch to prod
+LOAD_INTO_TRANSFORM = False   # After full autmation, we can switch to prod
 FEED_ID = '136'
 FNULL = open(os.devnull, 'w')
 
@@ -294,8 +294,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                             output_to_transform_path=LOAD_INTO_TRANSFORM
                         )
                         driver.provider_directory_path = driver.provider_directory_path + mdl + '/'
-                        this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
-                            if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
+                        # this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
+                        #     if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
 
                         # driver.init_spark_context()
                         driver.init_spark_context(conf_parameters=conf_parameters)
@@ -349,7 +349,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                                 stage_future_data(driver.spark, this_tmp_location, clmn, 1, master_tbl, date_input)
                                 driver.stop_spark()
                                 driver.log_run()
-                                driver.copy_to_output_path(output_location=this_output_location)
+                                driver.copy_to_output_path()
                                 # Copy claims to reference location
                                 logger.log("Writing claims to the reference location for future duplication checking")
                                 normalized_records_unloader.distcp(this_ref_location, src=this_tmp_location)
@@ -407,8 +407,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                             output_to_transform_path=LOAD_INTO_TRANSFORM
                         )
                         driver.provider_directory_path = driver.provider_directory_path + mdl + '/'
-                        this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
-                            if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
+                        # this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
+                        #     if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
 
                         driver.init_spark_context()
 
@@ -461,7 +461,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                                 stage_future_data(driver.spark, this_tmp_location, clmn, 1, master_tbl, date_input)
                                 driver.stop_spark()
                                 driver.log_run()
-                                driver.copy_to_output_path(output_location=this_output_location)
+                                driver.copy_to_output_path()
                                 # Copy claims to reference location
                                 logger.log("Writing claims to the reference location for future duplication checking")
                                 normalized_records_unloader.distcp(this_ref_location, src=this_tmp_location)
@@ -539,8 +539,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                             output_to_transform_path=LOAD_INTO_TRANSFORM
                         )
 
-                        this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
-                            if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
+                        # this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
+                        #     if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
                         driver.provider_directory_path = driver.provider_directory_path + mdl + '/'
 
                         driver.init_spark_context(conf_parameters=conf_parameters)
@@ -587,7 +587,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                                 stage_future_data(driver.spark, this_tmp_location, clmn, 1, master_tbl, date_input)
                                 driver.stop_spark()
                                 driver.log_run()
-                                driver.copy_to_output_path(output_location=this_output_location)
+                                driver.copy_to_output_path()
                                 # Copy claims to reference location
                                 logger.log("Writing claims to the reference location for future duplication checking")
                                 normalized_records_unloader.distcp(this_ref_location, src=this_tmp_location)
@@ -655,8 +655,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                         vdr_feed_id=136,
                         output_to_transform_path=LOAD_INTO_TRANSFORM
                     )
-                    this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
-                        if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
+                    # this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
+                    #     if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
 
                     driver.provider_directory_path = driver.provider_directory_path + mdl + '/'
 
@@ -710,7 +710,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                                     '{}_id'.format(master_tbl[p]), 1, master_tbl[p], date_input)
                             driver.stop_spark()
                             driver.log_run()
-                            driver.copy_to_output_path(output_location=this_output_location)
+                            driver.copy_to_output_path()
                             # Copy claims to reference location
                             logger.log("Writing claims to the reference location for future duplication checking")
                             for p in master_tbl:
@@ -778,8 +778,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                     vdr_feed_id=136,
                     output_to_transform_path=LOAD_INTO_TRANSFORM
                 )
-                this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
-                    if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
+                # this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
+                #     if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
 
                 driver.provider_directory_path = driver.provider_directory_path + mdl + '/'
 
@@ -844,8 +844,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                         vdr_feed_id=136,
                         output_to_transform_path=LOAD_INTO_TRANSFORM
                     )
-                    this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
-                        if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
+                    # this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
+                    #     if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
 
                     driver.provider_directory_path = driver.provider_directory_path + mdl + '/'
 
@@ -893,7 +893,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                                 driver.spark, this_tmp_location, 'prescription_id', 2, 'prescription', date_input)
                             driver.stop_spark()
                             driver.log_run()
-                            driver.copy_to_output_path(output_location=this_output_location)
+                            driver.copy_to_output_path()
                             # Copy claims to reference location
                             logger.log("Writing claims to the reference location for future duplication checking")
                             normalized_records_unloader.distcp(this_ref_location, src=this_tmp_location)
@@ -926,8 +926,8 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                     vdr_feed_id=136,
                     output_to_transform_path=LOAD_INTO_TRANSFORM
                 )
-                this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
-                    if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
+                # this_output_location = driver.output_path.replace('/parquet/', opp1186_warehouse) \
+                #     if LOAD_OUTPUT_OPP_DW and not driver.output_to_transform_path else None
 
                 driver.provider_directory_path = driver.provider_directory_path + mdl + '/'
 
@@ -951,7 +951,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                 driver.save_to_disk()
                 driver.stop_spark()
                 driver.log_run()
-                driver.copy_to_output_path(output_location=this_output_location)
+                driver.copy_to_output_path()
 
 
 def main(args):
