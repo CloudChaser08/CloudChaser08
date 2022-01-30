@@ -1,198 +1,169 @@
 """
 quest normalize
 """
-#! /usr/bin/python
 import argparse
-import time
-import logging
+import pyspark.sql.functions as FN
+
 from datetime import timedelta, datetime
-from spark.runner import Runner
-from spark.spark_setup import init
 import spark.helpers.file_utils as file_utils
 import spark.helpers.payload_loader as payload_loader
-import spark.helpers.external_table_loader as external_table_loader
+import spark.helpers.records_loader as records_loader
 import spark.helpers.postprocessor as postprocessor
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.privacy.labtests as lab_priv
-
-from spark.common.utility.output_type import DataType, RunType
-from spark.common.utility.run_recorder import RunRecorder
+from spark.common.marketplace_driver import MarketplaceDriver
+from spark.common.lab_common_model import schemas as labtest_schemas
+import spark.providers.quest.labtests.transactional_schemas_v1a as transactions_v1a
+import spark.providers.quest.labtests.transactional_schemas_v1 as transactions_v1
+import spark.providers.quest.labtests.transactional_schemas_v2 as transactions_v2
+import spark.providers.quest.labtests.transactional_schemas_v3 as transactions_v3
 from spark.common.utility import logger
 
-
-TODAY = time.strftime('%Y-%m-%d', time.localtime())
-
-OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/spark-output/'
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/labtests/2017-02-16/'
+CUTOFF_DATE_V1 = datetime.strptime('2016-08-31', '%Y-%m-%d')
+CUTOFF_DATE_V2 = datetime.strptime('2017-01-15', '%Y-%m-%d')
 
 
-def run(spark, runner, date_input, test=False, airflow_test=False):
-    date_obj = datetime.strptime(date_input, '%Y-%m-%d')
+def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
+    logger.log(" -quest-labtests: normalization ")
 
-    setid = 'HealthVerity_' + \
-            date_obj.strftime('%Y%m%d') + \
-            (date_obj + timedelta(days=1)).strftime('%m%d')
+    # ------------------------ Provider specific configuration -----------------------
+    provider_name = 'quest'
+    output_table_names_to_schemas = {
+        'quest_labtest_norm_final': labtest_schemas['schema_v4'],
+    }
+    provider_partition_name = 'quest'
 
-    vendor_feed_id = '18'
-    vendor_id = '7'
+    # ------------------------ Common for all providers -----------------------
+    is_schema_v1 = datetime.strptime(date_input, '%Y-%m-%d') < CUTOFF_DATE_V1
+    is_schema_v2 = CUTOFF_DATE_V1 <= datetime.strptime(date_input, '%Y-%m-%d') < CUTOFF_DATE_V2
+
+    if is_schema_v1:
+        logger.log('Historic Load schema')
+        source_table_schemas = transactions_v1
+    elif is_schema_v2:
+        logger.log('Load without NPI')
+        source_table_schemas = transactions_v2
+    else:
+        logger.log('Current Load schema with NPI')
+        source_table_schemas = transactions_v3
+
+    # Create and run driver
+    driver = MarketplaceDriver(
+        provider_name,
+        provider_partition_name,
+        source_table_schemas,
+        output_table_names_to_schemas,
+        date_input,
+        end_to_end_test,
+        test=test,
+        unload_partition_count=5,
+        vdr_feed_id=18,
+        load_date_explode=False,
+        use_ref_gen_values=True,
+        output_to_transform_path=False
+    )
+
+    conf_parameters = {
+        'spark.executor.memoryOverhead': 1024,
+        'spark.driver.memoryOverhead': 1024
+    }
+
+    if not test:
+        driver.init_spark_context(conf_parameters=conf_parameters)
+    else:
+        driver.spark = spark
+        driver.runner = runner
 
     script_path = __file__
-
     if test:
-        input_path = file_utils.get_abs_path(
+        driver.input_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/quest/resources/input/year/month/day/'
         ) + '/'
-        matching_path = file_utils.get_abs_path(
+        driver.matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/quest/resources/matching/year/month/day/'
         ) + '/'
     elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/out/{}/'.format(
+        driver.input_path = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/out/{}/'.format(
             date_input.replace('-', '/')
         )
-        matching_path = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/payload/{}/'.format(
-            date_input.replace('-', '/')
-        )
-    else:
-        input_path = 's3a://salusv/incoming/labtests/quest/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = 's3a://salusv/matching/payload/labtests/quest/{}/'.format(
+        driver.matching_path = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/payload/{}/'.format(
             date_input.replace('-', '/')
         )
 
-    trunk_path = input_path + 'trunk/'
-    addon_path = input_path + 'addon/'
+    driver.load()
+    driver.get_ref_gen_ref_values()
+
+    matching_payload_df = driver.spark.table('matching_payload')
+    if is_schema_v1:
+        matching_payload_df = postprocessor.add_null_column('hvJoinKey')(matching_payload_df)
+    cleaned_matching_payload_df = (
+        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(matching_payload_df))
+    cleaned_matching_payload_df.createOrReplaceTempView("matching_payload")
+
+    if is_schema_v1:
+        txn_df = driver.spark.table('txn').distinct()
+        txn_df.select('accn_id', 'dosid', 'local_order_code', 'standard_order_code',
+                      'order_name', 'loinc_code', 'local_result_code', 'result_name'
+                      ).createOrReplaceTempView('transactions_trunk')
+
+        txn_df.select('accn_id', 'dosid', 'local_order_code', 'standard_order_code',
+                      'order_name', 'loinc_code', 'local_result_code', 'result_name'
+                      ).createOrReplaceTempView('transactions_trunk')
+
+        txn_df.select('accn_id', 'date_of_service', 'dosid', 'lab_id', 'date_collected',
+            # FN.lit(None).cast(ArrayType(StringType())).alias('patient_first_name'),
+            # FN.lit(None).cast(ArrayType(StringType())).alias('patient_middle_name'),
+            # FN.lit(None).cast(ArrayType(StringType())).alias('patient_last_name'),
+            # FN.lit(None).cast(ArrayType(StringType())).alias('address1'),
+            # FN.lit(None).cast(ArrayType(StringType())).alias('address2'),
+            # FN.lit(None).cast(ArrayType(StringType())).alias('city'),
+            FN.lit(None).cast(ArrayType(StringType())).alias('state'),
+            FN.lit(None).cast(ArrayType(StringType())).alias('zip_code'),
+            # FN.lit(None).cast(ArrayType(StringType())).alias('date_of_birth'),
+            # FN.lit(None).cast(ArrayType(StringType())).alias('patient_age'),
+            FN.lit(None).cast(ArrayType(StringType())).alias('gender'),
+            'diagnosis_code', 'icd_codeset_ind',
+            FN.lit(None).cast(ArrayType(StringType())).alias('acct_zip'),
+            FN.lit(None).cast(ArrayType(StringType())).alias('npi'),
+            FN.lit(None).cast(ArrayType(StringType())).alias('hv_join_key')
+                     ).createOrReplaceTempView('transactions_trunk')
+    else:
+        driver.spark.table('trunk').distinct().createOrReplaceTempView('transactions_trunk')
+
+        addon_df = driver.spark.table('addon').distinct()
+        if is_schema_v2:
+            addon_df = postprocessor.add_null_column('acct_zip')(addon_df)
+            addon_df = postprocessor.add_null_column('npi')(addon_df)
+        addon_df.createOrReplaceTempView('transactions_addon')
+
+    provider_addon_tbl = 'transactions_provider_addon'
+    augmented_mp_tbl = 'augmented_with_prov_attrs_mp'
+    # provider matching information is stored in <matching_path>/provider_addon/<y>/<m>/<d>/
+
+    try:
+        prov_matching_path = '/'.join(driver.matching_path.split('/')[:-4]) + '/provider_addon/' \
+                             + '/'.join(driver.matching_path.split('/')[-4:])
+        payload_loader.load(driver.runner, prov_matching_path, ['claimId'], table_name=augmented_mp_tbl)
+    except:
+        driver.spark.table('matching_payload').createOrReplaceTempView(augmented_mp_tbl)
 
     # provider addon information will be at the month level
-    prov_addon_path = '/'.join(input_path.split('/')[:-2]) + '/provider_addon/'
-
-    # provider matching information is stored in <matching_path>/provider_addon/<y>/<m>/<d>/
-    prov_matching_path = '/'.join(matching_path.split('/')[:-4]) + '/provider_addon/' \
-                         + '/'.join(matching_path.split('/')[-4:])
-
-    if not test:
-        external_table_loader.load_ref_gen_ref(runner.sqlContext)
-
-    hvm_available_history_date = \
-        postprocessor.get_gen_ref_date(runner.sqlContext, vendor_feed_id,
-                                       "HVM_AVAILABLE_HISTORY_START_DATE")
-    earliest_valid_service_date = \
-        postprocessor.get_gen_ref_date(runner.sqlContext, vendor_feed_id,
-                                       "EARLIEST_VALID_SERVICE_DATE")
-    hvm_historical_date = hvm_available_history_date if hvm_available_history_date else \
-        earliest_valid_service_date if earliest_valid_service_date else datetime.date(1901, 1, 1)
-    max_date = date_input
-
-    # create helper tables
-    runner.run_spark_script('create_helper_tables.sql')
-
-    runner.run_spark_script('../../../common/lab_common_model_v3.sql', [
-        ['table_name', 'lab_common_model', False],
-        ['properties', '', False]
-    ])
-
-    payload_loader.load(runner, matching_path, ['hvJoinKey', 'claimId'], table_name='original_mp')
-
-    # not all dates have an augmented payload - create an empty one if
-    # no payload can be found
     try:
-        payload_loader.load(runner, prov_matching_path, ['claimId'],
-                            table_name='augmented_with_prov_attrs_mp')
+        prov_addon_path = '/'.join(driver.input_path.split('/')[:-2]) + '/provider_addon/'
+        records_loader.load_and_clean_all_v2(
+            driver.runner, prov_addon_path, transactions_v1a, load_file_name=True, spark_context=driver.spark)
     except:
-        logging.warn("No augmented payload file found!")
+        p_sql = """select cast(null as string) as accn_id, cast(null as string) as dosid, 
+        cast(null as string) as lab_code, cast(null as string) as acct_zip, 
+        cast(null as string) as npi 
+        """
+        driver.spark.sql(p_sql).createOrReplaceTempView(provider_addon_tbl)
 
-        runner.sqlContext.sql("DROP TABLE IF EXISTS augmented_with_prov_attrs_mp")
-        runner.sqlContext.sql(
-            "CREATE TABLE augmented_with_prov_attrs_mp LIKE original_mp"
-        )
-
-    if date_obj.strftime('%Y%m%d') >= '20171015':
-        runner.run_spark_script('load_and_merge_transactions_v2.sql', [
-            ['trunk_path', trunk_path],
-            ['addon_path', addon_path]
-        ])
-    elif date_obj.strftime('%Y%m%d') >= '20160831':
-        runner.run_spark_script('load_and_merge_transactions.sql', [
-            ['trunk_path', trunk_path],
-            ['addon_path', addon_path],
-            ['prov_addon_path', prov_addon_path]
-        ])
-    else:
-        runner.run_spark_script('load_transactions.sql', [
-            ['input_path', input_path],
-            ['prov_addon_path', prov_addon_path]
-        ])
-
-    for transactional_table in ['transactional_raw', 'original_mp', 'augmented_with_prov_attrs_mp']:
-        postprocessor.compose(
-            postprocessor.trimmify, postprocessor.nullify
-        )(
-            runner.sqlContext.sql('select * from {}'.format(transactional_table))
-        ).createOrReplaceTempView('{}'.format(transactional_table))
-
-    runner.run_spark_script('normalize.sql', [
-        ['join', (
-            'q.accn_id = mp.claimid AND mp.hvJoinKey = q.hv_join_key'
-            if date_obj.strftime('%Y%m%d') >= '20160831' else 'q.accn_id = mp.claimid'
-        ), False]
-    ])
-
-    postprocessor.compose(
-        postprocessor.add_universal_columns(
-            feed_id=vendor_feed_id,
-            vendor_id=vendor_id,
-            filename=setid
-        ),
-        lab_priv.filter,
-        postprocessor.apply_date_cap(
-            runner.sqlContext, 'date_service', max_date, vendor_feed_id,
-            'EARLIEST_VALID_SERVICE_DATE'
-        ),
-        postprocessor.apply_date_cap(
-            runner.sqlContext, 'date_specimen', max_date, vendor_feed_id,
-            'EARLIEST_VALID_SERVICE_DATE'
-        )
-    )(
-        runner.sqlContext.sql('select * from lab_common_model')
-    ).createTempView('lab_common_model')
-
+    driver.transform()
     if not test:
-        normalized_records_unloader.partition_and_rename(
-            spark, runner, 'lab', 'lab_common_model_v3.sql', 'quest',
-            'lab_common_model', 'date_service', date_input,
-            hvm_historical_date=datetime(
-                hvm_historical_date.year, hvm_historical_date.month, hvm_historical_date.day
-            )
-        )
-
-    if not test and not airflow_test:
-        logger.log_run_details(
-            provider_name='Quest',
-            data_type=DataType.LAB_TESTS,
-            data_source_transaction_path=input_path,
-            data_source_matching_path=matching_path,
-            output_path=OUTPUT_PATH_PRODUCTION,
-            run_type=RunType.MARKETPLACE,
-            input_date=date_input
-        )
-
-
-def main(args):
-    # init
-    spark, sql_context = init("Quest")
-
-    # initialize runner
-    runner = Runner(sql_context)
-
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
-
-    spark.stop()
-
-    if args.airflow_test:
-        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
-    else:
-        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
-        RunRecorder().record_run_details(additional_time=hadoop_time)
+        driver.save_to_disk()
+        driver.stop_spark()
+        driver.log_run()
+        driver.copy_to_output_path()
+    logger.log("Done")
 
 
 if __name__ == "__main__":
@@ -200,4 +171,4 @@ if __name__ == "__main__":
     parser.add_argument('--date', type=str)
     parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
-    main(args)
+    run(args.date,  args.end_to_end_test)
