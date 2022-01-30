@@ -54,11 +54,11 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         date_input,
         end_to_end_test,
         test=test,
-        unload_partition_count=5,
+        unload_partition_count=3,
         vdr_feed_id=18,
         load_date_explode=False,
         use_ref_gen_values=True,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     conf_parameters = {
@@ -80,7 +80,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         driver.matching_path = file_utils.get_abs_path(
             script_path, '../../../test/providers/quest/resources/matching/year/month/day/'
         ) + '/'
-    elif airflow_test:
+    elif end_to_end_test:
         driver.input_path = 's3://salusv/testing/dewey/airflow/e2e/quest/labtests/out/{}/'.format(
             date_input.replace('-', '/')
         )
@@ -162,7 +162,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         driver.save_to_disk()
         driver.stop_spark()
         driver.log_run()
-        driver.copy_to_output_path(output_location='s3://salusv/warehouse/transformed/quest_test_refactor/')
+        driver.copy_to_output_path()
     logger.log("Done")
 
 
@@ -170,6 +170,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
-    parser.add_argument('--airflow_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
     run(args.date,  args.end_to_end_test)

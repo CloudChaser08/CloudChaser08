@@ -62,7 +62,11 @@ SELECT
     q.order_name                                                            AS test_ordered_name,
     q.local_result_code                                                     AS result_id,
     q.result_name                                                           AS result_name,
-    SPLIT(q.diagnosis_code, '\\^')[diagnosis_exploder.n]                    AS diagnosis_code,
+    CLEAN_UP_DIAGNOSIS_CODE (
+        SPLIT(q.diagnosis_code, '\\^')[diagnosis_exploder.n]
+        ,CASE q.icd_codeset_ind WHEN '9' THEN '01' WHEN '0' THEN '02' END
+        ,TO_DATE(q.date_of_service, 'yyyyMMdd')
+    )                                                                       AS diagnosis_code,
     CASE q.icd_codeset_ind WHEN '9' THEN '01' WHEN '0' THEN '02' END        AS diagnosis_code_qual,
     CLEAN_UP_NPI_CODE(q.npi)                                                AS ordering_npi,
     q.acct_zip                                                              AS ordering_zip,
