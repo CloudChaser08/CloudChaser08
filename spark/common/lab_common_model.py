@@ -1,6 +1,7 @@
 """lab common model"""
 from pyspark.sql.types import *
 from spark.common.schema import Schema
+# pylint: disable=duplicate-code
 
 schema_v4 = StructType([
     StructField('record_id', LongType(), True),
