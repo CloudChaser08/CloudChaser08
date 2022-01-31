@@ -146,8 +146,8 @@ def build_test_list(default_tests, skip_tests, additional_tests):
             return test.column_name
 
     return [
-        test for test in default_tests if test and get_test_id(test) not in skip_tests
-    ] + additional_tests
+               test for test in default_tests if test and get_test_id(test) not in skip_tests
+           ] + additional_tests
 
 
 def standard_datafeed(

@@ -40,7 +40,7 @@ FILL_RATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
                                 "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
                                 "SET fill_rate = '{fill_rate}';"
 
-TOP_VALS_DELETE_SQL_TEMPLATE = "UPDATE marketplace_datafeedfield SET top_values = NULL "\
+TOP_VALS_DELETE_SQL_TEMPLATE = "UPDATE marketplace_datafeedfield SET top_values = NULL " \
                                "WHERE data_feed_id = {data_feed_id};"
 
 TOP_VALS_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
