@@ -10,6 +10,7 @@ import pytest
 pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
 
 from spark.test.census.questrinse.HV000838_1c.questrinse_helper import eval_test
+# pylint: disable-all
 
 
 def test_more_than_n_years(spark):
