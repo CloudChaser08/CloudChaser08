@@ -51,5 +51,4 @@ def assert_full_fill_in_target(target_table, target_column_name):
     The target_column_name is never null or blank
     """
     relevant_column = target_table.select(col(target_column_name))
-    assert relevant_column.count() == \
-           remove_nulls_and_blanks(relevant_column, target_column_name).count()
+    assert relevant_column.count() == remove_nulls_and_blanks(relevant_column, target_column_name).count()

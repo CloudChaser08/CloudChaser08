@@ -16,6 +16,7 @@ import spark.providers.quest.labtests.transactional_schemas_v1 as transactions_v
 import spark.providers.quest.labtests.transactional_schemas_v2 as transactions_v2
 import spark.providers.quest.labtests.transactional_schemas_v3 as transactions_v3
 from spark.common.utility import logger
+from pyspark.sql.types import StringType, StructType, StructField, ArrayType
 
 CUTOFF_DATE_V1 = datetime.strptime('2016-08-31', '%Y-%m-%d')
 CUTOFF_DATE_V2 = datetime.strptime('2017-01-15', '%Y-%m-%d')
@@ -108,17 +109,17 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
                       'order_name', 'loinc_code', 'local_result_code', 'result_name'
                       ).createOrReplaceTempView('transactions_trunk')
 
+        # FN.lit(None).cast(ArrayType(StringType())).alias('patient_first_name'),
+        # FN.lit(None).cast(ArrayType(StringType())).alias('patient_middle_name'),
+        # FN.lit(None).cast(ArrayType(StringType())).alias('patient_last_name'),
+        # FN.lit(None).cast(ArrayType(StringType())).alias('address1'),
+        # FN.lit(None).cast(ArrayType(StringType())).alias('address2'),
+        # FN.lit(None).cast(ArrayType(StringType())).alias('city'),
+        # FN.lit(None).cast(ArrayType(StringType())).alias('date_of_birth'),
+        # FN.lit(None).cast(ArrayType(StringType())).alias('patient_age'),
         txn_df.select('accn_id', 'date_of_service', 'dosid', 'lab_id', 'date_collected',
-                      # FN.lit(None).cast(ArrayType(StringType())).alias('patient_first_name'),
-                      # FN.lit(None).cast(ArrayType(StringType())).alias('patient_middle_name'),
-                      # FN.lit(None).cast(ArrayType(StringType())).alias('patient_last_name'),
-                      # FN.lit(None).cast(ArrayType(StringType())).alias('address1'),
-                      # FN.lit(None).cast(ArrayType(StringType())).alias('address2'),
-                      # FN.lit(None).cast(ArrayType(StringType())).alias('city'),
                       FN.lit(None).cast(ArrayType(StringType())).alias('state'),
                       FN.lit(None).cast(ArrayType(StringType())).alias('zip_code'),
-                      # FN.lit(None).cast(ArrayType(StringType())).alias('date_of_birth'),
-                      # FN.lit(None).cast(ArrayType(StringType())).alias('patient_age'),
                       FN.lit(None).cast(ArrayType(StringType())).alias('gender'),
                       'diagnosis_code', 'icd_codeset_ind',
                       FN.lit(None).cast(ArrayType(StringType())).alias('acct_zip'),

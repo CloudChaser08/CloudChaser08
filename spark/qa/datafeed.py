@@ -70,8 +70,7 @@ class Datafeed:
             # a list of columns that should be 100% populated in the target data
             target_full_fill_columns=None,
 
-            # a list of validation objects -
-            # used to validate values in the given column using the given whitelist
+            # a list of validation objects - used to validate values in the given column using the given whitelist
             validations=None,
 
             # a list of comparison objects - used to compare source to target for a single column
@@ -147,8 +146,8 @@ def build_test_list(default_tests, skip_tests, additional_tests):
             return test.column_name
 
     return [
-        test for test in default_tests if test and get_test_id(test) not in skip_tests
-    ] + additional_tests
+               test for test in default_tests if test and get_test_id(test) not in skip_tests
+           ] + additional_tests
 
 
 def standard_datafeed(
@@ -191,12 +190,10 @@ def standard_datafeed(
             'record_id', 'created', 'model_version', 'data_set', 'data_feed', 'data_vendor'
         ], skip_target_full_fill_columns, additional_target_full_fill_columns),
         validations=build_test_list([
-            gender_validation('patient_gender'),
-            state_validation('patient_state'), age_validation('patient_age')
+            gender_validation('patient_gender'), state_validation('patient_state'), age_validation('patient_age')
         ], skip_validations, additional_validations),
         unique_match_pairs=build_test_list([
-            Comparison(
-                source_claim_id_full_name, 'claim_id') if source_claim_id_full_name else None,
+            Comparison(source_claim_id_full_name, 'claim_id') if source_claim_id_full_name else None,
             Comparison(source_hvid_full_name, 'hvid') if source_hvid_full_name else None
         ], skip_unique_match_pairs, additional_unique_match_pairs)
     )

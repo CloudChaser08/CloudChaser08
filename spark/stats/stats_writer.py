@@ -5,61 +5,46 @@ from functools import reduce
 
 S3_OUTPUT_DIR = "s3://healthveritydev/marketplace_stats/sql_scripts/{}/"
 
-KEYSTATS_UPDATE_SQL_TEMPLATE = \
-    "UPDATE marketplace_datafeed SET {} = '{}' WHERE id = '{}';"
+KEYSTATS_UPDATE_SQL_TEMPLATE = "UPDATE marketplace_datafeed SET {} = '{}' WHERE id = '{}';"
 
-LONGITUDINALITY_DELETE_SQL_TEMPLATE = \
-    "DELETE FROM marketplace_longitudinalityreportitem WHERE datafeed_id = '{}';"
-LONGITUDINALITY_INSERT_SQL_TEMPLATE = \
-    "INSERT INTO marketplace_longitudinalityreportitem (duration, value, " \
-                                      "average, std_dev, datafeed_id) " \
-                                      "values ('{}', '{}', '{}', '{}', '{}');"
+LONGITUDINALITY_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_longitudinalityreportitem WHERE datafeed_id = '{}';"
+LONGITUDINALITY_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_longitudinalityreportitem (duration, value, " \
+                                      "average, std_dev, datafeed_id) values ('{}', '{}', '{}', '{}', '{}');"
 
-YOY_DELETE_SQL_TEMPLATE = \
-    "DELETE FROM marketplace_yearoveryearreportitem WHERE datafeed_id = '{}';"
+YOY_DELETE_SQL_TEMPLATE = "DELETE FROM marketplace_yearoveryearreportitem WHERE datafeed_id = '{}';"
 YOY_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_yearoveryearreportitem " \
                           "(startyear, value, datafeed_id) values ('{}', '{}', '{}');"
 
-EPI_AGE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_agereportitem (" \
-                              "value, age, datafeed_id) " \
-                              "VALUES ('{value}', '{field}', '{datafeed_id}') " \
-                              "ON CONFLICT (age, datafeed_id) " \
+EPI_AGE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_agereportitem (value, age, datafeed_id) " \
+                              "VALUES ('{value}', '{field}', '{datafeed_id}') ON CONFLICT (age, datafeed_id) " \
                               "DO UPDATE SET value = '{value}';"
 
-EPI_GENDER_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_genderreportitem (" \
-                                 "value, gender, datafeed_id) " \
-                                 "VALUES ('{value}', '{field}', '{datafeed_id}') " \
-                                 "ON CONFLICT (gender, datafeed_id) " \
+EPI_GENDER_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_genderreportitem (value, gender, datafeed_id) " \
+                                 "VALUES ('{value}', '{field}', '{datafeed_id}') ON CONFLICT (gender, datafeed_id) " \
                                  "DO UPDATE SET value = '{value}';"
 
 
-EPI_STATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_georeportitem (" \
-                                "value, state, datafeed_id) " \
-                                "VALUES ('{value}', '{field}', '{datafeed_id}') " \
-                                "ON CONFLICT (state, datafeed_id) " \
+EPI_STATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_georeportitem (value, state, datafeed_id) " \
+                                "VALUES ('{value}', '{field}', '{datafeed_id}') ON CONFLICT (state, datafeed_id) " \
                                 "DO UPDATE SET value = '{value}';"
 
 
-EPI_REGION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_regionreportitem (" \
-                                 "value, division, datafeed_id) " \
-                                 "VALUES ('{value}', '{field}', " \
-                                 "'{datafeed_id}') ON CONFLICT (division, datafeed_id) " \
+EPI_REGION_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_regionreportitem (value, division, datafeed_id) " \
+                                 "VALUES ('{value}', '{field}', '{datafeed_id}') ON CONFLICT (division, datafeed_id) " \
                                  "DO UPDATE SET value = '{value}';"
 
 FILL_RATE_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
-                                "(name, sequence, datafield_id, " \
-                                "data_feed_id, fill_rate, unique_to_data_feed) " \
+                                "(name, sequence, datafield_id, data_feed_id, fill_rate, unique_to_data_feed) " \
                                 "VALUES ('{name}', '{sequence}', '{datafield_id}'" \
                                 ", '{data_feed_id}', '{fill_rate}', false) " \
                                 "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
                                 "SET fill_rate = '{fill_rate}';"
 
-TOP_VALS_DELETE_SQL_TEMPLATE = "UPDATE marketplace_datafeedfield SET top_values = NULL "\
+TOP_VALS_DELETE_SQL_TEMPLATE = "UPDATE marketplace_datafeedfield SET top_values = NULL " \
                                "WHERE data_feed_id = {data_feed_id};"
 
 TOP_VALS_INSERT_SQL_TEMPLATE = "INSERT INTO marketplace_datafeedfield " \
-                               "(name, sequence, datafield_id, " \
-                               "data_feed_id, top_values, unique_to_data_feed) " \
+                               "(name, sequence, datafield_id, data_feed_id, top_values, unique_to_data_feed) " \
                                "VALUES ('{name}', '{sequence}', '{datafield_id}'" \
                                ", '{data_feed_id}', '{top_values}', false) " \
                                "ON CONFLICT (datafield_id, data_feed_id) DO UPDATE " \
@@ -156,15 +141,11 @@ def _generate_queries(stats, provider_conf):
                 ))
 
         elif stat_name == 'longitudinality' and stat_value:
-            stat_queries.append(
-                LONGITUDINALITY_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
+            stat_queries.append(LONGITUDINALITY_DELETE_SQL_TEMPLATE.format(provider_conf['datafeed_id']))
             for longitudinality_stat in stat_value:
                 stat_queries.append(LONGITUDINALITY_INSERT_SQL_TEMPLATE.format(
-                    longitudinality_stat['duration'],
-                    longitudinality_stat['value'],
-                    longitudinality_stat['average'],
-                    longitudinality_stat['std_dev'],
-                    provider_conf['datafeed_id']
+                    longitudinality_stat['duration'], longitudinality_stat['value'],
+                    longitudinality_stat['average'], longitudinality_stat['std_dev'], provider_conf['datafeed_id']
                 ))
 
         elif stat_name == 'year_over_year' and stat_value:
@@ -239,8 +220,7 @@ def _generate_queries(stats, provider_conf):
                 data_feed_id=provider_conf["datafeed_id"]))
 
             for r in stat_value:
-                r['value'] = r['value'] \
-                    if type(r['value'].encode('utf-8')) != str else r['value'].encode('utf-8')
+                r['value'] = r['value'] if type(r['value'].encode('utf-8')) != str else r['value'].encode('utf-8')
 
             for column in columns:
                 top_values_string = reduce(lambda x1, x2: x1 + ', ' + x2, [
@@ -259,10 +239,8 @@ def _generate_queries(stats, provider_conf):
 
             for field_dict in stat_value:
                 stat_queries.append(FILL_RATE_INSERT_SQL_TEMPLATE.format(
-                    name=field_dict['field'],
-                    datafield_id=name_id_dict[field_dict['field']]['field_id'],
-                    sequence=name_id_dict[field_dict['field']]['sequence'],
-                    data_feed_id=provider_conf['datafeed_id'],
+                    name=field_dict['field'], datafield_id=name_id_dict[field_dict['field']]['field_id'],
+                    sequence=name_id_dict[field_dict['field']]['sequence'], data_feed_id=provider_conf['datafeed_id'],
                     fill_rate=str(_safe_float(field_dict['fill']) * 100)
                 ))
 
