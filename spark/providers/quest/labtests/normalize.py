@@ -109,22 +109,22 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
                       ).createOrReplaceTempView('transactions_trunk')
 
         txn_df.select('accn_id', 'date_of_service', 'dosid', 'lab_id', 'date_collected',
-            # FN.lit(None).cast(ArrayType(StringType())).alias('patient_first_name'),
-            # FN.lit(None).cast(ArrayType(StringType())).alias('patient_middle_name'),
-            # FN.lit(None).cast(ArrayType(StringType())).alias('patient_last_name'),
-            # FN.lit(None).cast(ArrayType(StringType())).alias('address1'),
-            # FN.lit(None).cast(ArrayType(StringType())).alias('address2'),
-            # FN.lit(None).cast(ArrayType(StringType())).alias('city'),
-            FN.lit(None).cast(ArrayType(StringType())).alias('state'),
-            FN.lit(None).cast(ArrayType(StringType())).alias('zip_code'),
-            # FN.lit(None).cast(ArrayType(StringType())).alias('date_of_birth'),
-            # FN.lit(None).cast(ArrayType(StringType())).alias('patient_age'),
-            FN.lit(None).cast(ArrayType(StringType())).alias('gender'),
-            'diagnosis_code', 'icd_codeset_ind',
-            FN.lit(None).cast(ArrayType(StringType())).alias('acct_zip'),
-            FN.lit(None).cast(ArrayType(StringType())).alias('npi'),
-            FN.lit(None).cast(ArrayType(StringType())).alias('hv_join_key')
-                     ).createOrReplaceTempView('transactions_trunk')
+                      # FN.lit(None).cast(ArrayType(StringType())).alias('patient_first_name'),
+                      # FN.lit(None).cast(ArrayType(StringType())).alias('patient_middle_name'),
+                      # FN.lit(None).cast(ArrayType(StringType())).alias('patient_last_name'),
+                      # FN.lit(None).cast(ArrayType(StringType())).alias('address1'),
+                      # FN.lit(None).cast(ArrayType(StringType())).alias('address2'),
+                      # FN.lit(None).cast(ArrayType(StringType())).alias('city'),
+                      FN.lit(None).cast(ArrayType(StringType())).alias('state'),
+                      FN.lit(None).cast(ArrayType(StringType())).alias('zip_code'),
+                      # FN.lit(None).cast(ArrayType(StringType())).alias('date_of_birth'),
+                      # FN.lit(None).cast(ArrayType(StringType())).alias('patient_age'),
+                      FN.lit(None).cast(ArrayType(StringType())).alias('gender'),
+                      'diagnosis_code', 'icd_codeset_ind',
+                      FN.lit(None).cast(ArrayType(StringType())).alias('acct_zip'),
+                      FN.lit(None).cast(ArrayType(StringType())).alias('npi'),
+                      FN.lit(None).cast(ArrayType(StringType())).alias('hv_join_key')
+                      ).createOrReplaceTempView('transactions_trunk')
     else:
         driver.spark.table('trunk').distinct().createOrReplaceTempView('transactions_trunk')
 
