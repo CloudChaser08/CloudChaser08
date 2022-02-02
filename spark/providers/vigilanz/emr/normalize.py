@@ -112,10 +112,10 @@ if __name__ == "__main__":
     for mdl in models:
         output_table_names_to_schemas = {MODEL_SCHEMA[mdl][0]: MODEL_SCHEMA[mdl][1]}
 
-        trans_master_tbl = MODEL_SCHEMA[mdl][0]
-        trans_master_clmn = MODEL_SCHEMA[mdl][1]
-        this_ref_location = (ref_location + mdl + '/' + output_table_names_to_schemas + '/')
-        this_tmp_location = (tmp_location + mdl + '/' + output_table_names_to_schemas + '/')
+        trans_master_tbl = MODEL_CHUNK[mdl][0]
+        trans_master_clmn = MODEL_CHUNK[mdl][1]
+        this_ref_location = (ref_location + mdl + '/' + MODEL_SCHEMA[mdl][0] + '/')
+        this_tmp_location = (tmp_location + mdl + '/' + MODEL_SCHEMA[mdl][0] + '/')
         has_data = any(s3_utils.list_folders(this_ref_location)) if not skip_filter_duplicates else False
 
         # build odd number list chunks
