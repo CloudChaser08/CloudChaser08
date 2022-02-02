@@ -144,9 +144,9 @@ if __name__ == "__main__":
 
             driver.init_spark_context(conf_parameters=conf_parameters)
             driver.load()
-
+            additional_variables=[['CHUNK', str(i), False]]
             if mdl not in models_chunk:
-                driver.transform()
+                driver.transform(additional_variables=additional_variables)
                 driver.save_to_disk()
                 driver.stop_spark()
                 driver.log_run()
@@ -170,7 +170,7 @@ if __name__ == "__main__":
                     """
                     Transform the loaded data
                     """
-                    driver.transform(additional_variables=[['CHUNK', str(i), False]])
+                    driver.transform(additional_variables=additional_variables)
                     driver.save_to_disk()
 
                     stage_df = driver.spark.read.parquet(
