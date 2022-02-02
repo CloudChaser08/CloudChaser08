@@ -112,8 +112,6 @@ if __name__ == "__main__":
     for mdl in models:
         output_table_names_to_schemas = {MODEL_SCHEMA[mdl][0]: MODEL_SCHEMA[mdl][1]}
 
-        trans_master_tbl = MODEL_CHUNK[mdl][0]
-        trans_master_clmn = MODEL_CHUNK[mdl][1]
         this_ref_location = (ref_location + mdl + '/' + MODEL_SCHEMA[mdl][0] + '/')
         this_tmp_location = (tmp_location + mdl + '/' + MODEL_SCHEMA[mdl][0] + '/')
         has_data = any(s3_utils.list_folders(this_ref_location)) if not skip_filter_duplicates else False
@@ -145,48 +143,56 @@ if __name__ == "__main__":
             )
 
             driver.init_spark_context(conf_parameters=conf_parameters)
-            driver.load(cache_tables=False)
+            driver.load()
 
-            partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
-
-            clmn = trans_master_clmn
-            trans = driver.spark.table(trans_master_tbl)
-            if len(chunks) > 1:
-                trans = trans.filter(FN.substring(clmn, 1-len(max_chunk), len(max_chunk)-1).isin(rng))
-
-            if has_data:
-                trans = filter_out(driver.spark, this_ref_location, clmn, len(max_chunk)-1, trans, date_input)
-            trans = trans.repartition(partitions, clmn).cache_and_track(trans_master_tbl)
-            trans_cnt = trans.count() or 0
-            trans.createOrReplaceTempView(trans_master_tbl)
-
-            if trans_cnt > 0:
-                """
-                Transform the loaded data
-                """
-                driver.transform(additional_variables=[['CHUNK', str(i), False]])
+            if mdl not in models_chunk:
+                driver.transform()
                 driver.save_to_disk()
+                driver.stop_spark()
+                driver.log_run()
+                driver.copy_to_output_path()
+            else:
+                partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
+                trans_master_tbl = MODEL_CHUNK[mdl][0]
+                clmn = MODEL_CHUNK[mdl][1]
+                trans = driver.spark.table(trans_master_tbl)
 
-                stage_df = driver.spark.read.parquet(
-                    constants.hdfs_staging_dir +
-                    driver.output_table_names_to_schemas[MODEL_SCHEMA[mdl][0]].output_directory)
-                staged_cnt = stage_df.count() or 0
-                if staged_cnt > 0:
-                    stage_future_data(driver.spark, this_tmp_location, clmn, len(max_chunk)-1, trans_master_tbl, date_input)
-                    driver.stop_spark()
-                    driver.log_run()
-                    driver.copy_to_output_path()
-                    # Copy claims to reference location
-                    logger.log("Writing claims to the reference location for future duplication checking")
-                    normalized_records_unloader.distcp(this_ref_location, src=this_tmp_location)
-                    logger.log('.....{}process has been completed for {}'.format(chunk_message, mdl))
+                if len(chunks) > 1:
+                    trans = trans.filter(FN.substring(clmn, 1-len(max_chunk), len(max_chunk)-1).isin(rng))
+
+                if has_data:
+                    trans = filter_out(driver.spark, this_ref_location, clmn, len(max_chunk)-1, trans, date_input)
+                trans = trans.repartition(partitions, clmn).cache_and_track(trans_master_tbl)
+                trans_cnt = trans.count() or 0
+                trans.createOrReplaceTempView(trans_master_tbl)
+
+                if trans_cnt > 0:
+                    """
+                    Transform the loaded data
+                    """
+                    driver.transform(additional_variables=[['CHUNK', str(i), False]])
+                    driver.save_to_disk()
+
+                    stage_df = driver.spark.read.parquet(
+                        constants.hdfs_staging_dir +
+                        driver.output_table_names_to_schemas[MODEL_SCHEMA[mdl][0]].output_directory)
+                    staged_cnt = stage_df.count() or 0
+                    if staged_cnt > 0:
+                        stage_future_data(driver.spark, this_tmp_location, clmn, len(max_chunk)-1, trans_master_tbl, date_input)
+                        driver.stop_spark()
+                        driver.log_run()
+                        driver.copy_to_output_path()
+                        # Copy claims to reference location
+                        logger.log("Writing claims to the reference location for future duplication checking")
+                        normalized_records_unloader.distcp(this_ref_location, src=this_tmp_location)
+                        logger.log('.....{}process has been completed for {}'.format(chunk_message, mdl))
+                    else:
+                        driver.stop_spark()
+                        logger.log('.....{}there is no data staged for {}'.format(chunk_message, mdl))
                 else:
                     driver.stop_spark()
-                    logger.log('.....{}there is no data staged for {}'.format(chunk_message, mdl))
-            else:
-                driver.stop_spark()
-                logger.log('.....{}there is no trans data for {}'.format(chunk_message, mdl))
-        logger.log('.....{} custom process has been completed'.format(mdl))
-        for clean_table in [tmp_location, constants.hdfs_staging_dir]:
-            hdfs_utils.clean_up_output_hdfs(clean_table)
-        logger.log('.....{} all done ....................'.format(mdl))
+                    logger.log('.....{}there is no trans data for {}'.format(chunk_message, mdl))
+                logger.log('.....{} custom process has been completed'.format(mdl))
+                for clean_table in [tmp_location, constants.hdfs_staging_dir]:
+                    hdfs_utils.clean_up_output_hdfs(clean_table)
+            logger.log('.....{} all done ....................'.format(mdl))
