@@ -17,6 +17,7 @@ import spark.helpers.s3_utils as s3_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from spark.common.utility import logger
 
+
 def filter_out(spark, ref_loc, key_clmn, nbr_of_last_char, trans_df, date_input):
     """
     Filer out Trans
@@ -55,6 +56,8 @@ def stage_future_data(spark, stg_loc, key_clmn, nbr_of_last_char, trans_master_t
 
 
 HAS_DELIVERY_PATH = False
+ref_location = 's3://salusv/reference/practice_fusion/emr/'
+tmp_location = '/tmp/reference/'
 
 if __name__ == "__main__":
 
