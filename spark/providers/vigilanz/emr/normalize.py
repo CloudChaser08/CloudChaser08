@@ -1,6 +1,7 @@
 """
 vigilanz labtests normalize
 """
+import os
 import argparse
 import pyspark.sql.functions as FN
 from spark.common.emr.clinical_observation import schemas as clinical_observation_schemas
@@ -11,7 +12,6 @@ from spark.common.emr.medication import schemas as medication_schemas
 import spark.providers.vigilanz.emr.transactional_schemas_v1 as transactional_schemas_v1
 from spark.common.marketplace_driver import MarketplaceDriver
 import spark.helpers.constants as constants
-import spark.helpers.file_utils as file_utils
 import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.s3_utils as s3_utils
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
@@ -89,6 +89,7 @@ if __name__ == "__main__":
     parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
     date_input = args.date
+    skip_filter_duplicates = args.skip_filter_duplicates
     end_to_end_test = args.end_to_end_test
 
     # init
@@ -142,10 +143,6 @@ if __name__ == "__main__":
                 output_to_delivery_path=HAS_DELIVERY_PATH,
                 output_to_transform_path=False
             )
-
-            # driver.run(conf_parameters=conf_parameters)
-
-            # driver.provider_directory_path = driver.provider_directory_path + mdl + '/'
 
             driver.init_spark_context(conf_parameters=conf_parameters)
             driver.load(cache_tables=False)
