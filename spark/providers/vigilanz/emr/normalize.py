@@ -186,7 +186,7 @@ if __name__ == "__main__":
             else:
                 driver.stop_spark()
                 logger.log('.....{}there is no trans data for {}'.format(chunk_message, mdl))
-        logger.log('.....{} custom process has been completed for {} '.format(mdl, key))
+        logger.log('.....{} custom process has been completed'.format(mdl))
         for clean_table in [tmp_location, constants.hdfs_staging_dir]:
             hdfs_utils.clean_up_output_hdfs(clean_table)
         logger.log('.....{} all done ....................'.format(mdl))
