@@ -7,7 +7,7 @@ SELECT
             '_', madm.administration_date_time)                                             AS hv_medctn_id,
     CURRENT_DATE()                                                                          AS crt_dt,
 	'09'                                                                                    AS mdl_vrsn_num,
-    SPLIT(madm.input_file_name, '/')[SIZE(SPLIT(madm.input_file_name, '/')) - 1]            AS data_set_nm,
+    CONCAT('{CHUNK}_',SPLIT(madm.input_file_name, '/')[SIZE(SPLIT(madm.input_file_name, '/')) - 1])         AS data_set_nm,
 	1816                                                                                    AS hvm_vdr_id,
 	250                                                                                     AS hvm_vdr_feed_id,
     COALESCE(madm.client_id, med.client_id)                                                 AS vdr_org_id,
