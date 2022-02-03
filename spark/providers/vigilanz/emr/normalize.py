@@ -144,8 +144,8 @@ if __name__ == "__main__":
                 output_to_delivery_path=HAS_DELIVERY_PATH,
                 output_to_transform_path=False
             )
-            partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
             driver.init_spark_context(conf_parameters=conf_parameters)
+            partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
             driver.load()
 
             additional_variables=[['CHUNK', str(i), False]]
