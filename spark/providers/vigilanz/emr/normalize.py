@@ -56,13 +56,15 @@ def stage_future_data(spark, stg_loc, key_clmn, nbr_of_last_char, trans_master_t
 
 
 HAS_DELIVERY_PATH = False
-ref_location = 's3://salusv/reference/practice_fusion/emr/'
+ref_location = 's3://salusv/reference/vigilanz/emr/'
 tmp_location = '/tmp/reference/'
 
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'vigilanz'
+
+    # dw standard schema name: (schema final table, schema version, chunk process True or False )
 
     # dw standard schema name: (schema final table, schema version, chunk process True or False )
     MODEL_SCHEMA = {
@@ -148,7 +150,7 @@ if __name__ == "__main__":
             partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
             driver.load()
 
-            additional_variables=[['CHUNK', str(i), False]]
+            additional_variables = [['CHUNK', str(i), False]]
             if not is_chunk:
                 driver.transform(additional_variables=additional_variables)
                 trans_master_tbl = MODEL_SCHEMA[mdl][0]
@@ -171,7 +173,7 @@ if __name__ == "__main__":
                 """
                 Transform the loaded data
                 """
-                if not is_chunk:
+                if is_chunk:
                     driver.transform(additional_variables=additional_variables)
                 driver.save_to_disk()
 
