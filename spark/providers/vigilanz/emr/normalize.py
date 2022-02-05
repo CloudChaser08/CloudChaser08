@@ -56,7 +56,7 @@ def stage_future_data(spark, stg_loc, key_clmn, nbr_of_last_char, trans_master_t
 
 
 HAS_DELIVERY_PATH = False
-ref_location = 's3://salusv/reference/practice_fusion/emr/'
+ref_location = 's3://salusv/reference/vigilanz/emr/'
 tmp_location = '/tmp/reference/'
 
 if __name__ == "__main__":
@@ -64,17 +64,20 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'vigilanz'
 
+    # dw standard schema name: (schema final table, schema version, chunk process True or False )
+
+    # dw standard schema name: (schema final table, schema version, chunk process True or False )
     MODEL_SCHEMA = {
-        'diagnosis': ('vigilanz_emr_norm_diag_final', diagnosis_schemas['schema_v10']),
-        'clinical_observation': ('vigilanz_emr_norm_clin_obsn_final', clinical_observation_schemas['schema_v11']),
-        'encounter': ('vigilanz_emr_norm_enc_final', encounter_schemas['schema_v10']),
-        'medication': ('vigilanz_emr_norm_medctn_final', medication_schemas['schema_v11']),
-        'lab_test': ('vigilanz_emr_norm_lab_test_final', lab_test_schema['schema_v3'])
+        'diagnosis': ('vigilanz_emr_norm_diag_final', diagnosis_schemas['schema_v10'], False),
+        'clinical_observation': ('vigilanz_emr_norm_clin_obsn_final', clinical_observation_schemas['schema_v11'], False),
+        'encounter': ('vigilanz_emr_norm_enc_final', encounter_schemas['schema_v10'], False),
+        'lab_test': ('vigilanz_emr_norm_lab_test_final', lab_test_schema['schema_v3'], False),
+        'medication': ('vigilanz_emr_norm_medctn_final', medication_schemas['schema_v11'], True)
     }
 
-    # key: model_schema name  values (key table name and key table's column name)
+    # key: source transaction key column (key table name and key table's column name)
     MODEL_CHUNK = {
-        'medication': ('medication_administration', 'row_id')
+        'medication': ('medication_administration', 'row_id'),
     }
 
     provider_partition_name = '250'
@@ -106,14 +109,14 @@ if __name__ == "__main__":
 
     # collect keys
     models_chunk = MODEL_CHUNK.keys()
+
     MODELS = MODEL_SCHEMA.keys()
     models = args.models.split(',') if args.models else MODELS
 
     for mdl in models:
+        is_chunk = MODEL_SCHEMA[mdl][2]
         output_table_names_to_schemas = {MODEL_SCHEMA[mdl][0]: MODEL_SCHEMA[mdl][1]}
 
-        trans_master_tbl = MODEL_CHUNK[mdl][0]
-        trans_master_clmn = MODEL_CHUNK[mdl][1]
         this_ref_location = (ref_location + mdl + '/' + MODEL_SCHEMA[mdl][0] + '/')
         this_tmp_location = (tmp_location + mdl + '/' + MODEL_SCHEMA[mdl][0] + '/')
         has_data = any(s3_utils.list_folders(this_ref_location)) if not skip_filter_duplicates else False
@@ -121,7 +124,7 @@ if __name__ == "__main__":
         # build odd number list chunks
         top = 1
         max_chunk = 10
-        chunks = [num for num in range(max_chunk) if num % top == 0] if mdl in models_chunk else [1]
+        chunks = [num for num in range(max_chunk) if num % top == 0] if is_chunk else [1]
         chunk_message = ''
         for i in chunks:
             rng = [str(chunk).zfill(1) for chunk in range(i, i + top) if chunk < max_chunk]
@@ -143,19 +146,25 @@ if __name__ == "__main__":
                 output_to_delivery_path=HAS_DELIVERY_PATH,
                 output_to_transform_path=False
             )
-
             driver.init_spark_context(conf_parameters=conf_parameters)
-            driver.load(cache_tables=False)
-
             partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
+            driver.load()
 
-            clmn = trans_master_clmn
+            additional_variables = [['CHUNK', str(i), False]]
+            if not is_chunk:
+                driver.transform(additional_variables=additional_variables)
+                trans_master_tbl = MODEL_SCHEMA[mdl][0]
+                clmn = 'vdr_org_id'
+            else:
+                trans_master_tbl = MODEL_CHUNK[mdl][0]
+                clmn = MODEL_CHUNK[mdl][1]
+
             trans = driver.spark.table(trans_master_tbl)
             if len(chunks) > 1:
-                trans = trans.filter(FN.substring(clmn, 1-len(max_chunk), len(max_chunk)-1).isin(rng))
+                trans = trans.filter(FN.substring(clmn, -1, 1).isin(rng))
 
             if has_data:
-                trans = filter_out(driver.spark, this_ref_location, clmn, len(max_chunk)-1, trans, date_input)
+                trans = filter_out(driver.spark, this_ref_location, clmn, 1, trans, date_input)
             trans = trans.repartition(partitions, clmn).cache_and_track(trans_master_tbl)
             trans_cnt = trans.count() or 0
             trans.createOrReplaceTempView(trans_master_tbl)
@@ -164,7 +173,8 @@ if __name__ == "__main__":
                 """
                 Transform the loaded data
                 """
-                driver.transform(additional_variables=[['CHUNK', str(i), False]])
+                if is_chunk:
+                    driver.transform(additional_variables=additional_variables)
                 driver.save_to_disk()
 
                 stage_df = driver.spark.read.parquet(
@@ -172,7 +182,7 @@ if __name__ == "__main__":
                     driver.output_table_names_to_schemas[MODEL_SCHEMA[mdl][0]].output_directory)
                 staged_cnt = stage_df.count() or 0
                 if staged_cnt > 0:
-                    stage_future_data(driver.spark, this_tmp_location, clmn, len(max_chunk)-1, trans_master_tbl, date_input)
+                    stage_future_data(driver.spark, this_tmp_location, clmn, 1, trans_master_tbl, date_input)
                     driver.stop_spark()
                     driver.log_run()
                     driver.copy_to_output_path()
@@ -186,7 +196,7 @@ if __name__ == "__main__":
             else:
                 driver.stop_spark()
                 logger.log('.....{}there is no trans data for {}'.format(chunk_message, mdl))
-        logger.log('.....{} custom process has been completed'.format(mdl))
-        for clean_table in [tmp_location, constants.hdfs_staging_dir]:
-            hdfs_utils.clean_up_output_hdfs(clean_table)
-        logger.log('.....{} all done ....................'.format(mdl))
+            logger.log('.....{} custom process has been completed'.format(mdl))
+            for clean_table in [tmp_location, constants.hdfs_staging_dir]:
+                hdfs_utils.clean_up_output_hdfs(clean_table)
+            logger.log('.....{} all done ....................'.format(mdl))
