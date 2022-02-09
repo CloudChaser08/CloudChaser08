@@ -13,7 +13,7 @@ import spark.helpers.hdfs_utils as hdfs_utils
 import spark.helpers.s3_utils as s3_utils
 import spark.helpers.records_loader as records_loader
 import spark.helpers.payload_loader as payload_loader
-import spark.datamart.helix_genomics_cdc.transactional_schemas as source_table_schema
+import spark.datamart.genomics.labtests.helix.transactional_schemas as source_table_schema
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 
 # HDFS output locations
