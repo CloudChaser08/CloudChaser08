@@ -139,7 +139,7 @@ if __name__ == "__main__":
         normalized_records_unloader.distcp(prod_ops_loc, src=cdc_stg_loc.format(tbl))
 
         logger.log('transfer to cdcops {}'.format(tbl))
-        subprocess.check_call(['aws', 's3', 'rm', '--recursive', s3_cdc_loc + '{}/'.format(tbl)])
+        subprocess.check_call(['aws', 's3', 'rm', '--recursive', cdc_ops_loc])
         normalized_records_unloader.distcp(cdc_ops_loc, src=prod_ops_loc, deleteOnSuccess=False)
 
     hdfs_utils.clean_up_output_hdfs('/staging/')
