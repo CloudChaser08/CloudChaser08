@@ -24,6 +24,7 @@ cdc_stg_loc = '/staging/{}/'
 # S3 output locations
 s3_cdc_loc = 's3://salusv/warehouse/datahub/cdc_genomics/overlap/{}/'
 s3_ops_loc = "s3://salusv/warehouse/datahub/prodops/cdc_genomics_overlap/helix_hv004689/ops_dt={date_input}/"
+s3_helix_loc_out = 's3://salusv/deliverable/genomics_overlap/send_to_helix/date_input={date_input}/'
 
 table_list = ['helix_hvid_overlap_all_years']
 
@@ -172,9 +173,10 @@ if __name__ == "__main__":
         normalized_records_unloader.distcp(cdc_ops_loc, src=prod_ops_loc, deleteOnSuccess=False)
 
     logger.log('transfer to hv-out {}'.format('send_to_helix'))
-    subprocess.check_call(['aws', 's3', 'rm', '--recursive', s3_cdc_loc.format('send_to_helix')])
+    s3_helix_loc_out_fmt = s3_helix_loc_out.format(date_input=date_input.replace('/', ''))
+    subprocess.check_call(['aws', 's3', 'rm', '--recursive', s3_helix_loc_out_fmt])
     normalized_records_unloader.distcp(
-        s3_cdc_loc.format('send_to_helix'), src=cdc_stg_loc.format('send_to_helix'), deleteOnSuccess=False)
+        s3_helix_loc_out_fmt, src=cdc_stg_loc.format('send_to_helix'), deleteOnSuccess=False)
 
     hdfs_utils.clean_up_output_hdfs('/staging/')
     logger.log('Done')
