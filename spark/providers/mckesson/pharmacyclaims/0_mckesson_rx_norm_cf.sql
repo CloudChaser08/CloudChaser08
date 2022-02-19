@@ -1,20 +1,26 @@
 SELECT
+    MONOTONICALLY_INCREASING_ID()            AS record_id,
     t.prescriptionkey                        AS claim_id,
     mp.hvid                                  AS hvid,
+    CURRENT_DATE()                           AS created,
     6                                        AS model_version,
+    SPLIT(t.input_file_name, '/')[SIZE(SPLIT(t.input_file_name, '/')) - 1]
+                                             AS data_set,
+    '33'                                     AS data_feed,
+    '86'                                     AS data_vendor,
     mp.gender                                AS patient_gender,
     mp.age                                   AS patient_age,
     mp.yearOfBirth                           AS patient_year_of_birth,
     mp.threeDigitZip                         AS patient_zip3,
     TRIM(UPPER(mp.state))                    AS patient_state,
     extract_date(
-        t.datefilled, '%m/%d/%Y', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        t.datefilled, '%m/%d/%Y', CAST('{EARLIEST_SERVICE_DATE}' AS DATE), CAST('{VDR_FILE_DT}' AS DATE)
         )                                    AS date_service,
     extract_date(
-        t.datewritten, '%m/%d/%Y', CAST({min_date} AS DATE), CAST({max_date} AS DATE)
+        t.datewritten, '%m/%d/%Y', CAST('{EARLIEST_SERVICE_DATE}' AS DATE), CAST('{VDR_FILE_DT}' AS DATE)
         )                                    AS date_written,
     extract_date(
-        t.claimtransactiondate, '%Y/%m/%d', CAST('1999-01-01' AS DATE), CAST({max_date} AS DATE)
+        t.claimtransactiondate, '%Y/%m/%d', CAST('1999-01-01' AS DATE), CAST('{VDR_FILE_DT}' AS DATE)
         )                                    AS date_authorized,
     t.fillertransactiontime                  AS time_authorized,
     CASE
@@ -44,8 +50,8 @@ SELECT
     t.metricquantity                         AS dispensed_quantity,
     t.unitofmeasure                          AS unit_of_measure,
     t.dayssupply                             AS days_supply,
-    t.customernpinumber                      AS pharmacy_npi,
-    t.pharmacistnpi                          AS prov_dispensing_npi,
+    CLEAN_UP_NPI_CODE(t.customernpinumber)   AS pharmacy_npi,
+    CLEAN_UP_NPI_CODE(t.pharmacistnpi)       AS prov_dispensing_npi,
     t.payerid                                AS payer_id,
     t.payeridqualifier                       AS payer_id_qual,
     t.payername                              AS payer_name,
@@ -66,8 +72,9 @@ SELECT
     t.reasonforservice                       AS reason_for_service,
     t.professionalservicecode                AS professional_service_code,
     t.resultofservicecode                    AS result_of_service_code,
-    t.prescribernpi                          AS prov_prescribing_npi,
-    t.primarycareproviderid                  AS prov_primary_care_npi,
+    CLEAN_UP_NPI_CODE(t.prescribernpi)       AS prov_prescribing_npi,
+    CLEAN_UP_NPI_CODE(t.primarycareproviderid)
+                                             AS prov_primary_care_npi,
     t.cobcount                               AS cob_count,
     t.usualandcustomary                      AS usual_and_customary_charge,
     t.productselectionattributed             AS product_selection_attributed,
@@ -119,8 +126,25 @@ SELECT
     OR COALESCE(t.rejectcode5, '') != ''
     OR COALESCE(t.camstatuscode, 'X') = 'R'
     THEN 'Claim Rejected'
-    END                                      AS logical_delete_reason
-FROM {restriction_level}_transactions t
+    END                                      AS logical_delete_reason,
+    'mckesson'                               AS part_provider,
+
+    /* part_best_date */
+	CASE
+	    WHEN 0 = LENGTH(TRIM(COALESCE
+	                            (
+	                                CAP_DATE
+                                        (
+                                            CAST(EXTRACT_DATE(t.datefilled, '%m/%d/%Y') AS DATE),
+                                            COALESCE(CAST('{AVAILABLE_START_DATE}' AS DATE), CAST('{EARLIEST_SERVICE_DATE}' AS DATE)),
+                                            CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
+                                        ),
+                                    ''
+                                )))
+	        THEN '0_PREDATES_HVM_HISTORY'
+	    ELSE SUBSTR(CAST(EXTRACT_DATE(t.datefilled, '%m/%d/%Y') AS DATE), 1, 7)
+	END                                                                                 AS part_best_date
+FROM txn t
     LEFT JOIN matching_payload mp ON t.hvjoinkey = mp.hvjoinkey
 
 -- exclude blank hvJoinKey values

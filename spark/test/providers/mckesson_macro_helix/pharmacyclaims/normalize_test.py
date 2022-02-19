@@ -1,46 +1,53 @@
 import datetime
+import shutil
+import logging
 import pytest
 
 from pyspark.sql import Row
-import spark.providers.mckesson_macro_helix.pharmacyclaims.normalize as mmh
+import spark.helpers.file_utils as file_utils
+import spark.providers.mckesson_macro_helix.pharmacyclaims.normalize as mckesson
 
-source = None
-results = None
+
+results = []
+
 
 def cleanup(spark):
-    spark['sqlContext'].dropTempTable('pharmacyclaims_common_model')
-    spark['sqlContext'].dropTempTable('mckesson_macro_helix_transactions')
-    spark['sqlContext'].dropTempTable('exploder')
+    spark['sqlContext'].dropTempTable('mckesson_macro_helix_rx_norm_final')
+    spark['sqlContext'].dropTempTable('txn')
     spark['sqlContext'].dropTempTable('ref_gen_ref')
+
+    try:
+        shutil.rmtree(file_utils.get_abs_path(__file__, './resources/output/'))
+    except:
+        logging.warning('No output directory.')
 
 
 @pytest.mark.usefixtures('spark')
 def test_init(spark):
+    cleanup(spark)
+
     spark['spark'].sparkContext.parallelize([
         Row(
-            hvm_vdr_feed_id = mmh.FEED_ID,
-            gen_ref_domn_nm = 'EARLIEST_VALID_SERVICE_DATE',
-            gen_ref_itm_nm = '',
-            gen_ref_1_dt = datetime.date(1901, 1, 1),
-            whtlst_flg = ''
+            hvm_vdr_feed_id=51,
+            gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg=''
         ),
         Row(
-            hvm_vdr_feed_id = mmh.FEED_ID,
-            gen_ref_domn_nm = 'HVM_AVAILABLE_HISTORY_START_DATE',
-            gen_ref_itm_nm = '',
-            gen_ref_1_dt = datetime.date(1901, 1, 1),
-            whtlst_flg = ''
+            hvm_vdr_feed_id=51,
+            gen_ref_domn_nm='HVM_AVAILABLE_HISTORY_START_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg=''
         )
     ]).toDF().createOrReplaceTempView('ref_gen_ref')
 
-    mmh.run(spark['spark'], spark['runner'], '2017-10-06', test = True)
-    global source, results
-    source = spark['sqlContext'] \
-                .sql('select * from mckesson_macro_helix_transactions') \
-                .collect()
-    results = spark['sqlContext'] \
-                .sql('select * from pharmacyclaims_common_model') \
-                .collect()
+    mckesson.run(date_input='2017-10-06'
+                 , end_to_end_test=False, test=True, spark=spark['spark'], runner=spark['runner'])
+    global results
+
+    results = spark['sqlContext'].sql('select * from mckesson_macro_helix_rx_norm_final').collect()
 
 
 # 4 rows with 11 diagnoses + 6 rows with 13 diagnoses + 1 row no diagnoses = 123 rows in results
