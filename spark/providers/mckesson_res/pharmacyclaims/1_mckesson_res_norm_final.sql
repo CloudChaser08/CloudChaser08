@@ -35,7 +35,7 @@ SELECT
     t.ndc_code,
     t.product_service_id,
     t.product_service_id_qual,
-    t.rx_number,
+    CASE WHEN t.level_of_service ='6' THEN NULL ELSE t.rx_number END AS rx_number,
     t.rx_number_qual,
     t.bin_number,
     t.processor_control_number,

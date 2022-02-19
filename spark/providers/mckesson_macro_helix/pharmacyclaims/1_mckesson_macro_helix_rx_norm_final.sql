@@ -1,5 +1,5 @@
 SELECT
-    t.record_id,
+    MONOTONICALLY_INCREASING_ID()            AS record_id,
     t.claim_id,
     t.hvid,
     t.created,
