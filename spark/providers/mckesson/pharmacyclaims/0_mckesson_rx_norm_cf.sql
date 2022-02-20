@@ -6,8 +6,8 @@ SELECT
     6                                                               AS model_version,
     SPLIT(t.input_file_name, '/')[SIZE(SPLIT(t.input_file_name, '/')) - 1]
                                                                     AS data_set,
-    '36'                                                            AS data_feed,
-    '119'                                                           AS data_vendor,
+    '33'                                                            AS data_feed,
+    '86'                                                            AS data_vendor,
     CLEAN_UP_GENDER(mp.gender)                                      AS patient_gender,
 	CAP_AGE
 	    (

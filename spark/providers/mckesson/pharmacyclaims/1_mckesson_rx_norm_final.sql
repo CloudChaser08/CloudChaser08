@@ -133,4 +133,4 @@ SELECT
     t.logical_delete_reason,
     t.part_provider,
     t.part_best_date
-FROM mckesson_res_norm_cf t
+FROM mckesson_rx_norm_cf t

@@ -1,169 +1,87 @@
 """
 mckesson macro helix normalize
 """
-from datetime import datetime, date
+from datetime import date, datetime
 import argparse
-
-from spark.runner import Runner
-from spark.spark_setup import init
-from spark.common.pharmacyclaims import schemas as pharma_schemas
-import spark.helpers.file_utils as file_utils
-import spark.helpers.payload_loader as payload_loader
-import spark.helpers.normalized_records_unloader as normalized_records_unloader
-import spark.helpers.external_table_loader as external_table_loader
-import spark.helpers.schema_enforcer as schema_enforcer
-import spark.helpers.explode as explode
-import spark.helpers.postprocessor as postprocessor
-import spark.helpers.privacy.pharmacyclaims as pharm_priv
-from spark.providers.mckesson_macro_helix.pharmacyclaims import load_transactions
-from spark.providers.mckesson_macro_helix.pharmacyclaims.load_transactions \
-    import Schema as TransactionsSchema
-
-from spark.common.utility.output_type import DataType, RunType
-from spark.common.utility.run_recorder import RunRecorder
 from spark.common.utility import logger
+from spark.common.pharmacyclaims import schemas
+from spark.common.marketplace_driver import MarketplaceDriver
+import spark.helpers.file_utils as file_utils
+import spark.providers.mckesson_macro_helix.pharmacyclaims.transaction_schemas_v1 as old_schema
+import spark.providers.mckesson_macro_helix.pharmacyclaims.transaction_schemas_v2 as new_schema
 
-FEED_ID = '51'
-VENDOR_ID = '86'
-pharma_schema = pharma_schemas['schema_v6']
-OUTPUT_PATH_PRODUCTION = 's3://salusv/warehouse/parquet/' + pharma_schema.output_directory
-OUTPUT_PATH_TEST = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/spark-output/'
+cutoff_date = datetime(2018, 9, 30)
 
 
-def run(spark, runner, date_input, test=False, airflow_test=False):
-    setid = 'MHHealthVerity.Record.{}'.format(date_input.replace('-', ''))
+def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
+    logger.log("Mckesson Normalize ")
+    # ------------------------ Provider specific configuration -----------------------
+    provider_name = 'mckesson_macro_helix'
+    output_table_names_to_schemas = {
+        'mckesson_macro_helix_rx_norm_final': schemas['schema_v6']
+    }
+    provider_partition_name = provider_name
 
-    script_path = __file__
-
-    if test:
-        input_path = file_utils.get_abs_path(
-            script_path,
-            '../../../test/providers/mckesson_macro_helix/pharmacyclaims/resources/input/'
-        )
-        matching_path = file_utils.get_abs_path(
-            script_path,
-            '../../../test/providers/mckesson_macro_helix/pharmacyclaims/resources/matching/'
-        )
-    elif airflow_test:
-        input_path = 's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/out/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = \
-            's3://salusv/testing/dewey/airflow/e2e/mckesson_macro_helix/payload/{}/'.format(
-                date_input.replace('-', '/')
-            )
-    else:
-        input_path = 's3://salusv/incoming/pharmacyclaims/mckesson_macro_helix/{}/'.format(
-            date_input.replace('-', '/')
-        )
-        matching_path = \
-            's3://salusv/matching/payload/pharmacyclaims/mckesson_macro_helix/{}/'.format(
-                date_input.replace('-', '/')
-            )
-
-    if not test:
-        external_table_loader.load_ref_gen_ref(runner.sqlContext)
-
-    min_date = postprocessor.coalesce_dates(
-        runner.sqlContext,
-        FEED_ID,
-        None,
-        'HVM_AVAILABLE_HISTORY_START_DATE'
-    )
-    if min_date:
-        min_date = min_date.isoformat()
-
-    max_date = date_input
-
-    payload_loader.load(runner, matching_path, ['claimId', 'patientId', 'hvJoinKey'])
-
-    cutoff_date = datetime(2018, 9, 30)
+    # ------------------------ Common for all providers -----------------------
 
     if datetime.strptime(date_input, '%Y-%m-%d') < cutoff_date:
-        load_transactions.load(runner, input_path, TransactionsSchema.v1)
+        source_table_schemas = old_schema
     else:
-        load_transactions.load(runner, input_path, TransactionsSchema.v2)
+        source_table_schemas = new_schema
 
-    explode.generate_exploder_table(spark, 24, 'exploder')
-
-    normalized_df = runner.run_spark_script(
-        'normalize.sql',
-        [['date_input', date_input]],
-        return_output=True
+    # Create and run driver
+    driver = MarketplaceDriver(
+        provider_name,
+        provider_partition_name,
+        source_table_schemas,
+        output_table_names_to_schemas,
+        date_input,
+        end_to_end_test,
+        test=test,
+        unload_partition_count=2,
+        vdr_feed_id=51,
+        load_date_explode=False,
+        use_ref_gen_values=True,
+        output_to_transform_path=False
     )
 
-    postprocessor.compose(
-        schema_enforcer.apply_schema_func(pharma_schema.schema_structure),
-        postprocessor.add_universal_columns(
-            feed_id=FEED_ID,
-            vendor_id=VENDOR_ID,
-            filename=setid,
-            model_version_number='06'
-        ),
-        postprocessor.nullify,
-        postprocessor.apply_date_cap(
-            runner.sqlContext,
-            'date_service',
-            max_date,
-            FEED_ID,
-            None,
-            min_date
-        ),
-        pharm_priv.filter
-    )(
-        normalized_df
-    ).createOrReplaceTempView('pharmacyclaims_common_model')
+    conf_parameters = {
+        'spark.executor.memoryOverhead': 1024,
+        'spark.driver.memoryOverhead': 1024
+    }
 
     if not test:
-        hvm_historical = postprocessor.coalesce_dates(
-            runner.sqlContext,
-            FEED_ID,
-            date(1900, 1, 1),
-            'HVM_AVAILABLE_HISTORY_START_DATE',
-            'EARLIST_VALID_SERVICE_DATE'
-        )
-
-        normalized_records_unloader.partition_and_rename(
-            spark, runner, 'pharmacyclaims',
-            'pharmacyclaims/sql/pharmacyclaims_common_model_v6.sql',
-            'mckesson_macro_helix', 'pharmacyclaims_common_model',
-            'date_service', date_input,
-            hvm_historical_date=datetime(hvm_historical.year,
-                                         hvm_historical.month,
-                                         hvm_historical.day)
-        )
-
-    if not test and not airflow_test:
-        logger.log_run_details(
-            provider_name='Mckesson_Macro_Helix',
-            data_type=DataType.PHARMACY_CLAIMS,
-            data_source_transaction_path=input_path,
-            data_source_matching_path=matching_path,
-            output_path=OUTPUT_PATH_PRODUCTION,
-            run_type=RunType.MARKETPLACE,
-            input_date=date_input
-        )
-
-
-def main(args):
-    spark, sql_context = init('Mckesson_Macro_Helix')
-
-    runner = Runner(sql_context)
-
-    run(spark, runner, args.date, airflow_test=args.airflow_test)
-
-    spark.stop()
-
-    if args.airflow_test:
-        normalized_records_unloader.distcp(OUTPUT_PATH_TEST)
+        driver.init_spark_context(conf_parameters=conf_parameters)
     else:
-        hadoop_time = normalized_records_unloader.timed_distcp(OUTPUT_PATH_PRODUCTION)
-        RunRecorder().record_run_details(additional_time=hadoop_time)
+        driver.spark = spark
+        driver.runner = runner
+
+    script_path = __file__
+    if test:
+        driver.input_path = file_utils.get_abs_path(
+            script_path,
+            '../../../test/providers/mckesson_macro_helix/pharmacyclaims/resources/input/'
+        ) + '/'
+        driver.matching_path = file_utils.get_abs_path(
+            script_path,
+            '../../../test/providers/mckesson_macro_helix/pharmacyclaims/resources/matching/'
+        ) + '/'
+
+    driver.load()
+    driver.transform()
+    if not test:
+        driver.save_to_disk()
+        driver.stop_spark()
+        driver.log_run()
+        driver.copy_to_output_path()
+    logger.log("Done")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    # Parse input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--date', type=str)
-    parser.add_argument('--airflow_test', default=False, action='store_true')
+    parser.add_argument('--end_to_end_test', default=False, action='store_true')
     args = parser.parse_known_args()[0]
-    main(args)
+
+    run(args.date, args.end_to_end_test)

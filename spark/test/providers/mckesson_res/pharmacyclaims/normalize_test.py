@@ -1,18 +1,20 @@
 import datetime
 import shutil
 import logging
-
-import spark.providers.mckesson_res.pharmacyclaims.normalize as mckesson
-import spark.helpers.file_utils as file_utils
-
 import pytest
+
+from pyspark.sql import Row
+import spark.helpers.file_utils as file_utils
+import spark.providers.mckesson_res.pharmacyclaims.normalize as mckesson
+
 
 restricted_results = []
 
 
 def cleanup(spark):
-    spark['sqlContext'].dropTempTable('mckesson_res_pharmacyclaims')
+    spark['sqlContext'].dropTempTable('mckesson_res_norm_final')
     spark['sqlContext'].dropTempTable('txn')
+    spark['sqlContext'].dropTempTable('ref_gen_ref')
 
     try:
         shutil.rmtree(file_utils.get_abs_path(__file__, './resources/output/'))
@@ -23,12 +25,29 @@ def cleanup(spark):
 @pytest.mark.usefixtures("spark")
 def test_init(spark):
     cleanup(spark)
+
+    spark['spark'].sparkContext.parallelize([
+        Row(
+            hvm_vdr_feed_id=36,
+            gen_ref_domn_nm='EARLIEST_VALID_SERVICE_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg=''
+        ),
+        Row(
+            hvm_vdr_feed_id=36,
+            gen_ref_domn_nm='HVM_AVAILABLE_HISTORY_START_DATE',
+            gen_ref_itm_nm='',
+            gen_ref_1_dt=datetime.date(1901, 1, 1),
+            whtlst_flg=''
+        )
+    ]).toDF().createOrReplaceTempView('ref_gen_ref')
+
     mckesson.run(date_input='2016-12-31'
                  , end_to_end_test=False, test=True, spark=spark['spark'], runner=spark['runner'])
     global restricted_results
 
-    restricted_results = spark['sqlContext'].sql('select * from mckesson_res_norm_final') \
-        .collect()
+    restricted_results = spark['sqlContext'].sql('select * from mckesson_res_norm_final').collect()
 
 
 def test_date_parsing():
