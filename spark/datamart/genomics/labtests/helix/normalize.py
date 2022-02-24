@@ -63,7 +63,7 @@ if __name__ == "__main__":
     logger.log("Helix CDC Refresh- {}".format(date_input))
 
     # init
-    spark, sql_context = init("Helix CDC Refresh- {}".format(date_input.replace('/', '')))
+    spark, sql_context = init("Helix CDC Refresh- {}".format(date_input.replace('-', '')))
 
     # initialize runner
     runner = Runner(sql_context)
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         logger.log(v_sql)
         spark.sql(v_sql).repartition(1).write.parquet(cdc_stg_loc.format(tbl), compression='gzip', mode='overwrite')
 
-    output_path = cdc_stg_loc.format('send_to_helix') + '{}/'.format(date_input.replace('/', ''))
+    output_path = cdc_stg_loc.format('send_to_helix')
     spark.read.parquet(cdc_stg_loc.format('helix_hvid_overlap_all_years'))\
         .select('identifier').distinct()\
         .repartition(1)\
@@ -156,12 +156,12 @@ if __name__ == "__main__":
     list_cmd = ['hadoop', 'fs', '-ls']
     move_cmd = ['hadoop', 'fs', '-mv']
     fn = get_part_file_path(list_cmd, output_path)
-    cmd = move_cmd + [fn, output_path + 'hv_cdc_helix_identifiers_{}.psv.gz'.format(date_input.replace('/', '_'))]
+    cmd = move_cmd + [fn, output_path + 'hv_cdc_helix_identifiers_{}.psv.gz'.format(date_input.replace('-', '_'))]
     subprocess.check_call(cmd)
 
     logger.log('transfer to ops')
     for tbl in table_list:
-        prod_ops_loc = s3_ops_loc.format(date_input=date_input.replace('/', '-')) + '{}/'.format(tbl)
+        prod_ops_loc = s3_ops_loc.format(date_input=date_input) + '{}/'.format(tbl)
         cdc_ops_loc = s3_cdc_loc.format('helix') + '{}/'.format(tbl)
 
         logger.log('transfer to prodops {}'.format(tbl))
@@ -173,7 +173,7 @@ if __name__ == "__main__":
         normalized_records_unloader.distcp(cdc_ops_loc, src=prod_ops_loc, deleteOnSuccess=False)
 
     logger.log('transfer to hv-out {}'.format('send_to_helix'))
-    s3_helix_loc_out_fmt = s3_helix_loc_out.format(date_input=date_input.replace('/', ''))
+    s3_helix_loc_out_fmt = s3_helix_loc_out.format(date_input=date_input.replace('-', ''))
     subprocess.check_call(['aws', 's3', 'rm', '--recursive', s3_helix_loc_out_fmt])
     normalized_records_unloader.distcp(
         s3_helix_loc_out_fmt, src=cdc_stg_loc.format('send_to_helix'), deleteOnSuccess=False)

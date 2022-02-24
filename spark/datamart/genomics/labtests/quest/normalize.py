@@ -59,7 +59,7 @@ if __name__ == "__main__":
     logger.log("Quest CDC Refresh- {}". format(date_input))
 
     # init
-    spark, sql_context = init("Quest CDC Refresh- {}". format(date_input.replace('/', '')))
+    spark, sql_context = init("Quest CDC Refresh- {}". format(date_input.replace('-', '')))
 
     # initialize runner
     runner = Runner(sql_context)
@@ -131,7 +131,7 @@ if __name__ == "__main__":
 
     logger.log('transfer to ops')
     for tbl in table_list:
-        prod_ops_loc = s3_ops_loc.format(date_input=date_input.replace('/', '-')) + '{}/'.format(tbl)
+        prod_ops_loc = s3_ops_loc.format(date_input=date_input) + '{}/'.format(tbl)
         cdc_ops_loc = s3_cdc_loc + '{}/'.format(tbl)
 
         logger.log('transfer to prodops {}'.format(tbl))

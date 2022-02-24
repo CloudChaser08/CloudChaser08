@@ -37,8 +37,8 @@ TABLE_CONF = {
             , 'npi'
             , 'specialty_code'
             , 'report_zip'
-            , 'column29'
-            , 'column30'
+            , 'unknown_column29'
+            , 'unknown_column30'
             , 'accession_id'
             , 'hvjoinkey'
         ]

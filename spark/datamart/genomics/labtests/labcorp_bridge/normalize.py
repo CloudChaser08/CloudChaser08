@@ -31,8 +31,8 @@ table_list = ['labcorp_bridge_hvid_overlap_all_years']
 labtests_loc = "s3://salusv/warehouse/parquet/labtests/2017-02-16/part_provider={}/"
 
 # Transaction and payload location
-transaction_path = 's3://salusv/incoming/labcorp_bridge/'
-payload_path = 's3://salusv/incoming/matching/payload/labcorp_bridge/'
+transaction_path = 's3://salusv/incoming/labtests/labcorp_bridge/'
+payload_path = 's3://salusv/matching/payload/labtests/labcorp_bridge/'
 
 # Labtests providers for crosswalk
 part_provider_list = [
@@ -63,29 +63,29 @@ if __name__ == "__main__":
     logger.log("Labcorp-Bridge CDC Refresh- {}".format(date_input))
 
     # init
-    spark, sql_context = init("Labcorp-Bridge CDC Refresh- {}".format(date_input.replace('/', '')))
+    spark, sql_context = init("Labcorp-Bridge CDC Refresh- {}".format(date_input.replace('-', '')))
 
     # initialize runner
     runner = Runner(sql_context)
 
     # list all batch locations
-    transaction_batches = [path for path in s3_utils.list_folders(transaction_path, full_path=True)]
-    payload_batches = [path for path in s3_utils.list_folders(payload_path, full_path=True)]
+    input_path = s3_utils.get_list_of_2c_subdir(transaction_path, True)
+    matching_path = s3_utils.get_list_of_2c_subdir(payload_path, True)
 
     logger.log('Loading the source data')
 
     logger.log(' -loading: transactions')
     records_loader.load_and_clean_all_v2(
-        runner, transaction_batches, source_table_schema, load_file_name=True, spark_context=spark)
+        runner, input_path, source_table_schema, load_file_name=True, spark_context=spark)
     df_trans = spark.table('txn')
 
     logger.log(' -Loading: payload')
-    df_pay = payload_loader.load(runner, payload_batches, cache=True, return_output=True)
+    df_pay = payload_loader.load(runner, matching_path, cache=True, return_output=True)
     logger.log('........extract process started')
 
     # Joining transaction and payload data, and storing result
     df_trans.join(df_pay, ['hvjoinkey']).select(
-        df_trans.claimid, df_trans.hvjoinkey, df_pay.hvid).distinct().repartition(2).write.parquet(
+        df_trans.accession_id, df_trans.hvjoinkey, df_pay.hvid).distinct().repartition(2).write.parquet(
         stg_loc, compression='gzip', mode='overwrite')
 
     # Loading stored data
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         logger.log("...write " + provider_extract_loc + 'part_provider={}/'.format(part_provider))
 
         # Crosswalk and storing result
-        df_stg.join(df_prov, ['hvid']).select(df_stg.claimid, df_stg.hvid, df_prov.part_best_date)\
+        df_stg.join(df_prov, ['hvid']).select(df_stg.accession_id, df_stg.hvid, df_prov.part_best_date)\
             .withColumn("part_best_date", df_prov["part_best_date"].cast(StringType()))\
             .distinct().repartition(1).write.parquet(
             provider_extract_loc + 'part_provider={}/'.format(part_provider), compression='gzip', mode='overwrite')
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     spark.read.parquet(provider_extract_loc).createOrReplaceTempView('cdc_provider_stg_tbl')
     additional_data_clmn = 'COALESCE(' + additional_data_clmn.strip(',') + ', NULL) AS additional_data'
 
-    overlap_sql = """SELECT DISTINCT ols.claimid as identifier, ols.hvid, 
+    overlap_sql = """SELECT DISTINCT ols.accession_id, ols.hvid, 
         {additional_data} FROM (  
         SELECT  
             stg.* 
@@ -138,6 +138,7 @@ if __name__ == "__main__":
         FROM cdc_stg_tbl stg
             {join_sql}
         ) ols
+        WHERE accession_id IS NOT NULL AND hvid is IS NOT NULL
     """
 
     for tbl in table_list:
@@ -150,7 +151,7 @@ if __name__ == "__main__":
 
     logger.log('transfer to ops')
     for tbl in table_list:
-        prod_ops_loc = s3_ops_loc.format(date_input=date_input.replace('/', '-')) + '{}/'.format(tbl)
+        prod_ops_loc = s3_ops_loc.format(date_input=date_input) + '{}/'.format(tbl)
         cdc_ops_loc = s3_cdc_loc.format('labcorp_bridge') + '{}/'.format(tbl)
 
         logger.log('transfer to prodops {}'.format(tbl))
