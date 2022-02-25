@@ -67,7 +67,7 @@ if __name__ == "__main__":
         use_ref_gen_values=True,
         unload_partition_count=10,
         output_to_delivery_path=HAS_DELIVERY_PATH,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     driver.output_path = os.path.join(driver.output_path, 'hv002854/')
