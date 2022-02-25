@@ -26,7 +26,7 @@ SELECT
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
         WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex
-        ELSE NULL
+        ELSE 'U'
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
     --------------------------------------------------------------------------------------------------

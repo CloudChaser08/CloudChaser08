@@ -3,7 +3,9 @@ tsi emr normalize
 """
 import os
 import argparse
-import spark.providers.tsi.emr.transactional_schemas as source_table_schemas
+from datetime import datetime
+import spark.providers.tsi.emr.transactional_schemas as table_schemas
+import spark.providers.tsi.emr.transactional_schemas_v1 as table_schemas_v1
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.utility import logger
 from spark.common.emr.encounter import schemas as encounter_schemas
@@ -15,6 +17,7 @@ from spark.common.emr.lab_test import schemas as lab_test_schemas
 from spark.common.emr.clinical_observation import schemas as clinical_observation_schemas
 import spark.helpers.external_table_loader as external_table_loader
 
+CUTOFF_DATE_V1 = datetime.strptime('2022-02-14', '%Y-%m-%d')
 
 HAS_DELIVERY_PATH = True
 
@@ -43,6 +46,14 @@ if __name__ == "__main__":
     args = parser.parse_known_args()[0]
     date_input = args.date
     end_to_end_test = args.end_to_end_test
+
+    is_schema_v1 = datetime.strptime(date_input, '%Y-%m-%d') >= CUTOFF_DATE_V1
+    if is_schema_v1:
+        logger.log('Current Load schema')
+        source_table_schemas = table_schemas_v1
+    else:
+        logger.log('Historic Load schema')
+        source_table_schemas = table_schemas
 
     # Create and run driver
     driver = MarketplaceDriver(

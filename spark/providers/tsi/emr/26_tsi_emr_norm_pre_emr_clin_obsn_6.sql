@@ -25,8 +25,8 @@ SELECT
     END																			            AS hvid,
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
-        WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex 
-        ELSE NULL
+        WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex
+        ELSE 'U'
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
     --------------------------------------------------------------------------------------------------
@@ -104,20 +104,21 @@ SELECT
     CAST(NULL AS STRING)                                                                    AS clin_obsn_alt_cd,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_alt_cd_qual,
 
-    CASE
-        WHEN ARRAY  (    
-                    vit.weight_in_pounds,
+    ARRAY (    
+                    CLEAN_UP_VITAL_SIGN(
+                      'WEIGHT', 
+                      vit.weight_in_pounds, 
+                      'POUNDS', 
+                      pln.sex, 
+                      null, 
+                      pay.yearofbirth, 
+                      null,
+                      CAST(EXTRACT_DATE(SUBSTR(enc.encounter_date_time, 1, 10), '%Y-%m-%d') AS DATE)
+                      ),
                     vit.pulse_rate,
                     vit.diastolic_blood_pressure,
                     vit.systolic_blood_pressure
-                    )[clin_obsn_typ_cd_explode.n] IS NULL       THEN NULL
-        ELSE ARRAY (    
-                    vit.weight_in_pounds,
-                    vit.pulse_rate,
-                    vit.diastolic_blood_pressure,
-                    vit.systolic_blood_pressure
-                    )[clin_obsn_typ_cd_explode.n]                   
-    END                                                                                     AS clin_obsn_msrmt,
+                    )[clin_obsn_typ_cd_explode.n]                                           AS clin_obsn_msrmt,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_uom,
     CAST(NULL AS STRING)                                                                    AS clin_obsn_grp_txt,
     vit.enterprise_id                                                                       AS data_src_cd,
@@ -199,8 +200,8 @@ SELECT
     END																			            AS hvid,
     COALESCE(pln.date_of_birth, pay.yearofbirth)                                            AS ptnt_birth_yr,
     CASE 
-        WHEN pln.sex IN ('F', 'M', 'U') THEN pln.sex 
-        ELSE NULL
+        WHEN pln.sex IN ('F', 'M', 'U', 'null') THEN pln.sex
+        ELSE 'U'
     END                                                                                     AS ptnt_gender_cd,
     VALIDATE_STATE_CODE(UPPER(COALESCE(pln.state, pay.state)))                              AS ptnt_state_cd, 
     --------------------------------------------------------------------------------------------------
@@ -269,7 +270,7 @@ SELECT
 
     CASE 
         WHEN CAST(COALESCE(vit.height_in_total_centimeters, vit.height_in_total_inches, 
-                vit.height_in_centimeters,vit.height_in_feet,vit.height_in_inches, 0) AS FLOAT) <> 0 THEN 'HEIGHT'
+                vit.height_in_centimeters,vit.height_in_feet,vit.height_in_inches, 0) AS FLOAT) <> 0 THEN 'height'
     ELSE
     NULL
     END                                                                                     AS clin_obsn_typ_cd,
@@ -278,7 +279,9 @@ SELECT
     CAST(NULL AS STRING)                                                                    AS clin_obsn_alt_cd_qual,
 
 
-    CASE
+    CLEAN_UP_VITAL_SIGN(
+      'HEIGHT', 
+       CASE
         WHEN vit.height_in_total_centimeters IS NOT NULL AND CAST(vit.height_in_total_centimeters AS FLOAT) <> 0 
                         THEN CONVERT_CM_TO_IN(vit.height_in_total_centimeters)
         WHEN vit.height_in_total_inches      IS NOT NULL AND CAST(vit.height_in_total_inches      AS FLOAT) <> 0 
@@ -289,7 +292,15 @@ SELECT
                         THEN (vit.height_in_feet*12) + COALESCE(vit.height_in_inches, 0)
     ELSE
     NULL
-    END                                                                                     AS clin_obsn_msrmt,
+    END, 
+    'INCHES', 
+    pln.sex, 
+    null, 
+    pay.yearofbirth, 
+    null,
+    CAST(EXTRACT_DATE(SUBSTR(enc.encounter_date_time, 1, 10), '%Y-%m-%d') AS DATE)
+    )
+                                                                                        AS clin_obsn_msrmt,
     CASE 
         WHEN CAST(COALESCE(vit.height_in_total_centimeters, vit.height_in_total_inches, 
                 vit.height_in_centimeters,vit.height_in_feet,vit.height_in_inches, 0) AS FLOAT) <> 0 THEN 'INCHES'
@@ -332,4 +343,4 @@ LEFT OUTER JOIN plainout pln         ON pln.person_id = vit.patient_id
 LEFT OUTER JOIN matching_payload pay ON pay.hvjoinkey = pln.hvjoinkey
 WHERE  CAST(COALESCE(vit.height_in_total_centimeters, vit.height_in_total_inches, 
                 vit.height_in_centimeters,vit.height_in_feet,vit.height_in_inches, 0) AS FLOAT) <> 0
- AND TRIM(lower(COALESCE(vit.patient_id, 'empty'))) <> 'patientid'
+ AND TRIM(lower(COALESCE(vit.patient_id, 'empty'))) <> 'patientid'   

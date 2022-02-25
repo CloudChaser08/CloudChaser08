@@ -56,6 +56,18 @@ UNION ALL
 SELECT * FROM tsi_emr_norm_pre_emr_clin_obsn_8
 UNION ALL
 SELECT * FROM tsi_emr_norm_pre_emr_clin_obsn_9
+UNION ALL
+SELECT * FROM tsi_emr_norm_pre_emr_clin_obsn_10
+UNION ALL
+SELECT * FROM tsi_emr_norm_pre_emr_clin_obsn_11
+UNION ALL
+SELECT * FROM tsi_emr_norm_pre_emr_clin_obsn_12
+UNION ALL
+SELECT * FROM tsi_emr_norm_pre_emr_clin_obsn_13
+UNION ALL
+SELECT * FROM tsi_emr_norm_pre_emr_clin_obsn_14
+UNION ALL
+SELECT * FROM tsi_emr_norm_pre_emr_clin_obsn_15
 )
 GROUP BY  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
          11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
