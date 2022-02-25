@@ -364,7 +364,7 @@ ARRAY
 	    ELSE SUBSTR(enc.encounter_date_time, 1, 7)
 	END																					    AS part_mth
 
-FROM rhe_ltft
+FROM rheleftfoot rhe_ltft
 LEFT OUTER JOIN encounters enc
                 ON enc.encounter_id = rhe_ltft.encounter_id
 LEFT OUTER JOIN provider prov

@@ -37,13 +37,13 @@ SELECT
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(SUBSTR(enc.encounter_date_time, 1, 10), '%Y-%m-%d') AS DATE),
-            CAST('{EARLIEST_SERVICE_DATE}' AS DATE)),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )																					AS enc_dt,
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(SUBSTR(enc.encounter_date_time, 1, 10), '%Y-%m-%d') AS DATE),
-            CAST('{EARLIEST_SERVICE_DATE}' AS DATE)),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )																					AS clin_obsn_dt,
     CLEAN_UP_NPI_CODE(prov.provider_npi)                                                    AS clin_obsn_prov_npi,
@@ -125,7 +125,7 @@ SELECT
 	CAP_DATE
 	    (
             CAST(EXTRACT_DATE(SUBSTR(jnt2.record_create_date_time, 1, 10), '%Y-%m-%d') AS DATE),
-            CAST('{EARLIEST_SERVICE_DATE}' AS DATE)),
+            CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
             CAST('{VDR_FILE_DT}' AS DATE)
 	    )																					AS data_captr_dt,
     'joint_exam2'                                                               AS prmy_src_tbl_nm,
