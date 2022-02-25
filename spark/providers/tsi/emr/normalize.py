@@ -47,7 +47,7 @@ if __name__ == "__main__":
     date_input = args.date
     end_to_end_test = args.end_to_end_test
 
-    is_schema_v1 = datetime.strptime(date_input, '%Y-%m-%d') < CUTOFF_DATE_V1
+    is_schema_v1 = datetime.strptime(date_input, '%Y-%m-%d') >= CUTOFF_DATE_V1
     if is_schema_v1:
         logger.log('Current Load schema')
         source_table_schemas = table_schemas_v1
