@@ -68,7 +68,7 @@ def run(date_input, end_to_end_test):
         date_input,
         end_to_end_test,
         load_date_explode=False,
-        unload_partition_count=40,
+        unload_partition_count=10,
         vdr_feed_id=177,
         use_ref_gen_values=True,
         output_to_transform_path=False

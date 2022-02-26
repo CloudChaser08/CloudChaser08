@@ -41,7 +41,7 @@ if __name__ == "__main__":
         output_table_names_to_schemas,
         date_input,
         end_to_end_test,
-        unload_partition_count=2,
+        unload_partition_count=1,
         vdr_feed_id=259,
         use_ref_gen_values=True,
         output_to_transform_path=False

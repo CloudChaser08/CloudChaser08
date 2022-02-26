@@ -36,7 +36,9 @@ if __name__ == "__main__":
         date_input,
         end_to_end_test,
         use_ref_gen_values=True,
-        vdr_feed_id=153
+        vdr_feed_id=153,
+        unload_partition_count=2,
+        output_to_transform_path=False
     )
 
     conf_parameters = {

@@ -33,11 +33,11 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         date_input,
         end_to_end_test,
         test=test,
-        unload_partition_count=4,
+        unload_partition_count=3,
         vdr_feed_id=33,
         load_date_explode=False,
         use_ref_gen_values=True,
-        output_to_transform_path=False
+        output_to_transform_path=True
     )
 
     conf_parameters = {
