@@ -115,7 +115,7 @@ def run(spark, runner, date_input, custom_input_path=None, custom_matching_path=
             hvm_historical_date=datetime(hvm_historical.year,
                                          hvm_historical.month,
                                          hvm_historical.day),
-            substr_date_part=False
+            substr_date_part=False, unload_partition_count=2
         )
 
     else:

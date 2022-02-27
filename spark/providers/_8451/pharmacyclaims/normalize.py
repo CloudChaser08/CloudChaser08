@@ -75,7 +75,7 @@ def run(spark, runner, date_input, test=False, end_to_end_test=False):
 
         normalized_records_unloader.unload(
             spark, runner, output, 'part_best_date', date_input, '8451',
-            columns=_columns, substr_date_part=False
+            columns=_columns, substr_date_part=False, unload_partition_count=2
         )
     else:
         output.collect()

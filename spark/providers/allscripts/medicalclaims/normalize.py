@@ -37,6 +37,7 @@ def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
         date_input,
         end_to_end_test,
         test=test,
+        unload_partition_count=4,
         load_date_explode=False,
         vdr_feed_id=26,
         use_ref_gen_values=True,
