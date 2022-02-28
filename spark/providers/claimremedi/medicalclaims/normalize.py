@@ -43,7 +43,7 @@ if __name__ == "__main__":
         end_to_end_test,
         vdr_feed_id=264,
         use_ref_gen_values=True,
-        unload_partition_count=5,
+        unload_partition_count=3,
         load_date_explode=True,
         output_to_transform_path=True
     )
