@@ -19,6 +19,7 @@ v1_to_v3_cutoff_date = '2020-09-21'
 v2_cuttoff_start_date = '2020-12-04'
 v2_cuttoff_end_date = '2021-02-16'
 v2_cuttoff_special_date = ['2021-03-01']
+v3_cuttoff_special_date = ['2021-09-01']
 v4_cutoff_date = ['2021-02-17','2021-11-21']
 v5_cutoff_date = ['2021-02-18']
 v6_cutoff_date = ['2021-05-03', '2021-05-06', '2021-05-11']
@@ -61,7 +62,8 @@ if __name__ == "__main__":
 
     # 27 Columns-from v1 added: 'lab_id', 'instrument', 'kit_name' and 'loinc_code'
     is_schema_v3 = \
-        not is_schema_v2 and date_input >= v1_to_v3_cutoff_date \
+        not is_schema_v2 and (
+                    date_input >= v1_to_v3_cutoff_date or date_input in v3_cuttoff_special_date) \
         and date_input not in v4_cutoff_date and date_input not in v5_cutoff_date \
         and date_input not in v6_cutoff_date
 
