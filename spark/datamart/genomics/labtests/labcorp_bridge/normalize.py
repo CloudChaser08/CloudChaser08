@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     # Joining transaction and payload data, and storing result
     df_trans.join(df_pay, ['hvjoinkey']).select(
-        df_trans.accession_id, df_trans.hvjoinkey, df_pay.hvid).distinct().repartition(2).write.parquet(
+        df_trans.identifier, df_trans.hvjoinkey, df_pay.hvid).distinct().repartition(2).write.parquet(
         stg_loc, compression='gzip', mode='overwrite')
 
     # Loading stored data
@@ -105,13 +105,12 @@ if __name__ == "__main__":
 
     for part_provider in part_provider_list:
         logger.log(" - runnning {}".format(part_provider))
-
         # Load labtests data from warehouse
         df_prov = spark.read.parquet(labtests_loc.format(part_provider))
         logger.log("...write " + provider_extract_loc + 'part_provider={}/'.format(part_provider))
 
         # Crosswalk and storing result
-        df_stg.join(df_prov, ['hvid']).select(df_stg.accession_id, df_stg.hvid, df_prov.part_best_date)\
+        df_stg.join(df_prov, ['hvid']).select(df_stg.identifier, df_stg.hvid, df_prov.part_best_date)\
             .withColumn("part_best_date", df_prov["part_best_date"].cast(StringType()))\
             .distinct().repartition(1).write.parquet(
             provider_extract_loc + 'part_provider={}/'.format(part_provider), compression='gzip', mode='overwrite')
@@ -130,7 +129,7 @@ if __name__ == "__main__":
     spark.read.parquet(provider_extract_loc).createOrReplaceTempView('cdc_provider_stg_tbl')
     additional_data_clmn = 'COALESCE(' + additional_data_clmn.strip(',') + ', NULL) AS additional_data'
 
-    overlap_sql = """SELECT DISTINCT ols.accession_id, ols.hvid, 
+    overlap_sql = """SELECT DISTINCT ols.identifier, ols.hvid, 
         {additional_data} FROM (  
         SELECT  
             stg.* 
@@ -138,7 +137,7 @@ if __name__ == "__main__":
         FROM cdc_stg_tbl stg
             {join_sql}
         ) ols
-        WHERE accession_id IS NOT NULL AND hvid is IS NOT NULL
+        WHERE identifier IS NOT NULL AND hvid IS NOT NULL
     """
 
     for tbl in table_list:

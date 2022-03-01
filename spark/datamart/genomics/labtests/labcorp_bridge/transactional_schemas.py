@@ -38,7 +38,7 @@ TABLE_CONF = {
             , 'specialty_code'
             , 'report_zip'
             , 'unknown_column29'
-            , 'unknown_column30'
+            , 'identifier'
             , 'accession_id'
             , 'hvjoinkey'
         ]
