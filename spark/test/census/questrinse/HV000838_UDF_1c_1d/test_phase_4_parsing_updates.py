@@ -9,9 +9,10 @@ eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru, sp
 import pytest
 pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
 
-from spark.test.census.questrinse.HV000838_1c.questrinse_helper import eval_test
+from spark.test.census.questrinse.HV000838_UDF_1c_1d.questrinse_helper import eval_test
 
 
+@pytest.mark.skip("skipped as values in gold table")
 def test_tnp_prefix_chars(spark):
     """
     Criteria: 'Starts with TNP (1st 3 characters)'
@@ -25,7 +26,7 @@ def test_tnp_prefix_chars(spark):
     eval_test('< 1000 TNP is a test', '<', '1000', 'TEST NOT PERFORMED', '', spark)
     eval_test('> 1.0 TNP test', '>', '1.0', 'TEST NOT PERFORMED', '', spark)
 
-
+@pytest.mark.skip("skipped as values in gold table")
 def test_dnr_prefix_chars(spark):
     """
     Starts with DNR (1st 3 character)
@@ -40,7 +41,7 @@ def test_dnr_prefix_chars(spark):
     eval_test('< 1000 DNR is a test', '<', '1000', 'DO NOT REPORT', '', spark)
     eval_test('> 1.0 DNR test', '>', '1.0', 'DO NOT REPORT', '', spark)
 
-
+@pytest.mark.skip("skipped as values in gold table")
 def test_tnp_text_throughout(spark):
     """
     Criteria: "test not performed -> Anywhere in field, lower case or mixed case"
@@ -56,7 +57,7 @@ def test_tnp_text_throughout(spark):
     eval_test('<=4/4 the test NOT perFORMED test', '<=', '4/4', 'TEST NOT PERFORMED', '', spark)
     eval_test('<=5.0 TEST NOT PERFORMED ', '<=', '5.0', 'TEST NOT PERFORMED', '', spark)
 
-
+@pytest.mark.skip("skipped as values in gold table")
 def test_np_text_throughout(spark):
     """
     Criteria: "not performed -> Anywhere in field, lower case or mixed case"
@@ -72,7 +73,7 @@ def test_np_text_throughout(spark):
     eval_test('<=4/4 the  NOT perFORMED test', '<=', '4/4', 'TEST NOT PERFORMED', '', spark)
     eval_test('<=5.0  NOT PERFORMED ', '<=', '5.0', 'TEST NOT PERFORMED', '', spark)
 
-
+@pytest.mark.skip("skipped as values in gold table")
 def test_ng_text_throughout(spark):
     """
     Criteria: "not given -> Anywhere in field, lower case or mixed case"
@@ -88,7 +89,7 @@ def test_ng_text_throughout(spark):
     eval_test('<=4/4 the  not not GIVEN test', '<=', '4/4', 'NOT GIVEN', '', spark)
     eval_test('<=5.0  nOt gIVEN ', '<=', '5.0', 'NOT GIVEN', '', spark)
 
-
+@pytest.mark.skip("skipped as values in gold table")
 def test_dnr_text_throughout(spark):
     """
     Criteria: "do not report -> Anywhere in field, lower case or mixed case"
@@ -104,7 +105,7 @@ def test_dnr_text_throughout(spark):
     eval_test('<=4/4 the do NOT repORT test', '<=', '4/4', 'DO NOT REPORT', '', spark)
     eval_test('<=5.0 DO NOT REPORT ', '<=', '5.0', 'DO NOT REPORT', '', spark)
 
-
+@pytest.mark.skip("skipped as values in gold table")
 def test_nt_only(spark):
     """
     Criteria: "NT (by itself, no other characters)"
