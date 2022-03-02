@@ -174,6 +174,21 @@ SELECT
     norm_pre04.loinc_number_qtim       ,
 
     norm_pre04.s_diag_code_codeset_ind ,
-    norm_pre04.HV_s_diag_code_codeset_ind
+    norm_pre04.HV_s_diag_code_codeset_ind,
+    norm_pre04.hv_abnormal_indicator    ,
 
+    norm_pre04.hv_provider_name_cmdm	,
+    norm_pre04.hv_ind_spclty_tp_cmdm	,
+    norm_pre04.hv_ind_spclty_cd_cmdm	,
+    norm_pre04.hv_ind_spclty_desc_cmdm	,
+    norm_pre04.hv_ind_spclty_tp2_cmdm	,
+    norm_pre04.hv_ind_spclty_cd2_cmdm	,
+    norm_pre04.hv_ind_spclty_desc2_cmdm ,
+    norm_pre04.hv_ind_spclty_tp3_cmdm	,
+    norm_pre04.hv_ind_spclty_cd3_cmdm	,
+    norm_pre04.hv_ind_spclty_desc3_cmdm ,
+    norm_pre04.hv_act_spclty_tp_cmdm	,
+    norm_pre04.hv_act_spclty_cd_cmdm	,
+    norm_pre04.hv_act_spclty_desc_cmdm	,
+    norm_pre04.client_acct_number
 FROM labtest_quest_rinse_census_pre_final_04 norm_pre04

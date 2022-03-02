@@ -28,7 +28,7 @@ SELECT
 	/* patient_gender */
     	(
         	CASE
-        	    WHEN SUBSTR(UPPER(ptnt.gender), 1, 1) IN ('F', 'M','U') THEN SUBSTR(UPPER(ptnt.gender), 1, 1)
+        	    WHEN SUBSTR(UPPER(txn.gender), 1, 1) IN ('F', 'M','U') THEN SUBSTR(UPPER(txn.gender), 1, 1)
         	    WHEN SUBSTR(UPPER(pay.gender ), 1, 1) IN ('F', 'M','U') THEN SUBSTR(UPPER(pay.gender ), 1, 1)
         	    ELSE 'U'
         	END
@@ -36,9 +36,9 @@ SELECT
 	/* patient_age - (Notes for me - Per our transformation - if the pay.age is NULL the patient_age becomes NULL)
 	   CASE is added to increase the performance UDF cap_year_of_birth(age, date_service, year_of_birth)  EXTRACT_DATE('01/31/2017', '%Y-%m-%d') */
 	CASE
-	    WHEN ptnt.numeric_age IS NULL AND pay.age IS NULL THEN NULL
+	    WHEN txn.numeric_age IS NULL AND pay.age IS NULL THEN NULL
 	    ELSE
-	    CAP_AGE(COALESCE(ptnt.numeric_age, pay.age))
+	    CAP_AGE(COALESCE(txn.numeric_age, pay.age))
 	END                                                                                     AS HV_patient_age,
     ---------------------------------------------------------------------------------------------------------------------
     -------  In the Quest RINSE the YOB is populated from the payload. No YOB in transaction tables. The new process will be as follow:
@@ -50,7 +50,7 @@ SELECT
 	ELSE pay.yearofbirth
 	END  AS HV_patient_year_of_birth,
 	MASK_ZIP_CODE(SUBSTR(pay.threedigitzip, 1, 3))                                          AS HV_patient_zip3,
-    VALIDATE_STATE_CODE(UPPER(COALESCE(ptnt.pat_state, pay.state)))                         AS HV_patient_state,
+    VALIDATE_STATE_CODE(UPPER(COALESCE(txn.pat_state, pay.state)))                         AS HV_patient_state,
     ---------------------------------------------------------------------------------------------------------
     ------------------- Removing all the transformation for  (2020-05-06)
     ------------------- date_service, date_specimen, date_report, loinc_code, diagnosis_code
@@ -61,7 +61,7 @@ SELECT
     rslt.loinc_code	                                                                         AS loinc_code,
     ----------------------------------------------------------------------------------------------------------------> LOINC From HV
     --When the rslt.loinc_code is NULL or starts with the letter L, or when the lab_id is liste code
-    --then populate target with hv_loinc.loinc_code where available. Else populate rslt.loinc_code
+    --then populate target with hv_loinc.loinc_code where available. Else populate rslt.loinc_code (2021-03-24 JKS - scope change Excep only NUMERIC LOINC code)
      ----------------------------------------------------------------------------------------------------------------> LOINC From HV
     CASE
         WHEN (
@@ -75,7 +75,6 @@ SELECT
                     END
     ELSE rslt.loinc_code
     END                                                                                      AS hv_loinc_code,
-    ---------------------------------------------------------------------------------------------------------------->
     rslt.lab_id                                                                              AS lab_id                ,
     rslt.obs_id                                                                              AS test_id               ,
     CASE
@@ -213,24 +212,24 @@ SELECT
     rslt.lab_lis_type                 AS  lab_lis_type            ,
     rslt.confidential_order_ind       AS  confidential_order_ind  ,
     rslt.daard_client_flag            AS  daard_client_flag       ,
-    ptnt.accession_number             AS  ptnt_accession_number   ,
-    ptnt.date_of_service              AS  ptnt_date_of_service    ,
-    ptnt.lab_code                     AS  ptnt_lab_code           ,
-    ptnt.accn_enterprise_id           AS  accn_enterprise_id      ,
-    ptnt.age_code                     AS  age_code                ,
-    ptnt.species                      AS  species                 ,
-    ptnt.pat_country                  AS  pat_country             ,
-    ptnt.external_patient_id          AS  external_patient_id     ,
-    ptnt.pat_master_id                AS  pat_master_id           ,
-    ptnt.lab_reference_number         AS  lab_reference_number    ,
-    ptnt.room_number                  AS  room_number             ,
-    ptnt.bed_number                   AS  bed_number              ,
-    ptnt.hospital_location            AS  hospital_location       ,
-    ptnt.ward                         AS  ward                    ,
-    ptnt.admission_date               AS  admission_date          ,
-    ptnt.health_id                    AS  health_id               ,
-    ptnt.pm_eid                       AS  pm_eid                  ,
-    ptnt.idw_pm_email_address         AS  idw_pm_email_address    ,
+    txn.accession_number             AS  ptnt_accession_number   ,
+    txn.date_of_service              AS  ptnt_date_of_service    ,
+    txn.lab_code                     AS  ptnt_lab_code           ,
+    txn.accn_enterprise_id           AS  accn_enterprise_id      ,
+    txn.age_code                     AS  age_code                ,
+    txn.species                      AS  species                 ,
+    txn.pat_country                  AS  pat_country             ,
+    txn.external_patient_id          AS  external_patient_id     ,
+    txn.pat_master_id                AS  pat_master_id           ,
+    txn.lab_reference_number         AS  lab_reference_number    ,
+    txn.room_number                  AS  room_number             ,
+    txn.bed_number                   AS  bed_number              ,
+    txn.hospital_location            AS  hospital_location       ,
+    txn.ward                         AS  ward                    ,
+    txn.admission_date               AS  admission_date          ,
+    txn.health_id                    AS  health_id               ,
+    txn.pm_eid                       AS  pm_eid                  ,
+    txn.idw_pm_email_address         AS  idw_pm_email_address    ,
     rslt.date_reported                AS date_reported            ,
     rslt.ref_range_low                AS ref_range_low            ,
     rslt.ref_range_high               AS ref_range_high           ,
@@ -239,9 +238,13 @@ SELECT
     rslt.fasting_ind                  AS fasting_ind              ,
     rslt.cpt_code                     AS cpt_code                 ,
     rslt.npi                          AS npi                      ,
-    rslt.phy_last_name                AS phy_last_name            ,
-    rslt.phy_first_name               AS phy_first_name           ,
-    rslt.phy_middle_name              AS phy_middle_name          ,
+--  rslt.phy_last_name                AS phy_last_name            ,
+--  rslt.phy_first_name               AS phy_first_name           ,
+--  rslt.phy_middle_name              AS phy_middle_name          ,
+    ---- ADDED ONLY FOR CUSTOM DELIVERY JKS 2022-02-24
+    CASE WHEN phy.phy_id IS NOT NULL THEN phy.phy_last_name   ELSE rslt.phy_last_name   END AS phy_last_name,
+    CASE WHEN phy.phy_id IS NOT NULL THEN phy.phy_first_name  ELSE rslt.phy_first_name  END AS phy_first_name,
+    CASE WHEN phy.phy_id IS NOT NULL THEN phy.phy_middle_name ELSE rslt.phy_middle_name END AS phy_middle_name,
     rslt.acct_state                   AS acct_state               ,
     rslt.date_final_report            AS date_final_report        ,
     CASE
@@ -252,7 +255,8 @@ SELECT
      CASE
         --- Check if more than one opeators
         WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1
-         AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) NOT IN ('<=','>=','<>')                                                                  THEN  NULL
+         AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) NOT IN ('<=','>=','<>')
+         AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) NOT IN ('>OR=','<OR=')                                                                   THEN  NULL
         WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('>OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.-]' THEN '>='
         WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) IN ('<OR='         ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 5, 1) RLIKE '[0-9.-]' THEN '<='
         WHEN SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 8) IN ('MORETHAN'     ) AND SUBSTR(REPLACE(rslt.result_value,' ',''), 9, 1) RLIKE '[0-9.-]' THEN '>'
@@ -273,7 +277,8 @@ SELECT
             WHEN TRIM(UPPER(rslt.result_value)) LIKE ('= SAME AS 1ST READ W/ML%') THEN NULL
             --- Check if more than one opeators
             WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1
-             AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) NOT IN ('<=','>=','<>')                                                         THEN  NULL
+             AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) NOT IN ('<=','>=','<>')
+             AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) NOT IN ('>OR=','<OR=')                                                      THEN  NULL
             --- Check the number is fraction and there is no opearator in the beginning
             WHEN LOCATE('/'   , SPLIT(rslt.result_value,' ')[0]) <> 0  AND SUBSTR(REPLACE(rslt.result_value,' ',''), 1, 1) NOT IN ('>' , '<' ,'=' ) THEN NULL
             WHEN rslt.result_value = '.' THEN NULL
@@ -373,7 +378,8 @@ SELECT
         WHEN TRIM(UPPER(rslt.result_value)) LIKE ( '= SAME AS 1ST READ W/ML%')                             THEN NULL
         --- Check if more than one opeators
         WHEN LENGTH(REPLACE(REGEXP_REPLACE(rslt.result_value,'[A-Za-z("),~*%/0-9:.,~-]',''),' ' ,'')) > 1
-         AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) NOT IN ('<=','>=','<>')                THEN  NULL
+         AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 2) NOT IN ('<=','>=','<>')
+                  AND SUBSTR(REPLACE(UPPER(rslt.result_value),' ',''), 1, 4) NOT IN ('>OR=','<OR=')         THEN  NULL
         -------- hardcode for  mg/dL
         WHEN LOCATE(' mg/dL ', rslt.result_value) <> 0
           AND (
@@ -429,20 +435,37 @@ SELECT
     END
    AS HV_result_value_alpha,
    CAST(NULL AS STRING)   AS HV_result_value,
-    CASE
-        WHEN UPPER(qtim1.profile_ind) ='Y' THEN qtim1.lab_reprt_titles_concat
+   -------QTIM
+   CASE
+        WHEN UPPER(qtim.profile_ind) ='Y' THEN qtim.lab_reprt_titles_concat
     ELSE NULL
     END                                                     AS profile_name_qtim,
-    qtim1.lab_reprt_titles_concat                           AS order_name_qtim,
-    qtim1.specimen_type_desc                                AS specimen_type_desc_qtim,
-    COALESCE(qtim1.methodology_dos, qtim1.methodology_lis)  AS methodology_qtim,
-    qtim2.analyte_name                                      AS result_name_qtim,
-    qtim2.unit_of_measure                                   AS unit_of_measure_qtim,
-    qtim2.loinc_number                                      AS loinc_number_qtim
+    qtim.lab_reprt_titles_concat                           AS order_name_qtim,
+    qtim.specimen_type_desc                                AS specimen_type_desc_qtim,
+    COALESCE(qtim.methodology_dos, qtim.methodology_lis)  AS methodology_qtim,
+    qtim.analyte_name                                      AS result_name_qtim,
+    qtim.unit_of_measure                                   AS unit_of_measure_qtim,
+    qtim.loinc_number                                      AS loinc_number_qtim,
+    ------------------ CMDM
+    CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_full_nm               ELSE NULL END AS hv_provider_name_cmdm,
+    CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty                ELSE NULL END AS hv_ind_spclty_tp_cmdm,
+    CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty_cd             ELSE NULL END AS hv_ind_spclty_cd_cmdm,
+    CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty_desc           ELSE NULL END AS hv_ind_spclty_desc_cmdm,
+    CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty_tp_secondary   ELSE NULL END AS hv_ind_spclty_tp2_cmdm,
+    CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty_cd_secondary   ELSE NULL END AS hv_ind_spclty_cd2_cmdm,
+    CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty_desc_secondary ELSE NULL END AS hv_ind_spclty_desc2_cmdm,
+    CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty_tp_tertiary    ELSE NULL END AS hv_ind_spclty_tp3_cmdm,
+    CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty_cd_tertiary    ELSE NULL END AS hv_ind_spclty_cd3_cmdm,
+    CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty_desc_tertiary  ELSE NULL END AS hv_ind_spclty_desc3_cmdm,
+    CASE WHEN acct.act_client_no IS NOT NULL THEN acct.act_spclty_tp         ELSE NULL END AS hv_act_spclty_tp_cmdm,
+    CASE WHEN acct.act_client_no IS NOT NULL THEN acct.act_spclty_cd         ELSE NULL END AS hv_act_spclty_cd_cmdm,
+    CASE WHEN acct.act_client_no IS NOT NULL THEN acct.act_spclty_desc       ELSE NULL END AS hv_act_spclty_desc_cmdm,
+    delta.acct_number	                                                                   AS client_acct_number
+
 FROM order_result rslt
 LEFT OUTER JOIN diagnosis diag ON rslt.unique_accession_id = diag.unique_accession_id
-LEFT OUTER JOIN transactions  ptnt ON rslt.unique_accession_id = ptnt.unique_accession_id
-LEFT OUTER JOIN matching_payload  pay  ON ptnt.hvjoinkey           = pay.hvJoinKey
+LEFT OUTER JOIN transactions  txn ON rslt.unique_accession_id = txn.unique_accession_id
+LEFT OUTER JOIN matching_payload  pay  ON txn.hvjoinkey           = pay.hvJoinKey
 LEFT OUTER JOIN loinc_delta           ON CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-dd') AS DATE)  = CAST(TO_DATE(loinc_delta.date_of_service, 'yyyy-MM-dd') AS DATE)
                                        AND UPPER(rslt.result_name) = UPPER(loinc_delta.upper_result_name)
                                        AND rslt.local_result_code = loinc_delta.local_result_code
@@ -451,51 +474,48 @@ LEFT OUTER JOIN loinc           ON CAST(TO_DATE(rslt.date_of_service, 'yyyy-MM-d
                                        AND UPPER(rslt.result_name) = UPPER(loinc.upper_result_name)
                                        AND rslt.local_result_code = loinc.local_result_code
                                        AND rslt.units             = loinc.units
-LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim1 qtim1 ON rslt.lab_code = qtim1.compendium_code AND rslt.local_profile_code = qtim1.unit_code
-LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim2 qtim2 ON rslt.lab_code = qtim2.compendium_code AND rslt.local_result_code = COALESCE(qtim2.standard_result_code, qtim2.analyte_code)
-                             AND rslt.local_profile_code = qtim2.unit_code
+----------------------QTIM
+LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim_all  qtim ON  rslt.lab_code              = qtim.compendium_code
+                     AND  rslt.idw_Local_order_code  = qtim.unit_code
+                     AND  rslt.local_result_code     = qtim.analyte_code
+----------------------GOLD ALPHA
 LEFT OUTER JOIN labtest_quest_rinse_result_gold_alpha gold          ON UPPER(TRIM(gold.gen_ref_cd)) = UPPER(TRIM(rslt.result_value))
+-- ---------------------CMDM
+LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_cmdm_npi     cmdm  ON COALESCE(cmdm.ind_npi ,'Empty')    = COALESCE(CLEAN_UP_NPI_CODE(rslt.npi) ,'blank')
+-- ------------------ Delta main
+LEFT OUTER JOIN
+    (
+        SELECT accession_number, lab_code, dos_id, ord_seq, res_seq, ins_seq, acct_number FROM lab_account_cpt
+      GROUP BY accession_number, lab_code, dos_id, ord_seq, res_seq, ins_seq, acct_number
+    ) delta
+  ON  rslt.accession_number = delta.accession_number
+  AND COALESCE(rslt.lab_code,'Empty') = COALESCE(delta.lab_code,'Blank')
+  AND COALESCE(rslt.dos_id  ,'Empty') = COALESCE(delta.dos_id  ,'Blank')
+  AND COALESCE(rslt.ord_seq ,'Empty') = COALESCE(delta.ord_seq ,'Blank')
+  AND COALESCE(rslt.res_seq ,'Empty') = COALESCE(delta.res_seq ,'Blank')
+  AND COALESCE(rslt.ins_seq ,'NULL')  = COALESCE(delta.ins_seq ,'NULL')
+-- ------------------ CMDM LIMITED
+ LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_cmdm_acct acct
+  ON delta.lab_code = acct.act_idw_lab_code
+  AND CASE WHEN delta.acct_number rlike ('^\\\D') THEN substr(delta.acct_number,2,length(delta.acct_number)) ELSE delta.acct_number END = acct.act_client_no
+  AND UPPER(acct.act_addr_tp) = 'DELIVER RESULTS'
+-- ------------------ LEFT OUTER JOIN FOR PHYSCIAN NAME 2022-02-24 (JKS)
+ LEFT OUTER JOIN ref_questrinse_physicians phy ON  rslt.phy_id=phy.phy_id
 
 WHERE
-LOWER(COALESCE(rslt.unique_accession_id, '')) <> 'unique_accession_id'
+ LOWER(COALESCE(rslt.unique_accession_id, '')) <> 'unique_accession_id'
 AND
--- (
---      ---------------- 1. The COUNTRY is NOT NULL  (from patient) ------------------------------
---         LENGTH(TRIM(COALESCE(ptnt.pat_country , ''))) <> 0
---      ---------------- 2a. The state is NOT NULL   (from patient) ------------------------------
---      OR LENGTH(TRIM(COALESCE(ptnt.pat_state   , ''))) <> 0
---      ---------------- 2b. The state is NOT NULL  (from result) --------------------------------
---      OR LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0
---      ---------------- 2c. The state is NOT NULL   (from pay load) -----------------------------
---      OR LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0
---      ---------------- 3a. The Zip code is NOT NULL  (from result)------------------------------
---      OR LENGTH(TRIM(COALESCE(rslt.acct_zip    , ''))) <> 0
---      ---------------- 3b. The Zip code is NOT NULL  from patient)------------------------------
---      OR LENGTH(TRIM(COALESCE(ptnt.pat_zip     , ''))) <> 0
---      ---------------- 3c. The Zip code is NOT NULL  (from payload)-----------------------------
---      OR LENGTH(TRIM(COALESCE(pay.threedigitzip, ''))) <> 0
 
---  )
-
---  AND
   (
       ---------------- 1. The COUNTRY is Valid (from patient) --------------------------------------
-        ( LENGTH(TRIM(COALESCE(ptnt.pat_country , ''))) <> 0  AND UPPER(COALESCE(SUBSTR(ptnt.pat_country,1,2),'US')) = 'US')
+        ( LENGTH(TRIM(COALESCE(txn.pat_country , ''))) <> 0  AND UPPER(COALESCE(SUBSTR(txn.pat_country,1,2),'US')) = 'US')
       ---------------- 2a. The state is NULL or Valid  (from patient) ------------------------------
-      OR ( LENGTH(TRIM(COALESCE(ptnt.pat_state   , ''))) <> 0 AND EXISTS (SELECT 1 FROM ref_geo_state sts WHERE UPPER(COALESCE(ptnt.pat_state, 'PA')) = sts.geo_state_pstl_cd) )
+      OR ( LENGTH(TRIM(COALESCE(txn.pat_state   , ''))) <> 0 AND EXISTS (SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(txn.pat_state, 'PA')) = sts.geo_state_pstl_cd) )
       ---------------- 2b. The state is NULL or Valid  (from result) ------------------------------
-      OR ( LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0 AND EXISTS(SELECT 1 FROM ref_geo_state sts WHERE UPPER(COALESCE(rslt.acct_state, 'PA')) = sts.geo_state_pstl_cd) )
+      OR ( LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0 AND EXISTS(SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(rslt.acct_state, 'PA')) = sts.geo_state_pstl_cd) )
       ---------------- 2c. The state is NULL or Valid  (from pay load) ------------------------------
-      OR ( LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0 AND  EXISTS(SELECT 1 FROM ref_geo_state sts WHERE UPPER(COALESCE(pay.state, 'PA')) = sts.geo_state_pstl_cd)      )
-      ---------------- 3a. The Zip code is NULL or Valid (from result)------------------------------
-    --  OR rslt.acct_zip IS NULL
-    --  OR CAST(rslt.acct_zip AS INT) <> 0
-    --   ---------------- 3b. The Zip code is NULL or Valid (from patient)------------------------------
-    --   OR ptnt.pat_zip IS NULL
-    --   OR CAST(ptnt.pat_zip AS INT) <> 0
-    --   ---------------- 3c. The Zip code is NULL or Valid (from payload)------------------------------
-    --   OR pay.threedigitzip IS NULL
-    --   OR CAST(pay.threedigitzip AS INT) <> 0
+      OR ( LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0 AND  EXISTS(SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(pay.state, 'PA')) = sts.geo_state_pstl_cd)      )
+
 
   )
-
+--limit 10

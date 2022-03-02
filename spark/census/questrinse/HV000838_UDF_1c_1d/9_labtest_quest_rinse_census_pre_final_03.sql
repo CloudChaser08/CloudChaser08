@@ -179,7 +179,7 @@ SELECT
     ELSE     norm_pre01.HV_result_value_operator
     END AS HV_result_value_operator,
     CASE
-        ----- if the numeric value has one word and that is alphabet - nullify it
+        ----- if the numeric value is one word and that is alphabet
         WHEN SPLIT(HV_result_value_numeric,' ')[0]  rlike '[A-Za-z]' AND SPLIT(HV_result_value_numeric,' ')[1]  IS NULL THEN NULL
 
         ----- if the numeric value is date, nullify it  (HV_result_value_numeric)
@@ -205,16 +205,30 @@ SELECT
 
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[:'  THEN REPLACE(CONCAT('['  ,SUBSTR(norm_pre01.HV_result_value_numeric,3)), ' ', '')
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[/'  THEN REPLACE(CONCAT('['  ,SUBSTR(norm_pre01.HV_result_value_numeric,3)), ' ', '')
+        ----- REPLACE('.5/.25','.','0.')
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[.'
                 AND LOCATE ('/.', norm_pre01.HV_result_value_numeric) <> 0            THEN REPLACE(CONCAT('[0.', SUBSTR(norm_pre01.HV_result_value_numeric,3)) , '/.', '/0.')
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[.'                    THEN  CONCAT('[0.', SUBSTR(norm_pre01.HV_result_value_numeric,3))
-        WHEN LOCATE ('/.', norm_pre01.HV_result_value_numeric) <> 0                   THEN REPLACE(norm_pre01.HV_result_value_numeric , '/.', '/0.')
 
+        -- 2021-05-07
+        WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,3) = ']./'          THEN REPLACE(norm_pre01.HV_result_value_numeric, '/.]', ']')
+
+        WHEN LOCATE ('/.', norm_pre01.HV_result_value_numeric) <> 0                   THEN REPLACE(norm_pre01.HV_result_value_numeric , '/.', '/0.')
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,2) = '[]'  THEN NULL
         WHEN SUBSTR(norm_pre01.HV_result_value_numeric,1,3) = '[-]' THEN NULL
         WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,1) = '/'  THEN REPLACE(norm_pre01.HV_result_value_numeric, '/', '')
+
+        WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,2) = ']/' THEN REPLACE(norm_pre01.HV_result_value_numeric, '/]', ']')
         WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,2) = ']+' THEN REPLACE(norm_pre01.HV_result_value_numeric, '+]', ']')
-        WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,3) = ']/ ' THEN REPLACE(norm_pre01.HV_result_value_numeric, ' /]', ']')
+       -- 2021-05-07 2021-05-12
+        WHEN SUBSTR(REVERSE(norm_pre01.HV_result_value_numeric),1,3) = ']0 ' THEN REPLACE(norm_pre01.HV_result_value_numeric, ' 0]', ']')
+
+        WHEN LOCATE('ghs ', norm_pre01.result) <> 0
+        AND norm_pre01.HV_result_value_operator IS NOT NULL  THEN  SUBSTR( REPLACE(norm_pre01.result, norm_pre01.HV_result_value_operator, ''), 1, LOCATE('ghs ',REPLACE(norm_pre01.result, norm_pre01.HV_result_value_operator, ''))-1)
+        WHEN LOCATE('gnb ', norm_pre01.result) <> 0
+        AND norm_pre01.HV_result_value_operator IS NOT NULL  THEN  SUBSTR( REPLACE(norm_pre01.result, norm_pre01.HV_result_value_operator, ''), 1, LOCATE('gnb ',REPLACE(norm_pre01.result, norm_pre01.HV_result_value_operator, ''))-1)
+
+
     ELSE norm_pre01.HV_result_value_numeric
     END AS HV_result_value_numeric,
         -----------------------------Nullify alfa
@@ -241,23 +255,49 @@ SELECT
           SUBSTR(HV_result_value_numeric,7,1) = '/'         AND
           SUBSTR(HV_result_value_numeric,8,1) rlike '[0-9]' AND
           SUBSTR(HV_result_value_numeric,9,1) rlike '[0-9]'
-         )                                                        THEN NULL
+         )                                                            THEN NULL
         ------------- Exception for mg/dL
         WHEN LOCATE(' mg/dL ', norm_pre01.HV_result_value_alpha) <> 0
         AND norm_pre01.HV_result_value_operator IS NOT NULL     THEN TRIM(norm_pre01.HV_result_value_alpha)
+        ------------- Exception for MG/DL 2021-05-07
+        WHEN LOCATE('MGDL',  norm_pre01.HV_result_value_alpha) <> 0 AND norm_pre01.HV_result_value_operator IS NOT NULL     THEN 'MG/DL'
+        ------------- Exception for MG/DL 2021-05-12
+        WHEN LOCATE('mgdL',  norm_pre01.HV_result_value_alpha) <> 0 AND norm_pre01.HV_result_value_operator IS NOT NULL     THEN 'mg/dL'
+        WHEN LOCATE('EUDL',  norm_pre01.HV_result_value_alpha) <> 0 AND norm_pre01.HV_result_value_operator IS NOT NULL     THEN 'EU/DL'
+        WHEN LOCATE('MILML', norm_pre01.HV_result_value_alpha) <> 0 AND norm_pre01.HV_result_value_operator IS NOT NULL     THEN 'MIL/ML'
+
+        ------------- Exception for CLASS 2021-05-07
+        WHEN LOCATE('CLASS ', norm_pre01.result) <> 0
+        AND norm_pre01.HV_result_value_operator IS NOT NULL     THEN SUBSTR(norm_pre01.result, LOCATE('CLASS ', norm_pre01.result))
+
+        WHEN LOCATE('gnb ', norm_pre01.result) <> 0
+        AND norm_pre01.HV_result_value_operator IS NOT NULL     THEN SUBSTR(norm_pre01.result, LOCATE('gnb ', norm_pre01.result))
+
+        WHEN LOCATE('ghs ', norm_pre01.result) <> 0
+        AND norm_pre01.HV_result_value_operator IS NOT NULL     THEN SUBSTR(norm_pre01.result, LOCATE('ghs ', norm_pre01.result))
+
         -------- Exception for mcg/ML 2021-03-29
         WHEN LOCATE('mL', norm_pre01.HV_result_value_alpha) <> 0
+         AND LOCATE('/mL', norm_pre01.result) <> 0
          AND LOCATE('/mL', norm_pre01.HV_result_value_alpha) = 0
         AND norm_pre01.HV_result_value_operator IS NOT NULL           THEN REPLACE(norm_pre01.HV_result_value_alpha, 'mL', '/mL')
+        -------- Exception for U/L
+        WHEN LOCATE('UL', norm_pre01.HV_result_value_alpha) <> 0
+         AND LOCATE('U/L', norm_pre01.HV_result_value_alpha) = 0
+        AND norm_pre01.HV_result_value_operator IS NOT NULL           THEN REPLACE(norm_pre01.HV_result_value_alpha, 'UL', 'U/L')
+        -------- Exception for U/L
+        WHEN LOCATE('ngliter', norm_pre01.HV_result_value_alpha) <> 0
+         AND LOCATE('ng/liter', norm_pre01.HV_result_value_alpha) = 0
+        AND norm_pre01.HV_result_value_operator IS NOT NULL           THEN REPLACE(norm_pre01.HV_result_value_alpha, 'ngliter', 'ng/liter')
+
 
         WHEN LENGTH(TRIM(COALESCE(norm_pre01.HV_result_value_numeric ,''))) <> 0
          AND LENGTH(TRIM(COALESCE(norm_pre01.HV_result_value_operator,''))) <> 0
          AND norm_pre01.HV_result_value_alpha NOT IN ( 'IN' , 'TO')               ---- Exception disregard IN TO
-                THEN norm_pre01.HV_result_value_alpha
-
+                                                                      THEN  norm_pre01.HV_result_value_alpha
     ELSE NULL
-    END AS HV_result_value_alpha       ,
-    norm_pre01.date_final_report       ,
+    END AS HV_result_value_alpha ,
+    norm_pre01.date_final_report ,
     norm_pre01.profile_name_qtim,
     norm_pre01.order_name_qtim,
     norm_pre01.specimen_type_desc_qtim,
@@ -267,10 +307,28 @@ SELECT
     norm_pre01.loinc_number_qtim,
 
     norm_pre02.s_diag_code_codeset_ind ,
-    norm_pre02.HV_s_diag_code_codeset_ind
+    norm_pre02.HV_s_diag_code_codeset_ind,
 
-           FROM labtest_quest_rinse_census_pre_final_01 norm_pre01
-LEFT OUTER JOIN labtest_quest_rinse_census_pre_final_02 norm_pre02  ON norm_pre01.unique_accession_id = norm_pre02.unique_accession_id
+    norm_pre01.hv_abnormal_indicator    ,
+
+    norm_pre01.hv_provider_name_cmdm	,
+    norm_pre01.hv_ind_spclty_tp_cmdm	,
+    norm_pre01.hv_ind_spclty_cd_cmdm	,
+    norm_pre01.hv_ind_spclty_desc_cmdm	,
+    norm_pre01.hv_ind_spclty_tp2_cmdm	,
+    norm_pre01.hv_ind_spclty_cd2_cmdm	,
+    norm_pre01.hv_ind_spclty_desc2_cmdm ,
+    norm_pre01.hv_ind_spclty_tp3_cmdm	,
+    norm_pre01.hv_ind_spclty_cd3_cmdm	,
+    norm_pre01.hv_ind_spclty_desc3_cmdm ,
+    norm_pre01.hv_act_spclty_tp_cmdm	,
+    norm_pre01.hv_act_spclty_cd_cmdm	,
+    norm_pre01.hv_act_spclty_desc_cmdm	,
+    norm_pre01.client_acct_number
+
+
+FROM labtest_quest_rinse_census_pre_final_01a norm_pre01
+LEFT OUTER JOIN labtest_quest_rinse_census_pre_final_02  norm_pre02  ON norm_pre01.unique_accession_id = norm_pre02.unique_accession_id
 LEFT OUTER JOIN labtest_quest_rinse_result_gold_alpha gold          ON UPPER(TRIM(gold.gen_ref_cd)) = UPPER(TRIM(norm_pre01.HV_result_value_alpha))
 
 GROUP BY
@@ -281,4 +339,5 @@ GROUP BY
     80,   81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  96,  97,  98,  99,
     100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
     120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
-    140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153
+    140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155,	156, 157, 158, 159,
+    160, 161, 162, 163,	164, 165, 166, 167,	168
