@@ -103,7 +103,31 @@ def run(date_input, test=False, end_to_end_test=False, spark=None, runner=None):
 
     driver.load()
 
+    logger.log(' -trimmify-nullify d_drug data')
+    d_drug_df = driver.spark.table('d_drug')
+    cleaned_d_drug_df = (
+        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(d_drug_df))
+    cleaned_d_drug_df.distinct().createOrReplaceTempView("d_drug")
+
+    logger.log(' -trimmify-nullify d_multum_to_ndc data')
+    ndc_sql = """
+    SELECT distinct max(ndc) as ndc, multum_id, touch_date 
+        FROM d_multum_to_ndc 
+        WHERE (multum_id, touch_date) 
+        IN 
+            (
+            SELECT multum_id, max(touch_date) as touch_date 
+            FROM d_multum_to_ndc 
+            GROUP BY multum_id
+            ) 
+        GROUP BY multum_id, touch_date
+    """
+    d_multum_to_ndc_df = driver.spark.sql(ndc_sql)
+    cleaned_d_multum_to_ndc_df = (
+        postprocessor.compose(postprocessor.trimmify, postprocessor.nullify)(d_multum_to_ndc_df))
+    cleaned_d_multum_to_ndc_df.distinct().createOrReplaceTempView("d_multum_to_ndc")
     logger.log(' -trimmify-nullify matching_payload data')
+
     v_matching_sql = """ select * 
                     from
                         (   select  *

@@ -83,7 +83,7 @@ SELECT
         CAST('{EARLIEST_SERVICE_DATE}' AS DATE),
         CAST('{VDR_FILE_DT}' AS DATE)
     )                                                                                   AS medctn_end_dt,
-    CLEAN_UP_NDC_CODE(ndc.ndc)                                                          AS medctn_ndc,
+    CLEAN_UP_NDC_CODE(COALESCE(ndc.ndc, med.ndc))                                       AS medctn_ndc,
     med.med_name                                                                        AS medctn_brd_nm,
     drg.generic_name                                                                    AS medctn_genc_nm,
     drg.dosage_form                                                                     AS medctn_admin_form_nm,
