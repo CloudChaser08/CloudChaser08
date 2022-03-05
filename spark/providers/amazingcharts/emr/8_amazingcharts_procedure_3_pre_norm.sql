@@ -126,11 +126,13 @@ SELECT
     CAST(NULL AS STRING) AS proc_rndrg_prov_addr_2_txt,
     UPPER(COALESCE(prv.state, ''))                                              AS proc_rndrg_prov_state_cd,
     CAST(NULL AS STRING) AS proc_rndrg_prov_zip_cd,
-    TRIM(UPPER(cpt.cpt_code))                                                   AS proc_cd,
+    -- RL: 1/25/2022 Vendor changed layout. Now using f_procedure.cpt_key rather than cpt.cpt_code in the code below
+    TRIM(UPPER(prc.cpt_key))                                                   AS proc_cd,
     CASE
-        WHEN cpt.cpt_code IS NULL THEN NULL
+        WHEN prc.cpt_key IS NULL THEN NULL
         ELSE 'CPT_CODE'
     END                                                                         AS proc_cd_qual,
+-- End of f_procedure.cpt_key modification
     CAST(NULL AS STRING) AS proc_cd_1_modfr,
     CAST(NULL AS STRING) AS proc_cd_2_modfr,
     CAST(NULL AS STRING) AS proc_cd_3_modfr,
@@ -179,7 +181,7 @@ FROM f_procedure prc
 LEFT OUTER JOIN d_patient ptn ON prc.patient_key = ptn.patient_key
 LEFT OUTER JOIN matching_payload pay ON ptn.patient_key = pay.personid
 LEFT OUTER JOIN d_provider prv ON prc.provider_key = prv.provider_key
-LEFT OUTER JOIN d_cpt cpt ON prc.cpt_key = cpt.cpt_key
+-- LEFT OUTER JOIN d_cpt cpt ON prc.cpt_key = cpt.cpt_key
 WHERE
     TRIM(UPPER(COALESCE(prc.practice_key, 'empty'))) <> 'PRACTICE_KEY'
---LIMIT 100
+-- LIMIT 10
