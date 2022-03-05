@@ -51,7 +51,7 @@ SELECT 'DETECTED*' AS gen_ref_cd, 'DETECTED' AS gen_ref_desc UNION ALL -- new
 SELECT 'NT' AS gen_ref_cd, 'TEST NOT PERFORMED' AS gen_ref_desc  -- new
 ---- New value from transaction table-------
 UNION ALL
-SELECT a.result_value   AS gen_ref_cd ,
+SELECT a.result_value AS gen_ref_cd ,
       CASE
        WHEN UPPER(a.result_value) LIKE 'TNP%'            THEN 'TEST NOT PERFORMED'
        WHEN UPPER(a.result_value) LIKE '%NOT PERFORMED%' THEN 'TEST NOT PERFORMED'

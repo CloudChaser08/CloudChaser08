@@ -1,4 +1,4 @@
-SELECT
+SELECT DISTINCT
     norm_pre01.HV_claim_id	,
     norm_pre01.hvid	        ,
     norm_pre01.created	    ,
@@ -15,7 +15,14 @@ SELECT
     norm_pre01.date_specimen	,
     norm_pre01.HV_date_report	,
     norm_pre01.loinc_code	    ,
-    norm_pre01.hv_loinc_code	,
+    ---------------------------------------------------------------------------------------------------------------->
+    --(2021-03-24 JKS - scope change Excep only NUMERIC LOINC code)
+    ---------------------------------------------------------------------------------------------------------------->
+    CASE
+        WHEN norm_pre01.hv_loinc_code NOT RLIKE '^[0-9-]+$'   THEN NULL
+        ELSE norm_pre01.hv_loinc_code
+    END             AS hv_loinc_code   ,
+--    norm_pre01.hv_loinc_code	,
     norm_pre01.lab_id	        ,
     norm_pre01.test_id	        ,
     norm_pre01.HV_test_number	,
@@ -32,7 +39,7 @@ SELECT
     norm_pre01.result_desc	        ,
     norm_pre01.HV_ref_range_alpha	,
     norm_pre01.HV_fasting_status	,
-    norm_pre01.HV_ONE_diagnosis_code,
+--    norm_pre01.HV_ONE_diagnosis_code,
     norm_pre01.HV_procedure_code	,
     norm_pre01.HV_procedure_code_qual	,
     norm_pre01.HV_ordering_npi	    ,
@@ -141,7 +148,10 @@ SELECT
     norm_pre01.phy_middle_name	,
     norm_pre01.acct_state	,
     norm_pre01.date_final_report	,
+
     norm_pre01.s_diag_code_codeset_ind	,
+    norm_pre01.HV_s_diag_code_codeset_ind,
+
     norm_pre01.HV_result_value_operator	,
     norm_pre01.HV_result_value_numeric	,
     norm_pre01.HV_result_value_alpha	,

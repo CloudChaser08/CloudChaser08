@@ -161,9 +161,9 @@ FROM
     TRIM(HV_result_value_operator) AS HV_result_value_operator   ,
     TRIM(HV_result_value_numeric)  AS HV_result_value_numeric ,
     --------------- ONLY FOR AUTOATION
-    --REPLACE(REPLACE(TRIM(HV_result_value_numeric), '[',''),']','') AS HV_result_value_numeric ,
+    --*--REPLACE(REPLACE(TRIM(HV_result_value_numeric), '[',''),']','') AS HV_result_value_numeric ,
     TRIM(REPLACE(HV_result_value_alpha, '"','')) AS HV_result_value_alpha,
-    TRIM(HV_result_value) AS   HV_result_value                   ,
+    TRIM(HV_result_value) AS HV_result_value                   ,
 -------------------------------------------------------------------------------------------------
 ---------- QTIM
 -------------------------------------------------------------------------------------------------
@@ -189,8 +189,8 @@ FROM
     hv_act_spclty_cd_cmdm	                                ,
     hv_act_spclty_desc_cmdm	                                ,
     client_acct_number
-
-FROM labtest_quest_rinse_census_pre_final_05
+FROM labtest_quest_rinse_census_pre_final_01a
+--FROM labtest_quest_rinse_census_pre_final_05
 GROUP BY
 1	,	2	,	3	,	4	,	5	,	6	,	7	,	8	,	9	,	10	,
 11	,	12	,	13	,	14	,	15	,	16	,	17	,	18	,	19	,	20	,

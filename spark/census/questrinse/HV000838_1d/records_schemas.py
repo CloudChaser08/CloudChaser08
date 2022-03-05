@@ -1,4 +1,4 @@
-"""records schema questrince hv000838_1c"""
+"""records schema questrince hv000838_1b"""
 from spark.helpers.source_table import SourceTable
 
 TABLE_CONF = {
@@ -164,6 +164,21 @@ TABLE_CONF = {
             'pm_eid',
             'idw_pm_email_address',
             'hvjoinkey'
+        ]
+    ),
+    'lab_account_cpt': SourceTable(
+        'parquet',
+        trimmify_nullify=True,
+        columns=[
+            'accession_number',
+            'unique_accession_id',
+            'lab_code',
+            'dos_id',
+            'ord_seq',
+            'res_seq',
+            'ins_seq',
+            'acct_number',
+            'cpt_code'
         ]
     )
 }

@@ -510,11 +510,11 @@ AND
       ---------------- 1. The COUNTRY is Valid (from patient) --------------------------------------
         ( LENGTH(TRIM(COALESCE(txn.pat_country , ''))) <> 0  AND UPPER(COALESCE(SUBSTR(txn.pat_country,1,2),'US')) = 'US')
       ---------------- 2a. The state is NULL or Valid  (from patient) ------------------------------
-      OR ( LENGTH(TRIM(COALESCE(txn.pat_state   , ''))) <> 0 AND EXISTS (SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(txn.pat_state, 'PA')) = sts.geo_state_pstl_cd) )
+      OR ( LENGTH(TRIM(COALESCE(txn.pat_state   , ''))) <> 0 AND EXISTS (SELECT 1 FROM ref_geo_state sts WHERE UPPER(COALESCE(txn.pat_state, 'PA')) = sts.geo_state_pstl_cd) )
       ---------------- 2b. The state is NULL or Valid  (from result) ------------------------------
-      OR ( LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0 AND EXISTS(SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(rslt.acct_state, 'PA')) = sts.geo_state_pstl_cd) )
+      OR ( LENGTH(TRIM(COALESCE(rslt.acct_state  , ''))) <> 0 AND EXISTS(SELECT 1 FROM ref_geo_state sts WHERE UPPER(COALESCE(rslt.acct_state, 'PA')) = sts.geo_state_pstl_cd) )
       ---------------- 2c. The state is NULL or Valid  (from pay load) ------------------------------
-      OR ( LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0 AND  EXISTS(SELECT 1 FROM dw.ref_geo_state sts WHERE UPPER(COALESCE(pay.state, 'PA')) = sts.geo_state_pstl_cd)      )
+      OR ( LENGTH(TRIM(COALESCE(pay.state        , ''))) <> 0 AND  EXISTS(SELECT 1 FROM ref_geo_state sts WHERE UPPER(COALESCE(pay.state, 'PA')) = sts.geo_state_pstl_cd)      )
 
 
   )

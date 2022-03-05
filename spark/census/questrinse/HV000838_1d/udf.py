@@ -51,7 +51,7 @@ import re
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
-from pyspark.sql.functions import upper
+# from pyspark.sql.functions import upper
 
 # Specialty patterns
 GENETIC_PATTERN = r'[ACGT]>[ACGT]\s*[ACGT]/[ACGT]'
@@ -170,6 +170,7 @@ def alpha_search(pattern, table_dict):
     """
     return table_dict.get(pattern.upper())
 
+
 def udf_gen(table, test, spark):
   
     """ Generates udf coupled with gold table
@@ -182,16 +183,13 @@ def udf_gen(table, test, spark):
     if table:
         # Gold table is converted into dictionary
         df_1 = spark.table(table)
-        df_1 = df_1.withColumn('new_cd',upper('gen_ref_cd')).withColumn('new_desc',upper('gen_ref_desc')).select('new_cd','new_desc').cache()
-
         gold_dict = df_1.toPandas().set_index('new_cd').T.to_dict('records')[0]
 
     elif test:
         # Test dictionary 
         gold_dict = test
 
-    else :
-
+    else:
         print("No table given")
         return
 
