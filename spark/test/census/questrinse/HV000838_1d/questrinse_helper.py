@@ -55,6 +55,7 @@ REPLACEMENT_LOOKUP = {
     "TNP": "TEST NOT PERFORMED",
 }
 
+
 def eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru, spark):
 
     df: DataFrame = spark['spark'].sparkContext.parallelize([

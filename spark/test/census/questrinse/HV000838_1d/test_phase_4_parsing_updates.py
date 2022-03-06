@@ -9,7 +9,7 @@ eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru, sp
 import pytest
 pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
 
-from spark.test.census.questrinse.HV000838_UDF_1c_1d.questrinse_helper import eval_test
+from spark.test.census.questrinse.HV000838_1d.questrinse_helper import eval_test
 
 
 @pytest.mark.skip("skipped as values in gold table")

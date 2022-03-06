@@ -7,7 +7,7 @@ eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru, sp
 """
 import pytest
 pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
-from spark.test.census.questrinse.HV000838_UDF_1c_1d.questrinse_helper import eval_test
+from spark.test.census.questrinse.HV000838_1d.questrinse_helper import eval_test
 
 
 # Regression tests were passing before Phase 5
@@ -39,6 +39,7 @@ def test_regression_multislash_error(spark):
               '/905/3640/17306/36126/5363/10306/36127/91431',
               spark)
     eval_test('333/05/2021"', '', '', '', '333/05/2021"', spark)
+
 
 @pytest.mark.usefixtures("spark")
 def test_numeric_begin_comma(spark):
