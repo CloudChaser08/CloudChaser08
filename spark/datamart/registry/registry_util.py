@@ -2,13 +2,14 @@ import pyspark.sql.functions as FN
 import spark.common.utility.logger as logger
 
 registry_cohort = 's3://salusv/warehouse/datamart/registry/_mom_cohort/part_provider={}/'
+mp_clmns = ['age', 'claimid', 'gender', 'hvid', 'state', 'threedigitzip', 'yearofbirth']
 
 
 def get_mom_cohort_filtered_mp(spark, provider_partition_name, mp_tbl='matching_payload'):
     # Cohort processing
     registry_loc = registry_cohort.format(provider_partition_name)
     logger.log('    -Collecting registry cohort from {}'.format(registry_loc))
-    recent_cohort_created_dt = spark.read.parquet(registry_loc).groupBy('created_date').max().collect()[0][0]
+    recent_cohort_created_dt = spark.read.parquet(registry_loc).agg({'created_date': 'max'}).collect()[0][0]
 
     if not recent_cohort_created_dt:
         raise Exception("Alert!!!! Registry cohort does not exist")
@@ -26,7 +27,6 @@ def get_mom_cohort_filtered_mp(spark, provider_partition_name, mp_tbl='matching_
         raise Exception("Alert!!!! Registry cohort is empty or hvids are null")
 
     # matching payload processing
-    mp_clmns = ['age', 'claimid', 'gender', 'hvid', 'state', 'threedigitzip', 'yearofbirth']
     logger.log('    -Filtering {} table from registry cohort'.format(mp_tbl))
     mp_df = spark.table(mp_tbl)
     filtered_mp_df_out = mp_df.join(registry_df_out, ['hvid']) \

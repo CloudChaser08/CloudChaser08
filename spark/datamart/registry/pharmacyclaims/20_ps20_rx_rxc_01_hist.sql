@@ -29,7 +29,7 @@ SELECT
 --------------------------- Get the PROD Table (currently there is no table)
 ---FROM _pharmacyclaims_nb
 FROM _temp_pharmacyclaims_hist
-    WHERE FALSE
+    WHERE TRUE
     --part_provider = 'inovalon'
     ----- Look current month and 3 month back
     AND part_best_date >= ADD_MONTHS(TRUNC(CAST('{VDR_FILE_DT}' AS DATE), 'MONTH'), -2)
@@ -39,5 +39,5 @@ FROM _temp_pharmacyclaims_hist
 ----------------------------- change to the PROD Table
 --  --SELECT 1 FROM darch._mom_cohort mom WHERE hivd = mom.hvid
 -- ----------- Cohort has both mom and baby     TEMPORARY
---  SELECT 1 FROM _temp_mom_cohort mom WHERE hvid = mom.hvid
+--  SELECT 1 FROM _mom_cohort mom WHERE hvid = mom.hvid
 --)

@@ -15,7 +15,8 @@ SELECT
     prescribingnpi   ,
     dispensingnpi    ,
     sourcemodifieddate,
-    createddate
+    createddate,
+    input_file_name
 FROM
     (
         SELECT
@@ -36,6 +37,7 @@ FROM
         dispensingnpi    ,
         sourcemodifieddate,
         createddate       ,
+        input_file_name   ,
            ROW_NUMBER() OVER (PARTITION BY
                 memberuid	     ,
                 provideruid	     ,
@@ -56,6 +58,6 @@ FROM
                 sourcemodifieddate DESC
                 ) AS row_num
         FROM rxc
-        WHERE lower(rxclaimuid)  <>  'rxclaimuid'
+        WHERE TRIM(lower(COALESCE(rxc.rxclaimuid, 'empty')))  <>  'rxclaimuid'
     )
 WHERE row_num  = 1

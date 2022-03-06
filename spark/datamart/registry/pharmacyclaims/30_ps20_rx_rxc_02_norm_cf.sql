@@ -18,7 +18,7 @@ SELECT
      CAP_DATE
         (
             CAST(EXTRACT_DATE(rxc.filldate                    , '%Y-%m-%d') AS DATE),
-            CAST(EXTRACT_DATE('{EARLIEST_VALID_SERVICE_DATE}', '%Y-%m-%d') AS DATE),
+            CAST(EXTRACT_DATE('{EARLIEST_SERVICE_DATE}', '%Y-%m-%d') AS DATE),
             CAST(EXTRACT_DATE('{VDR_FILE_DT}'                , '%Y-%m-%d') AS DATE)
         )
 
@@ -62,6 +62,7 @@ SELECT
         WHEN rxc.claimstatuscode = 'P' THEN 'Pending'
     ELSE NULL
     END                                                                                     AS  logical_delete_reason,
+    CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE) AS stg_file_date,
 	'inovalon'                                                                              AS part_provider,
 
      	CASE
@@ -70,7 +71,7 @@ SELECT
     	                                CAP_DATE
                                             (
                                                 CAST(EXTRACT_DATE(rxc.filldate, '%Y-%m-%d') AS DATE),
-                                                CAST(EXTRACT_DATE(COALESCE('{HVM_AVAILABLE_HISTORY_START_DATE}','{EARLIEST_VALID_SERVICE_DATE}'), '%Y-%m-%d') AS DATE),
+                                                CAST(EXTRACT_DATE(COALESCE('{AVAILABLE_START_DATE}','{EARLIEST_SERVICE_DATE}'), '%Y-%m-%d') AS DATE),
                                                 CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE)
                                             )
                                      , '')
@@ -95,7 +96,7 @@ LEFT OUTER JOIN mbr    ON rxc.memberuid    = mbr.memberuid
 -- LEFT OUTER JOIN (SELECT DISTINCT rxclaimuid , rxfilluid FROM inovalon_rxcw) rxcw ON rxc.rxclaimuid = rxcw.rxclaimuid
 -- LEFT OUTER JOIN inovalon_rxcc        rxcc ON rxcw.rxfilluid = rxcc.rxfilluid
 
-INNER JOIN _temp_mom_cohort   mom ON pay.hvid = mom.hvid  ----------- Cohort has both mom and baby TEMPORARY
+INNER JOIN _mom_cohort   mom ON pay.hvid = mom.hvid  ----------- Cohort has both mom and baby TEMPORARY
 
 
 WHERE lower(rxc.rxclaimuid)  <>  'rxclaimuid'

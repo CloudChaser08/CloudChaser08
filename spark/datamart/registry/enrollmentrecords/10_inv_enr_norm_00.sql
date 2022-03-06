@@ -27,7 +27,7 @@ SELECT DISTINCT
 LEFT OUTER JOIN mbr ON enr.memberuid = mbr.memberuid
 --LEFT OUTER JOIN matching_payload pay ON enr.memberuid = pay.claimid
 INNER JOIN matching_payload pay ON enr.memberuid = pay.claimid
---INNER JOIN _temp_mom_cohort mom ON pay.hvid = mom.hvid
+--INNER JOIN _mom_cohort mom ON pay.hvid = mom.hvid
 WHERE UPPER(COALESCE(enr.memberuid, 'X')) <> 'MEMBERUID'
   AND COALESCE(medicalindicator, 'X') = '1'
 UNION ALL
@@ -60,6 +60,6 @@ SELECT DISTINCT
 LEFT OUTER JOIN mbr ON enr.memberuid = mbr.memberuid
 --LEFT OUTER JOIN matching_payload pay ON enr.memberuid = pay.claimid
 INNER JOIN matching_payload pay ON enr.memberuid = pay.claimid
-INNER JOIN _temp_mom_cohort mom ON pay.hvid = mom.hvid
+INNER JOIN _mom_cohort mom ON pay.hvid = mom.hvid
 WHERE UPPER(COALESCE(enr.memberuid, 'X')) <> 'MEMBERUID'
   AND COALESCE(rxindicator, 'X') = '1'

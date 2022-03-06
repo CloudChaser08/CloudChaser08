@@ -10,7 +10,33 @@ from spark.common.datamart.registry.pharmacyclaims.pharmacyclaims_registry_model
 from spark.common.marketplace_driver import MarketplaceDriver
 import spark.common.utility.logger as logger
 import spark.helpers.hdfs_utils as hdfs_utils
+from spark.helpers.s3_utils import get_s3_file_count, list_files
 import spark.datamart.registry.registry_util as reg_util
+
+b_proxy_amount = False
+trans_tbl = 'rxc'
+trns_clmns = [
+    'rxclaimuid',
+    'memberuid',
+    'provideruid',
+    'claimstatuscode',
+    'filldate',
+    'ndc11code',
+    'supplydayscount',
+    'dispensedquantity',
+    'billedamount',
+    'allowedamount',
+    'copayamount',
+    'paidamount',
+    'costamount',
+    'prescribingnpi',
+    'dispensingnpi',
+    'sourcemodifieddate',
+    'createddate',
+    'input_file_name'
+    ]
+mp_tbl = 'matching_payload'
+registry_tbl = '_mom_cohort'
 
 tmp_loc = '/tmp/rx/'
 
@@ -59,49 +85,46 @@ if __name__ == "__main__":
     }
     hdfs_utils.clean_up_output_hdfs(tmp_loc)
     driver.init_spark_context(conf_parameters=conf_parameters)
-    driver.load()
+
+    b_payloads = True
+    if date_input == '2022-02-07':
+        driver.spark.read.parquet(driver.matching_path).createOrReplaceTempView(mp_tbl)
+        b_payloads = False
+    driver.load(payloads=b_payloads)
+
     partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
 
     # logger.log('Loading external tables')
-    # rx_hist_path = os.path.join(driver.output_path, rx_versioned_schema.output_directory, 'part_provider=inovalon/')
-    # driver.spark.read.parquet(rx_hist_path).createOrReplaceTempView('_temp_pharmacyclaims_hist')
+    rx_hist_path = os.path.join(driver.output_path, rx_versioned_schema.output_directory, 'part_provider=inovalon/')
+    driver.spark.read.parquet(rx_hist_path).createOrReplaceTempView('_temp_pharmacyclaims_hist')
 
     # registry and matching payload processing
-    mp_tbl = 'matching_payload'
-    registry_tbl = '_temp_mom_cohort'
     registry_df, filtered_mp_df = reg_util.get_mom_cohort_filtered_mp(driver.spark, provider_partition_name, mp_tbl)
-
-    trans_tbl = 'rxc'
-    trns_clmns = [
-        'rxclaimuid', 'memberuid', 'provideruid', 'claimstatuscode', 'filldate', 'ndc11code', 'supplydayscount',
-        'dispensedquantity', 'billedamount', 'allowedamount', 'copayamount', 'paidamount', 'costamount',
-        'prescribingnpi', 'dispensingnpi', 'sourcemodifieddate', 'createddate', 'input_file_name']
-
     logger.log('    -Filtering registry hvid from {} table'.format(trans_tbl))
     trans_df = driver.spark.table(trans_tbl)
-    trans_df.join(filtered_mp_df, trans_df['memberuid'] == filtered_mp_df['claimid'], 'inner').\
-        select(*[trans_df[c] for c in trans_df.columns if c in trns_clmns])\
-        .repartition(partitions, 'memberuid').createOrReplaceTempView(trans_tbl)
+    filtered_trans_df = trans_df.join(filtered_mp_df, trans_df['memberuid'] == filtered_mp_df['claimid'], 'inner')\
+        .select(*[trans_df[c] for c in trans_df.columns if c in trns_clmns])\
+        .repartition(partitions, 'memberuid')
+    filtered_trans_df.createOrReplaceTempView(trans_tbl)
 
-    logger.log('    -Filtering rxcw and rxcc tables')
-    rxcw_df = driver.spark.table('rxcw').select('rxclaimuid', 'rxfilluid').distinct()
-    rxcc_df = driver.spark.table('rxcc').select('rxfilluid', 'unadjustedprice').distinct()
-    rxcw_df.join(
-        driver.spark.table(trans_tbl), ['rxclaimuid']).select(rxcw_df.rxclaimuid, rxcw_df.rxfilluid)\
-        .join(rxcc_df, ['rxfilluid']).select(rxcw_df.rxclaimuid, rxcc_df.unadjustedprice)\
-        .distinct().repartition(3)\
-        .write.parquet(tmp_loc + 'rxcw_rxcc/', compression='gzip', mode='overwrite')
-
-    driver.spark.read.parquet(tmp_loc + 'rxcw_rxcc/').repartition(1).createOrReplaceTempView('rxcw_rxcc')
+    if b_proxy_amount:
+        logger.log('    -Filtering rxcw and rxcc tables')
+        rxcw_df = driver.spark.table('rxcw').select('rxclaimuid', 'rxfilluid').distinct()
+        rxcc_df = driver.spark.table('rxcc').select('rxfilluid', 'unadjustedprice').distinct()
+        rxcw_df.join(
+            driver.spark.table(trans_tbl), ['rxclaimuid']).select(rxcw_df.rxclaimuid, rxcw_df.rxfilluid)\
+            .join(rxcc_df, ['rxfilluid']).select(rxcw_df.rxclaimuid, rxcc_df.unadjustedprice)\
+            .distinct().repartition(3)\
+            .write.parquet(tmp_loc + 'rxcw_rxcc/', compression='gzip', mode='overwrite')
+        driver.spark.read.parquet(tmp_loc + 'rxcw_rxcc/').repartition(1).createOrReplaceTempView('rxcw_rxcc')
 
     for ref_tbl, ref_clmn in [('mbr', 'memberuid'), ('prv', 'provideruid'), ('psp', 'provideruid')]:
         logger.log('    -Filtering {} table'.format(ref_tbl))
-        ref_loc = tmp_loc + ref_tbl + '/'
         ref_df = driver.spark.table(ref_tbl)
         ref_df.join(driver.spark.table(trans_tbl), [ref_clmn]).select(*[ref_df[c] for c in ref_df.columns])\
             .distinct().repartition(2)\
-            .write.parquet(ref_loc, compression='gzip', mode='overwrite')
-        driver.spark.read.parquet(ref_loc).repartition(2).createOrReplaceTempView(ref_tbl)
+            .write.parquet(tmp_loc + ref_tbl + '/', compression='gzip', mode='overwrite')
+        driver.spark.read.parquet(tmp_loc + ref_tbl + '/').repartition(2).createOrReplaceTempView(ref_tbl)
 
     registry_df.createOrReplaceTempView(registry_tbl)
     filtered_mp_df.createOrReplaceTempView(mp_tbl)
@@ -110,24 +133,27 @@ if __name__ == "__main__":
     driver.save_to_disk()
     driver.stop_spark()
     driver.log_run()
-    #
-    # logger.log('Backup historical data')
-    # if end_to_end_test:
-    #     tmp_path = 's3://salusv/testing/dewey/airflow/e2e/inovalon/pharmacyclaims/backup/part_provider=inovalon/'
-    # else:
-    #     tmp_path = 's3://salusv/backup/registry/inovalon/pharmacyclaims/{}/part_provider=inovalon/'.format(date_input)
-    # date_part = 'part_best_date={}/'
-    #
-    # current_year_month = date_input[:7] + '-01'
-    # one_month_prior = (driver.date_input - relativedelta(months=1)).strftime('%Y-%m-01')
-    # two_months_prior = (driver.date_input - relativedelta(months=2)).strftime('%Y-%m-01')
-    #
-    # for month in [current_year_month, one_month_prior, two_months_prior]:
-    #     subprocess.check_call(
-    #         ['aws', 's3', 'mv', '--recursive',
-    #          rx_hist_path + date_part.format(month), tmp_path + date_part.format(month)]
-    #     )
 
+    logger.log('Backup historical data')
+    if end_to_end_test:
+        tmp_path = 's3://salusv/testing/dewey/airflow/e2e/inovalon/pharmacyclaims/backup/part_provider=inovalon/'
+    else:
+        tmp_path = 's3://salusv/backup/registry/inovalon/pharmacyclaims/{}/part_provider=inovalon/'.format(date_input)
+    date_part = 'part_best_date={}/'
+
+    current_year_month = date_input[:7] + '-01'
+    one_month_prior = (driver.date_input - relativedelta(months=1)).strftime('%Y-%m-01')
+    two_months_prior = (driver.date_input - relativedelta(months=2)).strftime('%Y-%m-01')
+
+    for month in [current_year_month, one_month_prior, two_months_prior]:
+        src_path = rx_hist_path + date_part.format(month)
+        s3_file_cnt = get_s3_file_count(src_path, True) or 0
+        if s3_file_cnt > 0:
+            subprocess.check_call(
+                ['aws', 's3', 'mv', '--recursive',src_path, tmp_path + date_part.format(month)]
+            )
+        else:
+            logger.log('Warning! there is no files to move from {}'.format(src_path))
     driver.copy_to_output_path()
     hdfs_utils.clean_up_output_hdfs(tmp_loc)
     logger.log('Done')
