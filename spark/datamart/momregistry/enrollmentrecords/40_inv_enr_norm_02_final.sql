@@ -1,0 +1,20 @@
+SELECT
+    MONOTONICALLY_INCREASING_ID()  AS record_id,
+    'pregnancy'                AS registry_type,
+    hvid                 ,
+    created              ,
+    model_version        ,
+    data_set             ,
+    data_feed            ,
+    data_vendor          ,
+    patient_gender       ,
+    source_record_date   ,
+    date_start           ,
+    date_end             ,
+    benefit_type         ,
+    payer_type           ,
+    payer_grp_txt        ,
+    CAST(EXTRACT_DATE('{VDR_FILE_DT}', '%Y-%m-%d') AS DATE) AS stg_file_date,       
+    part_provider        ,
+    part_best_date
+FROM inv_enr_norm_02_dedup txn

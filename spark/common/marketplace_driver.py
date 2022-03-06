@@ -26,6 +26,7 @@ PRODUCTION = 'production'
 TRANSFORM = 'transform'
 RESTRICTED = 'restricted'
 DELIVERY = 'datamart'
+DATAMART = 'datamart'
 DRIVER_MODULE_NAME = 'driver'
 
 MODE_RECORDS_PATH_TEMPLATE = {
@@ -34,7 +35,8 @@ MODE_RECORDS_PATH_TEMPLATE = {
     PRODUCTION: s3_constants.RECORDS_PATH,
     TRANSFORM: s3_constants.RECORDS_PATH,
     RESTRICTED: s3_constants.RECORDS_PATH,
-    DELIVERY: s3_constants.RECORDS_PATH
+    DELIVERY: s3_constants.RECORDS_PATH,
+    DATAMART: s3_constants.RECORDS_PATH
 }
 
 MODE_MATCHING_PATH_TEMPLATE = {
@@ -43,7 +45,8 @@ MODE_MATCHING_PATH_TEMPLATE = {
     PRODUCTION: s3_constants.MATCHING_PATH,
     TRANSFORM: s3_constants.MATCHING_PATH,
     RESTRICTED: s3_constants.MATCHING_PATH,
-    DELIVERY: s3_constants.MATCHING_PATH
+    DELIVERY: s3_constants.MATCHING_PATH,
+    DATAMART: s3_constants.MATCHING_PATH
 }
 
 MODE_OUTPUT_PATH = {
@@ -52,7 +55,8 @@ MODE_OUTPUT_PATH = {
     PRODUCTION: s3_constants.PRODUCTION_PATH,
     TRANSFORM: s3_constants.TRANSFORM_PATH,
     RESTRICTED: s3_constants.RESTRICTED_PATH,
-    DELIVERY: s3_constants.DELIVERY_PATH
+    DELIVERY: s3_constants.DELIVERY_PATH,
+    DATAMART: s3_constants.DATAMART_PATH
 }
 
 
@@ -75,9 +79,10 @@ class MarketplaceDriver(object):
                  use_ref_gen_values=False,
                  count_transform_sql=False,
                  restricted_private_source=False,
-                 additional_output_path=None, # additional_output_schemas are written to this exact s3 key
-                 additional_output_schemas=None, # dict with same keys as output_table_names_to_schemas
-                 output_to_delivery_path=False
+                 additional_output_path=None,   # additional_output_schemas are written to this exact s3 key
+                 additional_output_schemas=None,    # dict with same keys as output_table_names_to_schemas
+                 output_to_delivery_path=False,
+                 output_to_datamart_path=False
                  ):
 
         # get directory and path for provider
@@ -112,6 +117,7 @@ class MarketplaceDriver(object):
         self.additional_output_path = additional_output_path
         self.additional_output_schemas = additional_output_schemas
         self.output_to_delivery_path  = output_to_delivery_path
+        self.output_to_datamart_path = output_to_datamart_path
         self.available_start_date = None
         self.earliest_service_date = None
         self.earliest_diagnosis_date = None
@@ -133,6 +139,8 @@ class MarketplaceDriver(object):
             mode = RESTRICTED
         elif self.output_to_delivery_path:
             mode = DELIVERY
+        elif self.output_to_datamart_path:
+            mode = DATAMART
         else:
             mode = PRODUCTION
 
@@ -220,6 +228,7 @@ class MarketplaceDriver(object):
                                                            self.vdr_feed_id,
                                                            'EARLIEST_VALID_DIAGNOSIS_DATE',
                                                            get_as_string=True)
+
     def transform(self, additional_variables = None):
         """
         Transform the loaded data
@@ -306,7 +315,6 @@ class MarketplaceDriver(object):
                 self.save_schema_to_disk(data_frame, self.additional_output_schemas[table], table)
 
             data_frame.unpersist()
-            
 
     def log_run(self):
         logger.log('Logging run details')
