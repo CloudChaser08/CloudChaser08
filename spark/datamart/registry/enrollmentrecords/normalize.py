@@ -66,7 +66,8 @@ if __name__ == "__main__":
     trns_clmns = [
         'memberuid', 'effectivedate', 'terminationdate', 'createddate', 'productcode',  'groupplantypecode',
         'acaindicator', 'acaissuerstatecode', 'acaonexchangeindicator', 'acaactuarialvalue', 'payergroupcode',
-        'payertypecode', 'input_file_name', 'medicalindicator', 'rxindicator']
+        'payertypecode', 'input_file_name', 'medicalindicator', 'rxindicator'
+    ]
 
     logger.log('    -Filtering registry hvid from {} table'.format(trans_tbl))
     trans_df = driver.spark.table(trans_tbl)
