@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # registry and matching payload processing
     mp_tbl = 'matching_payload'
     registry_tbl = '_temp_mom_cohort'
-    registry_df, filtered_mp_df = reg_util.get_mom_cohort_filtered_mp(driver.spark, mp_tbl)
+    registry_df, filtered_mp_df = reg_util.get_mom_cohort_filtered_mp(driver.spark, provider_partition_name, mp_tbl)
 
     trans_tbl = 'enr'
     trns_clmns = [

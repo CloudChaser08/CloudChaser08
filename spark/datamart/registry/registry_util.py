@@ -4,7 +4,7 @@ import spark.common.utility.logger as logger
 registry_cohort = 's3://salusv/warehouse/datamart/registry/_mom_cohort/part_provider={}/'
 
 
-def get_mom_cohort_filtered_mp(spark, mp_tbl='matching_payload'):
+def get_mom_cohort_filtered_mp(spark, provider_partition_name, mp_tbl='matching_payload'):
     # Cohort processing
     registry_loc = registry_cohort.format(provider_partition_name)
     logger.log('    -Collecting registry cohort from {}'.format(registry_loc))
