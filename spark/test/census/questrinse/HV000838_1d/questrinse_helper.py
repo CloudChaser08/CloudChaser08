@@ -1,5 +1,5 @@
 import pytest
-from spark.census.questrinse.HV000838_UDF_1c_1d.udf import udf_gen
+from spark.census.questrinse.HV000838_1d.udf import udf_gen
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, Row
 
