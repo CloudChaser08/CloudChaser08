@@ -81,8 +81,9 @@ if __name__ == "__main__":
 
     # init
     conf_parameters = {
-        'spark.executor.memoryOverhead': 1024,
-        'spark.driver.memoryOverhead': 1024
+        'spark.executor.memoryOverhead': 2048,
+        'spark.driver.memoryOverhead': 2048,
+        'spark.sql.autoBroadcastJoinThreshold': 104857600
     }
 
     driver.init_spark_context(conf_parameters=conf_parameters)
