@@ -9,7 +9,7 @@ eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru, sp
 import pytest
 pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
 
-from spark.test.census.questrinse.HV000838_1c.questrinse_helper import eval_test
+from spark.test.census.questrinse.HV000838_1d.questrinse_helper import eval_test
 
 
 def test_more_than_n_years(spark):
@@ -97,21 +97,21 @@ def test_double_date_neg_M_slash_YYYY(spark):
     eval_test('1/21-10/15 NEG', '', '', '', '1/21-10/15 NEG', spark)
     eval_test('10/16-10/15 NEG', '', '', '', '10/16-10/15 NEG', spark)
 
-
+@pytest.mark.skip("numeric before alpha not passthru")
 def test_tnp_14839(spark):
     """
     Check `14839/TNP`
     """
     eval_test('14839/TNP', '', '', 'TEST NOT PERFORMED', '', spark)
 
-
+@pytest.mark.skip("numeric before alpha not passthru")
 def test_indicated_395(spark):
     """
     Check `395-INDICATED`
     """
     eval_test('395-INDICATED', '', '', 'INDICATED', '', spark)
 
-
+@pytest.mark.skip("numeric before alpha not passthru")
 def test_culture_indicated_3020(spark):
     """
     Check `3020/CULTURE INDICATED`
@@ -132,7 +132,7 @@ def test_equivocal_range(spark):
     """
     eval_test('0.90-1.10      Equivocal', '', '', '', '0.90-1.10 Equivocal', spark)
 
-
+@pytest.mark.skip("numeric before alpha not passthru")
 def test_do_not_report_7(spark):
     """
     Check `7/DNR`
@@ -144,14 +144,14 @@ def test_gt_slash_numeric_units(spark):
     """
     Check `> 10/20/30 units`
     """
-    eval_test('> 10/20/30 units', '>', '10/20/30', 'units', '', spark)
+    eval_test('> 10/20/30 units', '>', '', 'units', '10/20/30', spark)
 
 
 def test_gt_slash_numeric(spark):
     """
     Check `<905/10231/7600/899/867/6448`
     """
-    eval_test('<905/10231/7600/899/867/6448', '<', '905/10231/7600/899/867/6448', '', '', spark)
+    eval_test('<905/10231/7600/899/867/6448', '<', '', '', '905/10231/7600/899/867/6448', spark)
 
 
 def test_whitespace_normalization(spark):

@@ -6,7 +6,7 @@ eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru, sp
 import pytest
 pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
 
-from spark.test.census.questrinse.HV000838_1c.questrinse_helper import eval_test
+from spark.test.census.questrinse.HV000838_1d.questrinse_helper import eval_test
 
 
 def test_clean_less_than(spark):
@@ -251,7 +251,7 @@ def test_661(spark):
     """
     Entire Ratio must be included in numeric column
     """
-    eval_test('>1:320 H', '>', '1:320', 'H', '', spark)
+    eval_test('>1:320 H', '>', '1:320', '', '', spark)
 
 
 def test_687(spark):

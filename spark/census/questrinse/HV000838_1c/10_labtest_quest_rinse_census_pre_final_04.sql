@@ -22,7 +22,7 @@ SELECT
     norm_pre03.test_battery_local_id   ,
     norm_pre03.test_battery_std_id     ,
     norm_pre03.test_battery_name       ,
-    norm_pre03.test_ordered_local_id   ,    
+    norm_pre03.test_ordered_local_id   ,
     norm_pre03.test_ordered_std_id     ,
     norm_pre03.test_ordered_name       ,
     norm_pre03.result_id               ,
@@ -78,7 +78,7 @@ SELECT
     norm_pre03.non_physician_name      ,
     norm_pre03.non_physician_id        ,
     norm_pre03.long_description        ,
-    norm_pre03.phy_name                ,    
+    norm_pre03.phy_name                ,
     norm_pre03.suffix                  ,
     norm_pre03.degree                  ,
     norm_pre03.idw_analyte_code        ,
@@ -130,7 +130,7 @@ SELECT
     norm_pre03.date_reported           ,
     norm_pre03.ref_range_low           ,
     norm_pre03.ref_range_high          ,
-    norm_pre03.ref_range_alpha         ,    
+    norm_pre03.ref_range_alpha         ,
     norm_pre03.requisition_number      ,
     norm_pre03.fasting_ind             ,
     norm_pre03.cpt_code                ,
@@ -143,11 +143,11 @@ SELECT
     norm_pre03.HV_result_value_numeric ,
     ----------------- Special exceptions (When there is number in the result but numeric field is NULL and opearator is NULL then make the alpha NULL)
     CASE
-        WHEN CAST(REPLACE(SPLIT(norm_pre03.result,' ')[0],',','') AS FLOAT) IS NOT NULL 
+        WHEN CAST(REPLACE(SPLIT(norm_pre03.result,' ')[0],',','') AS FLOAT) IS NOT NULL
          AND norm_pre03.HV_result_value_operator IS NULL
          AND norm_pre03.HV_result_value_numeric IS NULL         THEN NULL
-        WHEN SUBSTR(norm_pre03.HV_result_value_alpha,1,1) = '/' THEN REPLACE(norm_pre03.HV_result_value_alpha, '/', '')        
-  
+        WHEN SUBSTR(norm_pre03.HV_result_value_alpha,1,1) = '/' THEN REPLACE(norm_pre03.HV_result_value_alpha, '/', '')
+
     ELSE
         norm_pre03.HV_result_value_alpha
     END AS HV_result_value_alpha       ,
@@ -161,6 +161,22 @@ SELECT
     norm_pre03.unit_of_measure_qtim    ,
     norm_pre03.loinc_number_qtim       ,
     norm_pre03.s_diag_code_codeset_ind ,
-    norm_pre03.HV_s_diag_code_codeset_ind
-    
+    norm_pre03.HV_s_diag_code_codeset_ind,
+    norm_pre03.hv_abnormal_indicator    ,
+
+    norm_pre03.hv_provider_name_cmdm	,
+    norm_pre03.hv_ind_spclty_tp_cmdm	,
+    norm_pre03.hv_ind_spclty_cd_cmdm	,
+    norm_pre03.hv_ind_spclty_desc_cmdm	,
+    norm_pre03.hv_ind_spclty_tp2_cmdm	,
+    norm_pre03.hv_ind_spclty_cd2_cmdm	,
+    norm_pre03.hv_ind_spclty_desc2_cmdm ,
+    norm_pre03.hv_ind_spclty_tp3_cmdm	,
+    norm_pre03.hv_ind_spclty_cd3_cmdm	,
+    norm_pre03.hv_ind_spclty_desc3_cmdm ,
+    norm_pre03.hv_act_spclty_tp_cmdm	,
+    norm_pre03.hv_act_spclty_cd_cmdm	,
+    norm_pre03.hv_act_spclty_desc_cmdm	,
+    norm_pre03.client_acct_number
+
 FROM labtest_quest_rinse_census_pre_final_03 norm_pre03

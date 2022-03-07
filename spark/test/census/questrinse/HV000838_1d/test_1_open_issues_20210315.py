@@ -6,7 +6,7 @@ eval_test(result_value, expect_op, expect_num, expect_alpha, expect_passthru, sp
 import pytest
 pytest.register_assert_rewrite("spark.test.census.questrinse.HV000838_1c.questrinse_helper")
 
-from spark.test.census.questrinse.HV000838_1c.questrinse_helper import eval_test
+from spark.test.census.questrinse.HV000838_1d.questrinse_helper import eval_test
 
 
 def test_02(spark):
@@ -75,21 +75,21 @@ def test_10(spark):
     """
     eval_test('TNP/632', '', '', 'TEST NOT PERFORMED', '', spark)
 
-
+@pytest.mark.skip("Included in gold table")
 def test_11(spark):
     """
     3.1
     """
     eval_test('TNP/564', '', '', 'TEST NOT PERFORMED', '', spark)
 
-
+@pytest.mark.skip("Included in gold table")
 def test_12(spark):
     """
     3.1
     """
     eval_test('TNP/521', '', '', 'TEST NOT PERFORMED', '', spark)
 
-
+@pytest.mark.skip("Included in gold table")
 def test_13(spark):
     """
     3.1

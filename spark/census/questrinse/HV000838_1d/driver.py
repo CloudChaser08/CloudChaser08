@@ -12,14 +12,18 @@ import spark.helpers.s3_utils as s3_utils
 import spark.helpers.external_table_loader as external_table_loader
 import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.helpers.postprocessor as postprocessor
-import spark.census.questrinse.HV000838_1c.refbuild_loinc_delta_sql as refbuild_loinc_delta
+import pyspark.sql.functions as FN
+import spark.census.questrinse.HV000838_1d.refbuild_loinc_delta_sql as refbuild_loinc_delta
+import spark.census.questrinse.HV000838_1d.udf as GET_RESULT_VALUE
+from spark.runner import PACKAGE_PATH
 
 PARQUET_FILE_SIZE = 1024 * 1024 * 1024
 REFERENCE_OUTPUT_PATH = 's3://salusv/reference/questrinse/{}/'
 REF_LOINC = "loinc_ref"
+REF_RESULT_VALUE = "result_value_ref"
 
 # QDIP config.
-QDIP_LOAD = True
+QDIP_LOAD = False
 QDIP_PARQUET_FILE_SIZE = 1024 * 1024 * 350
 QDIP_COLUMNS = [
     'record_id', 'HV_claim_id', 'hvid', 'obfuscate_hvid', 'HV_patient_gender',
@@ -37,10 +41,14 @@ QDIP_COLUMNS = [
 
 REF_HDFS_OUTPT_PATH = '/reference/'
 REF_LOINC_DELTA = "loinc_delta"
+REF_RSLT_VAL_DELTA = "result_value_lkp"
 
 QDIP_LOCAL_STAGING = '/qdip_staging/'
 POC_1B1 = True
-poc_output_path = 's3://salusv/deliverable/questrinse_1b/1c_sample_20220304/'
+poc_output_path = 's3://salusv/deliverable/questrinse_1b/1d_sample_20220304/'
+
+DIAG_CD_CLMNS = ['unique_accession_id', 's_diag_code', 's_icd_codeset_ind']
+DIAG_CLMNS = ['unique_accession_id', 'accn_id', 'date_of_service', 'lab_code', 'acct_id', 'acct_number', 'dos_yyyymm']
 
 
 class QuestRinseCensusDriver(CensusDriver):
@@ -123,11 +131,11 @@ class QuestRinseCensusDriver(CensusDriver):
         self._spark.read.parquet('s3://salusv/reference/parquet/ref_physicians_quest/file_date=2022-02-20/') \
             .distinct().cache().createOrReplaceTempView('ref_questrinse_physicians')
 
-        # self._sqlContext.setConf("spark.driver.memoryOverhead", 16384)
-        # self._sqlContext.setConf("spark.executor.memoryOverhead", 16384)
-        # self._sqlContext.setConf("spark.default.parallelism", 1000)
-        # self._sqlContext.setConf("spark.sql.shuffle.partitions", 1000)
-        # self._sqlContext.setConf("spark.sql.autoBroadcastJoinThreshold", 26240000)
+        self._sqlContext.setConf("spark.driver.memoryOverhead", 16384)
+        self._sqlContext.setConf("spark.executor.memoryOverhead", 16384)
+        self._sqlContext.setConf("spark.default.parallelism", 1000)
+        self._sqlContext.setConf("spark.sql.shuffle.partitions", 1000)
+        self._sqlContext.setConf("spark.sql.autoBroadcastJoinThreshold", 26240000)
 
         df = self._spark.table('order_result')
         df = df.repartition(int(
@@ -136,6 +144,21 @@ class QuestRinseCensusDriver(CensusDriver):
         df = df.cache_and_track('order_result')
         df.createOrReplaceTempView('order_result')
         df.count()
+
+        diag_df = self._spark.table('diagnosis')
+        tbl = 'diagnosis_skinny'
+        logger.log('Saving {}'.format(tbl))
+        diag_cd_cleaned_df = diag_df.select(*DIAG_CD_CLMNS).distinct()
+        diag_cd_cleaned_df.repartition(2).write.parquet(
+            '/tmp/qr/{}/'.format(tbl), compression='gzip', mode='overwrite')
+        self._spark.read.parquet('/tmp/qr/{}/'.format(tbl)).createOrReplaceTempView(tbl)
+
+        tbl = 'diagnosis'
+        logger.log('Saving {}'.format(tbl))
+        diag_cleaned_df = diag_df.select(*DIAG_CLMNS).distinct()
+        diag_cleaned_df.repartition(2).write.parquet(
+            '/tmp/qr/{}/'.format(tbl), compression='gzip', mode='overwrite')
+        self._spark.read.parquet('/tmp/qr/{}/'.format(tbl)).createOrReplaceTempView(tbl)
 
         logger.log('Building LOINC delta reference data')
         for table_conf in refbuild_loinc_delta.TABLE_CONF:
@@ -195,6 +218,53 @@ class QuestRinseCensusDriver(CensusDriver):
 
         self._spark.table(REF_LOINC_DELTA).count()
 
+        logger.log('Building UDF-result value intermediate table')
+        census_module = importlib.import_module(self._base_package)
+        scripts_directory = '/'.join(inspect.getfile(census_module).replace(PACKAGE_PATH, '').split('/')[:-1] + [''])
+
+        GOLD_CLMNS = ['gen_ref_cd', 'gen_ref_desc']
+        gold_df = \
+            self._runner.run_spark_script('0_labtest_quest_rinse_result_gold_alpha.sql',
+                                          source_file_path=scripts_directory,
+                                          return_output=True
+                                          ).select(*GOLD_CLMNS).distinct().withColumnRenamed(
+                'gen_ref_cd', 'new_cd').withColumnRenamed('gen_ref_desc', 'new_desc')
+
+        delta_df = self._spark.table('order_result').select('result_value').distinct() \
+            .withColumn('gen_ref_cd', FN.upper(FN.col('result_value'))).select('gen_ref_cd') \
+            .where(FN.col('gen_ref_cd').isNotNull() & (FN.trim(FN.col('gen_ref_cd')) != '')) \
+            .distinct()
+
+        result_value_df = delta_df.join(gold_df, gold_df['new_cd'] == delta_df['gen_ref_cd'], 'left_anti').distinct()
+        gold_df.cache().createOrReplaceTempView('ref_gold_alpha')
+
+        parse_value = GET_RESULT_VALUE.udf_gen(table='ref_gold_alpha', test=None, spark=self._spark)
+
+        UDF_CLMNS = ['gen_ref_cd', 'udf_operator', 'udf_numeric', 'udf_alpha', 'udf_passthru']
+        # Process 'result' column with UDF and Coalesce passthru's as ALPHA
+        out_result_value_df = result_value_df \
+            .withColumn('udf_result', parse_value(FN.col('gen_ref_cd'))).cache() \
+            .withColumn('udf_operator', FN.when(FN.col('udf_result')[0] != "", FN.col('udf_result')[0]).otherwise(None)) \
+            .withColumn('udf_numeric', FN.when(FN.col('udf_result')[1] != "", FN.col('udf_result')[1]).otherwise(None)) \
+            .withColumn('udf_alpha', FN.when(FN.col('udf_result')[2] != "", FN.col('udf_result')[2]).otherwise(None)) \
+            .withColumn('udf_passthru', FN.when(FN.col('udf_result')[3] != "", FN.col('udf_result')[3]).otherwise(None)) \
+            .distinct().select(*UDF_CLMNS)
+
+        expand_gold_df = gold_df.withColumnRenamed('new_cd', 'gen_ref_cd') \
+            .withColumn('udf_operator', FN.lit(None).cast('string')) \
+            .withColumn('udf_numeric', FN.lit(None).cast('string')) \
+            .withColumnRenamed('new_desc', 'udf_alpha') \
+            .withColumn('udf_passthru', FN.lit(None).cast('string')).select(*UDF_CLMNS)
+
+        expand_gold_df.unionAll(out_result_value_df) \
+            .where(FN.col('gen_ref_cd').isNotNull() & (FN.trim(FN.col('gen_ref_cd')) != '')) \
+            .distinct() \
+            .repartition(1).write.parquet(REF_HDFS_OUTPT_PATH + REF_RSLT_VAL_DELTA + '/', compression='gzip',
+                                          mode='overwrite')
+
+        self._spark.read.parquet(REF_HDFS_OUTPT_PATH + REF_RSLT_VAL_DELTA + '/') \
+            .createOrReplaceTempView(REF_RSLT_VAL_DELTA)
+
     def save(self, dataframe, batch_date, batch_id, chunk_idx=None, header=True):
         logger.log('Saving data to the local file system')
         dataframe.persist()
@@ -209,7 +279,7 @@ class QuestRinseCensusDriver(CensusDriver):
         # Calculate number of partitions required to maintain a max file size of 1GB
         repartition_cnt = int(ceil(hdfs_utils.get_hdfs_file_path_size(local_output_path_temp) / PARQUET_FILE_SIZE)) or 1
         logger.log('Repartition into {} partitions'.format(repartition_cnt))
-        self._spark.read.parquet(local_output_path_temp) \
+        self._spark.read.parquet(local_output_path_temp)\
             .repartition(repartition_cnt).write.parquet(local_output_path, compression='gzip', mode='overwrite')
         hdfs_utils.clean_up_output_hdfs(local_output_path_temp)
         # dataframe.repartition(repartition_cnt).write.parquet(local_output_path,
@@ -256,7 +326,7 @@ class QuestRinseCensusDriver(CensusDriver):
         if not POC_1B1:
             output_file_name_template = 'Data_Set_{}_response_{{:05d}}.gz.parquet'.format(batch_id)
         else:
-            output_file_name_template = 'Test1c_Data_Set_{}_response_{{:05d}}.gz.parquet'.format(batch_id)
+            output_file_name_template = 'Test1d_Data_Set_{}_response_{{:05d}}.gz.parquet'.format(batch_id)
 
         local_output_path_list = [local_output_path]
         if QDIP_LOAD:
@@ -280,7 +350,7 @@ class QuestRinseCensusDriver(CensusDriver):
             manifest_file_path = self._output_path.replace('s3a:', 's3:') + '{batch_id_path}/'.format(
                 batch_id_path=_batch_id_path)
         else:
-            manifest_file_name = 'Test1c_Data_Set_{}_manifest.tsv'.format(batch_id)
+            manifest_file_name = 'Test1d_Data_Set_{}_manifest.tsv'.format(batch_id)
             manifest_file_path = poc_output_path.replace('s3a:', 's3:') + '{batch_id_path}/'.format(
                 batch_id_path=_batch_id_path)
 
@@ -316,6 +386,13 @@ class QuestRinseCensusDriver(CensusDriver):
                 logger.log("Copying reference files to: " + REFERENCE_OUTPUT_PATH.format(REF_LOINC))
                 normalized_records_unloader.distcp(
                     REFERENCE_OUTPUT_PATH.format(REF_LOINC), REF_HDFS_OUTPT_PATH + REF_LOINC_DELTA)
+
+        if hdfs_utils.list_parquet_files(REF_HDFS_OUTPT_PATH + REF_RSLT_VAL_DELTA)[0].strip():
+            logger.log("Copying reference files to: " + REFERENCE_OUTPUT_PATH.format(REF_RESULT_VALUE))
+            normalized_records_unloader.distcp(
+                REFERENCE_OUTPUT_PATH.format(
+                    REF_RESULT_VALUE) + 'batch_id={}/batch_date={}/'.format(batch_date, batch_id)
+                , REF_HDFS_OUTPT_PATH + REF_RSLT_VAL_DELTA)
 
         logger.log('Deleting ' + REF_HDFS_OUTPT_PATH)
         hdfs_utils.clean_up_output_hdfs(REF_HDFS_OUTPT_PATH)
