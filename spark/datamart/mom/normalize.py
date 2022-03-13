@@ -203,7 +203,7 @@ if __name__ == "__main__":
         logger.log('        -unload all publish sqls from {} module'.format(mdl))
         if mdl == 'publish_fact':
             table_names = mom_util.transform_sql(
-                runner, spark, 'deliverable', directory_path + 'sql/{}/'.format(mdl), variables + publish_variables)
+                runner, 'deliverable', directory_path + 'sql/{}/'.format(mdl), variables + publish_variables)
             for r_mdl, table in table_names:
                 unload_partition_count = 50 if table == '' else 10
 
