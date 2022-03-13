@@ -254,45 +254,45 @@ if __name__ == "__main__":
 
     # transfer to prod
     logger.log('    <=====transfer data=====>')
-
-    mdl_list = list(set([mdl for mdl, tbl in all_tables_names]))
-    for mdl in mdl_list:
-        logger.log('    -transfer to prod -> archive {} module'.format(mdl))
-        mt_list = [(m, t) for m, t in all_tables_names if m in [mdl]]
-        for ml, tbl in mt_list:
-            curr_path = os.path.join(MOM_PATH, ml, tbl + '/')
-            arch_path = os.path.join(MOM_PATH, 'archive', 'ts={}'.format(ARCHIVE_TS), ml, tbl + '/')
-            logger.log('        from {}'.format(curr_path))
-            logger.log('        ..to {}'.format(arch_path))
-            while True:
-                s3_file_cnt = s3_utils.get_s3_file_count(curr_path, True) or 0
-                if s3_file_cnt > 0:
-                    subprocess.check_call(
-                        ['aws', 's3', 'mv', '--recursive', curr_path, arch_path]
-                    )
-                else:
-                    logger.log('    -there is no files to move from {}'.format(curr_path))
-                    break
-        logger.log('.............archive done')
-
-        logger.log('    -transfer to stage -> prod {} module'.format(mdl))
-        stg_path = os.path.join(staging_path, mdl + '/')
-        curr_path = os.path.join(MOM_PATH, mdl + '/')
-        logger.log('        from {}'.format(stg_path))
-        logger.log('        ..to {}'.format(curr_path))
-        normalized_records_unloader.distcp(curr_path, src=stg_path)
-        logger.log('.............deploy done')
-
-    logger.log('    <=====refresh tables=====>')
-    # init
-    logger.log('    -re-init spark')
-    spark, sql_context = init("Publish-Deploy MOM- {}".format(date_input.replace('-', '')))
-
-    # initialize runner
-    runner = Runner(sql_context)
-    # ['publish_mom_pharmacyclaims', 'publish_mom_enrollment', 'publish_mom_medicalclaims']
-    for tbl in publish_fact_table_names:
-        spark.sql('msck repair table {db}._publish_{tbl}'.format(db=publish_db, tbl=tbl))
-    logger.log('    -Stopping the spark context')
-    spark.stop()
-    logger.log('All Done')
+    #
+    # mdl_list = list(set([mdl for mdl, tbl in all_tables_names]))
+    # for mdl in mdl_list:
+    #     logger.log('    -transfer to prod -> archive {} module'.format(mdl))
+    #     mt_list = [(m, t) for m, t in all_tables_names if m in [mdl]]
+    #     for ml, tbl in mt_list:
+    #         curr_path = os.path.join(MOM_PATH, ml, tbl + '/')
+    #         arch_path = os.path.join(MOM_PATH, 'archive', 'ts={}'.format(ARCHIVE_TS), ml, tbl + '/')
+    #         logger.log('        from {}'.format(curr_path))
+    #         logger.log('        ..to {}'.format(arch_path))
+    #         while True:
+    #             s3_file_cnt = s3_utils.get_s3_file_count(curr_path, True) or 0
+    #             if s3_file_cnt > 0:
+    #                 subprocess.check_call(
+    #                     ['aws', 's3', 'mv', '--recursive', curr_path, arch_path]
+    #                 )
+    #             else:
+    #                 logger.log('    -there is no files to move from {}'.format(curr_path))
+    #                 break
+    #     logger.log('.............archive done')
+    #
+    #     logger.log('    -transfer to stage -> prod {} module'.format(mdl))
+    #     stg_path = os.path.join(staging_path, mdl + '/')
+    #     curr_path = os.path.join(MOM_PATH, mdl + '/')
+    #     logger.log('        from {}'.format(stg_path))
+    #     logger.log('        ..to {}'.format(curr_path))
+    #     normalized_records_unloader.distcp(curr_path, src=stg_path)
+    #     logger.log('.............deploy done')
+    #
+    # logger.log('    <=====refresh tables=====>')
+    # # init
+    # logger.log('    -re-init spark')
+    # spark, sql_context = init("Publish-Deploy MOM- {}".format(date_input.replace('-', '')))
+    #
+    # # initialize runner
+    # runner = Runner(sql_context)
+    # # ['publish_mom_pharmacyclaims', 'publish_mom_enrollment', 'publish_mom_medicalclaims']
+    # for tbl in publish_fact_table_names:
+    #     spark.sql('msck repair table {db}._publish_{tbl}'.format(db=publish_db, tbl=tbl))
+    # logger.log('    -Stopping the spark context')
+    # spark.stop()
+    # logger.log('All Done')
