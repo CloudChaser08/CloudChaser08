@@ -94,8 +94,9 @@ if __name__ == "__main__":
 
     partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
 
-    # logger.log('Loading external tables')
+    # # logger.log('Loading external tables')
     rx_hist_path = os.path.join(driver.output_path, rx_versioned_schema.output_directory, 'part_provider=inovalon/')
+    logger.log('    -load history from: {}'.format(rx_hist_path))
     driver.spark.read.parquet(rx_hist_path).createOrReplaceTempView('_temp_pharmacyclaims_hist')
 
     # registry and matching payload processing
@@ -154,6 +155,7 @@ if __name__ == "__main__":
             )
         else:
             logger.log('Warning! there is no files to move from {}'.format(src_path))
+
     driver.copy_to_output_path()
     hdfs_utils.clean_up_output_hdfs(tmp_loc)
     logger.log('Done')

@@ -70,30 +70,31 @@ if __name__ == "__main__":
 
     partitions = int(driver.spark.conf.get('spark.sql.shuffle.partitions'))
 
-    # registry and matching payload processing
-    registry_df, filtered_mp_df = reg_util.get_mom_cohort_filtered_mp(driver.spark, mp_tbl)
+    # #registry and matching payload processing
+    registry_df, filtered_mp_df = reg_util.get_mom_cohort_filtered_mp(driver.spark, provider_partition_name, mp_tbl)
 
-    # trans processing
+    # clm (trans) processing - filter out selected hvids from  mom_cohort  table
     logger.log('    -Filtering registry hvid from {} table'.format(trans_tbl))
     trans_df = driver.spark.table(trans_tbl)
     filtered_trans_df = trans_df.join(filtered_mp_df, trans_df['memberuid'] == filtered_mp_df['claimid'], 'inner')\
-        .select(*[trans_df[c] for c in trans_df.columns]) \
-        .repartition(partitions)
+        .select(*[trans_df[c] for c in trans_df.columns])
     filtered_trans_df.createOrReplaceTempView(trans_tbl)
 
-    # dim processing
-    for ref_tbl, ref_clmn, prtn_cnt in [('ccd', 'claimuid', 100), ('mbr', 'memberuid', 2)]:
+    # dim processing  - ccd filterout selected
+    for ref_tbl, ref_clmn, prtn_cnt in [('ccd', 'claimuid', 200), ('mbr', 'memberuid', 4)]:
         ref_loc = tmp_loc + ref_tbl + '/'
         logger.log('    -Filtering {} table'.format(ref_tbl))
         ref_df = driver.spark.table(ref_tbl)
         ref_df.join(driver.spark.table(trans_tbl), [ref_clmn]).select(*[ref_df[c] for c in ref_df.columns])\
-            .distinct().repartition(prtn_cnt)\
+            .repartition(prtn_cnt)\
             .write.parquet(ref_loc, compression='gzip', mode='overwrite')
-        driver.spark.read.parquet(ref_loc).repartition(prtn_cnt).createOrReplaceTempView(ref_tbl)
+        driver.spark.read.parquet(ref_loc).createOrReplaceTempView(ref_tbl)
 
+    # publish cohort and payload
     registry_df.createOrReplaceTempView(registry_tbl)
     filtered_mp_df.createOrReplaceTempView(mp_tbl)
 
+    # first run sql
     orig_provider_directory_path = driver.provider_directory_path
     driver.provider_directory_path = orig_provider_directory_path + 'run_first/'
     driver.transform()
@@ -104,8 +105,8 @@ if __name__ == "__main__":
     driver.spark.table(out_tbl).repartition(200)\
         .write.parquet(tmp_loc + out_tbl + '/', compression='gzip', mode='overwrite')
     logger.log('    -Reading Interim table {}'.format(out_tbl))
-    driver.spark.read.parquet(tmp_loc + out_tbl + '/').repartition(200).createOrReplaceTempView(out_tbl)
-
+    driver.spark.read.parquet(tmp_loc + out_tbl + '/').createOrReplaceTempView(out_tbl)
+    #
     # final processing
     driver.provider_directory_path = orig_provider_directory_path
     driver.transform()

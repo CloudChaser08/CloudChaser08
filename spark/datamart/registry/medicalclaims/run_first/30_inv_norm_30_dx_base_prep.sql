@@ -33,8 +33,8 @@ SELECT
 --  pivot.apdrg,
 --  pivot.msdrg,
 --  pivot.rev_code,
-  clm.input_file_name,
-  'end'
+  clm.input_file_name--,
+--  'end'
 FROM
   inv_norm_0_dx_transaction clm
 --  LEFT OUTER JOIN inv_norm_10_dx_pivot pivot ON clm.claimuid = pivot.claimuid --------------------- JOIN the PIVOT Table
