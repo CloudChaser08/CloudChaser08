@@ -7,7 +7,6 @@ import spark.helpers.records_loader as records_loader
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.providers.waystar.medicalclaims.transactional_schemas as transactional_schemas
-from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 
 FEED_ID = '24'
 

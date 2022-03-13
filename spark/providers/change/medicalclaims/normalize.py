@@ -3,7 +3,6 @@ import spark.providers.change.medicalclaims.transactional_schemas as source_tabl
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
-from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 from datetime import datetime
 
 if __name__ == "__main__":

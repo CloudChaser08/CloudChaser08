@@ -10,7 +10,6 @@ from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 from pyspark.sql.types import ArrayType, StringType
 import spark.helpers.explode as explode
-from spark.helpers.s3_constants import DATAMART_PATH, E2E_DATAMART_PATH
 
 
 def run(date_input, end_to_end_test=False, test=False, spark=None, runner=None):
