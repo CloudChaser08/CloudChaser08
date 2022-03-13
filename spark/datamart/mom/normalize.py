@@ -245,8 +245,8 @@ if __name__ == "__main__":
             publish_table_names = publish_table_names + table_names
 
     # final swap
-    all_tables_names = all_tables_names + publish_fact_table_names + publish_table_names + \
-                       prod_table_names + qa_table_names
+    all_tables_names = \
+        all_tables_names + publish_fact_table_names + publish_table_names + prod_table_names + qa_table_names
     logger.log('.............done')
 
     logger.log('    -Stopping the spark context')
