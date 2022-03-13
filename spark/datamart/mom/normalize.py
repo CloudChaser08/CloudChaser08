@@ -20,7 +20,6 @@ import spark.helpers.normalized_records_unloader as normalized_records_unloader
 import spark.datamart.mom.publish_prep as P
 import spark.datamart.mom.mom_util as mom_util
 import spark.datamart.registry.registry_util as reg_util
-from spark.common.marketplace_driver import MarketplaceDriver
 
 from spark.common.datamart.mom.pharmacyclaims.pharmacyclaims_mom_model import schemas as mom_rx_schemas
 from spark.common.datamart.mom.medicalclaims.medicalclaims_mom_model import schemas as mom_dx_schemas
@@ -158,7 +157,8 @@ if __name__ == "__main__":
     )
 
     # staging output
-    staging_path = '/staging/created_dt={}/'.format(date_input)
+    # staging_path = '/staging/created_dt={}/'.format(date_input)
+    staging_path = '/staging/'
 
     # collect cohort
     logger.log('    -load cohort table {}'.format(_mom_cohort))
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     for mdl in ['publish_dim', 'publish_fact', 'publish_qa']:
         logger.log('        -unload all publish sqls from {} module'.format(mdl))
         if mdl == 'publish_fact':
-            table_names = mom_util.sql_unload(
+            table_names = mom_util.transform_sql(
                 runner, spark, 'deliverable', directory_path + 'sql/{}/'.format(mdl), variables + publish_variables)
             for r_mdl, table in table_names:
                 unload_partition_count = 50 if table == '' else 10
@@ -211,7 +211,6 @@ if __name__ == "__main__":
                 schema_obj = output_table_names_to_schemas[table]
                 import spark.helpers.schema_enforcer as schema_enforcer
                 logger.log('        -Saving data to local file system with schema {}'.format(schema_obj.name))
-                # output = MarketplaceDriver.apply_schema(df, schema_obj)
                 output = schema_enforcer.apply_schema(
                     df,
                     schema_obj.schema_structure,
@@ -258,11 +257,11 @@ if __name__ == "__main__":
 
     mdl_list = list(set([mdl for mdl, tbl in all_tables_names]))
     for mdl in mdl_list:
+        logger.log('    -transfer to prod -> archive {} module'.format(mdl))
         mt_list = [(m, t) for m, t in all_tables_names if m in [mdl]]
-        for mdl, tbl in mt_list:
-            logger.log('    -transfer to prod -> archive {} module'.format(mdl))
-            curr_path = os.path.join(MOM_PATH, mdl, tbl + '/')
-            arch_path = os.path.join(MOM_PATH, 'archive', 'ts='.format(ARCHIVE_TS), mdl, tbl + '/')
+        for ml, tbl in mt_list:
+            curr_path = os.path.join(MOM_PATH, ml, tbl + '/')
+            arch_path = os.path.join(MOM_PATH, 'archive', 'ts={}'.format(ARCHIVE_TS), ml, tbl + '/')
             logger.log('        from {}'.format(curr_path))
             logger.log('        ..to {}'.format(arch_path))
             while True:

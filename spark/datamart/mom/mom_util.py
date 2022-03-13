@@ -98,7 +98,7 @@ def sql_unload_and_read(runner, spark, module, output_path, sql_path=None, varia
     return table_name_list
 
 
-def sql_unload (runner, spark, module, sql_path=None, variables=None):
+def transform_sql(runner, spark, module, sql_path=None, variables=None):
     if variables is None:
         variables = []
 
@@ -126,12 +126,12 @@ def sql_unload (runner, spark, module, sql_path=None, variables=None):
     table_name_list = []
     for s in scripts:
         table_name = '_'.join(s.replace('.sql', '').split('_')[1:])
-        logger.log(' -loading:' + table_name)
+        logger.log(' -transform sql:' + table_name)
         tbl_df = runner.run_spark_script(
             s, variables=copy.deepcopy(variables), source_file_path=sql_path, return_output=True)
         logger.log('    -done')
         tbl_df.createOrReplaceTempView(table_name)
         table_name_list.append((module, table_name))
 
-    logger.log(' -sql_unload......Done')
+    logger.log(' -transform_sql......Done')
     return table_name_list
