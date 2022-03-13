@@ -74,22 +74,23 @@ def sql_unload_and_read(runner, spark, module, output_path, sql_path=None, varia
     for s in scripts:
         table_name = '_'.join(s.replace('.sql', '').split('_')[1:])
         logger.log('            -loading:' + table_name)
-        tbl_df = runner.run_spark_script(
-            s, variables=copy.deepcopy(variables), source_file_path=sql_path, return_output=True)\
-            .withColumn('run_date', FN.current_date())
+        if module in ['publish_qa']:
+            tbl_df = runner.run_spark_script(
+                s, variables=copy.deepcopy(variables), source_file_path=sql_path, return_output=True)\
+                .withColumn('run_date', FN.current_date())
 
-        tbl_df.repartition(10).write.parquet(local_output_path + table_name + '/',
-                                             compression='gzip', mode='overwrite')
+            tbl_df.repartition(10).write.parquet(local_output_path + table_name + '/',
+                                                 compression='gzip', mode='overwrite')
 
-        # Delivery requirement: max file size of 250mb
-        # Calculate number of partitions required to maintain a max file size of 250mb
-        repartition_cnt = \
-            int(ceil(hdfs_utils.get_hdfs_file_path_size(local_output_path + table_name + '/') / PARQUET_FILE_SIZE)) or 1
-        logger.log('                -repartition into {} partitions'.format(repartition_cnt))
+            # Delivery requirement: max file size of 250mb
+            # Calculate number of partitions required to maintain a max file size of 250mb
+            repartition_cnt = \
+                int(ceil(hdfs_utils.get_hdfs_file_path_size(local_output_path + table_name + '/') / PARQUET_FILE_SIZE)) or 1
+            logger.log('                -repartition into {} partitions'.format(repartition_cnt))
 
-        tbl_df.repartition(repartition_cnt).write.parquet(output_path + table_name + '/',
-                                                          compression='gzip', mode='overwrite')
-        logger.log('            -done')
+            tbl_df.repartition(repartition_cnt).write.parquet(output_path + table_name + '/',
+                                                              compression='gzip', mode='overwrite')
+            logger.log('            -done')
         spark.read.parquet(output_path + table_name + '/').createOrReplaceTempView(table_name)
         table_name_list.append(table_name)
 

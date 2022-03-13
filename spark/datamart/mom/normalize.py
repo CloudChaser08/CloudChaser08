@@ -204,14 +204,23 @@ if __name__ == "__main__":
         if mdl == 'publish_fact':
             table_names = mom_util.sql_unload(
                 runner, spark, 'deliverable', directory_path + 'sql/{}/'.format(mdl), variables + publish_variables)
-            for table in table_names:
+            for r_mdl, table in table_names:
                 unload_partition_count = 50 if table == '' else 10
 
                 df = spark.table(table)
                 schema_obj = output_table_names_to_schemas[table]
-
+                import spark.helpers.schema_enforcer as schema_enforcer
                 logger.log('        -Saving data to local file system with schema {}'.format(schema_obj.name))
-                output = MarketplaceDriver.apply_schema(df, schema_obj)
+                # output = MarketplaceDriver.apply_schema(df, schema_obj)
+                output = schema_enforcer.apply_schema(
+                    df,
+                    schema_obj.schema_structure,
+                    columns_to_keep=[
+                        schema_obj.provider_partition_column,
+                        schema_obj.date_partition_column
+                    ]
+                )
+
                 _columns = output.columns
                 _columns.remove(schema_obj.provider_partition_column)
                 _columns.remove(schema_obj.date_partition_column)
@@ -229,7 +238,7 @@ if __name__ == "__main__":
                     unload_partition_count=unload_partition_count
                 )
                 output.unpersist()
-                publish_fact_table_names = publish_fact_table_names + table_names
+            publish_fact_table_names = publish_fact_table_names + table_names
         else:
             table_names = mom_util.sql_unload_and_read(
                 runner, spark, 'deliverable', staging_path, directory_path + 'sql/{}/'.format(mdl),

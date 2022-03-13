@@ -24,4 +24,4 @@ select
     'inovalon' as part_provider,
     SUBSTR(part_best_date, 1, 7) as part_mth
 from _mom_enrollment a
-  inner join publosh_pat_list b on a.hvid=b.hvid
+  inner join publish_pat_list b on a.hvid=b.hvid
