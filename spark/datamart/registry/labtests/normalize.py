@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'labcorp'
     output_table_names_to_schemas = {
-        'labcorp_mom_final' : labtest_schemas['schema_v10']
+        'labtest_labcorp_mom_final': labtest_schemas['schema_v10']
     }
     provider_partition_name = 'labcorp'
 
