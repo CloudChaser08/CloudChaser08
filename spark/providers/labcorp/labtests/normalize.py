@@ -6,9 +6,7 @@ from datetime import datetime
 import spark.providers.labcorp.labtests.transactional_schemas as transactions_v1
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.lab_common_model import schemas as labtest_schemas
-import spark.helpers.external_table_loader as external_table_loader
 import spark.common.utility.logger as logger
-import spark.helpers.hdfs_utils as hdfs_utils
 
 xwalk_loc = 's3://salusv/reference/labcorp_abbr_xwalk/created_date=2022-03-09/'
 
