@@ -3,6 +3,8 @@ tsi emr normalize
 """
 import os
 import argparse
+import subprocess
+import spark.helpers.normalized_records_unloader as normalized_records_unloader
 from datetime import datetime
 import spark.providers.tsi.emr.transactional_schemas as table_schemas
 import spark.providers.tsi.emr.transactional_schemas_v1 as table_schemas_v1
@@ -16,8 +18,17 @@ from spark.common.emr.medication import schemas as medication_schemas
 from spark.common.emr.lab_test import schemas as lab_test_schemas
 from spark.common.emr.clinical_observation import schemas as clinical_observation_schemas
 import spark.helpers.external_table_loader as external_table_loader
+import spark.helpers.file_utils as file_utils
+import spark.helpers.hdfs_utils as hdfs_utils
+import spark.helpers.s3_utils as s3_utils
 
 CUTOFF_DATE_V1 = datetime.strptime('2022-02-14', '%Y-%m-%d')
+S3_REF_TSI_CROSSWALK = 's3://salusv/reference/tsi/crosswalk_for_race/'
+S3_TSI_PAYLOAD = 's3://salusv/matching/payload/emr/tsi/202*/*/*/'
+S3_REF_TSI_CROSSWALK_BACKUP = 's3://salusv/backup/reference/tsi/crosswalk_for_race/date_input={' \
+                              'date_input}/'
+LOCAL_REF_TSI = '/local_phi/'
+PARQUET_FILE_SIZE = 1024 * 1024 * 250
 
 HAS_DELIVERY_PATH = True
 
@@ -82,10 +93,26 @@ if __name__ == "__main__":
     driver.load()
     external_table_loader.load_analytics_db_table(
         driver.runner.sqlContext, 'dw', 'gen_ref_whtlst', 'gen_ref_whtlst')
-
+    driver.spark.read.json(S3_TSI_PAYLOAD).createOrReplaceTempView("tsi_payload")
     driver.transform()
     driver.save_to_disk()
     driver.stop_spark()
     driver.log_run()
     driver.copy_to_output_path()
+    logger.log('Saving Crosswalk for race')
+    repartition_cnt = file_utils.get_optimal_s3_partition_count(s3_path=S3_REF_TSI_CROSSWALK,
+                                                                expected_file_size=PARQUET_FILE_SIZE)
+    local_tsi_path = 'hdfs://' + LOCAL_REF_TSI
+    hdfs_utils.clean_up_output_hdfs(local_tsi_path)
+    driver.spark.table('tsi_crosswalk_race').repartition(repartition_cnt).write.parquet(
+        local_tsi_path, compression='gzip', mode='append')
+    subprocess.check_call([
+        'aws',
+        's3',
+        'mv',
+        '--recursive',
+        S3_REF_TSI_CROSSWALK,
+        S3_REF_TSI_CROSSWALK_BACKUP.format(date_input=date_input)
+    ])
+    normalized_records_unloader.distcp(dest=S3_REF_TSI_CROSSWALK, src='hdfs://' + LOCAL_REF_TSI)
     logger.log('Done')
