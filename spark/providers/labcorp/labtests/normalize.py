@@ -7,8 +7,10 @@ import spark.providers.labcorp.labtests.transactional_schemas as transactions_v1
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.lab_common_model import schemas as labtest_schemas
 import spark.common.utility.logger as logger
+import spark.helpers.hdfs_utils as hdfs_utils
 
 xwalk_loc = 's3://salusv/reference/labcorp_abbr_xwalk/created_date=2022-03-09/'
+tmp_loc = '/tmp/lab/'
 
 if __name__ == "__main__":
 
@@ -54,14 +56,16 @@ if __name__ == "__main__":
         'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
         'spark.sql.autoBroadcastJoinThreshold': 26214400
     }
+    hdfs_utils.clean_up_output_hdfs(tmp_loc)
     driver.init_spark_context(conf_parameters=conf_parameters)
     """
     labecorp is using labcorp_abbr_xwalk external table
     """
     ref_table = 'labcorp_abbr_xwalk'
-    driver.spark.read.parquet(xwalk_loc).repartition(2)\
-        .write.parquet('/tmp/lab/{}/'.format(ref_table), compression='gzip', mode='overwrite')
-    driver.spark.read.parquet('/tmp/lab/{}/'.format(ref_table)).createOrReplaceTempView(ref_table)
+    driver.spark.read.parquet(xwalk_loc) \
+        .distinct().repartition(2) \
+        .write.parquet(tmp_loc + ref_table + '/', compression='gzip', mode='overwrite')
+    driver.spark.read.parquet(tmp_loc + ref_table + '/').createOrReplaceTempView(ref_table)
 
     driver.load()
     driver.transform()
@@ -69,4 +73,5 @@ if __name__ == "__main__":
     driver.stop_spark()
     driver.log_run()
     driver.copy_to_output_path()
+    hdfs_utils.clean_up_output_hdfs(tmp_loc)
     logger.log('Done')
