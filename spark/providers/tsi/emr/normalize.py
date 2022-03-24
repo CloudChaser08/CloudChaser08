@@ -94,7 +94,8 @@ if __name__ == "__main__":
         .select(['hvid', 'personId']) \
         .withColumn('tsi_patient_id', FN.upper(FN.col('personId')))\
         .where(FN.col('hvid').isNotNull() & (FN.trim(FN.col('hvid')) != ''))\
-        .select(['hvid', 'tsi_patient_id'])
+        .select(['hvid', 'tsi_patient_id'])\
+        .distinct()
 
     driver.load()
     external_table_loader.load_analytics_db_table(
