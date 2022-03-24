@@ -72,7 +72,8 @@ if __name__ == "__main__":
     logger.log('    -load _mom_masterset table {}'.format(_mom_masterset))
     masterset_df = reg_util.get_mom_masterset(driver.spark, provider_name)
     logger.log('        -{} table count {}'.format(_mom_masterset, masterset_df.count()))
-    masterset_df.distinct().repartition(2)\
+    masterset_df\
+        .distinct().repartition(2)\
         .write.parquet(tmp_loc + _mom_masterset + '/', compression='gzip', mode='overwrite')
     driver.spark.read.parquet(tmp_loc + _mom_masterset + '/').createOrReplaceTempView(_mom_masterset)
 
