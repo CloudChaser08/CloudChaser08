@@ -92,9 +92,9 @@ if __name__ == "__main__":
 
     all_mp_df = payload_loader.load(driver.runner, all_payload_path_list,  return_output=True)\
         .select(['hvid', 'personId']) \
-        .withColumn('personid', FN.upper(FN.col('personId')))\
+        .withColumn('tsi_patient_id', FN.upper(FN.col('personId')))\
         .where(FN.col('hvid').isNotNull() & (FN.trim(FN.col('hvid')) != ''))\
-        .select(['hvid', 'personid'])
+        .select(['hvid', 'tsi_patient_id'])
 
     driver.load()
     external_table_loader.load_analytics_db_table(
