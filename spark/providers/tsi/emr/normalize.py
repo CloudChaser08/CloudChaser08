@@ -16,6 +16,9 @@ from spark.common.emr.medication import schemas as medication_schemas
 from spark.common.emr.lab_test import schemas as lab_test_schemas
 from spark.common.emr.clinical_observation import schemas as clinical_observation_schemas
 import spark.helpers.external_table_loader as external_table_loader
+import spark.helpers.s3_utils as s3_utils
+import spark.helpers.payload_loader as payload_loader
+import pyspark.sql.functions as FN
 
 CUTOFF_DATE_V1 = datetime.strptime('2022-02-14', '%Y-%m-%d')
 
@@ -46,6 +49,8 @@ if __name__ == "__main__":
     args = parser.parse_known_args()[0]
     date_input = args.date
     end_to_end_test = args.end_to_end_test
+
+    date_path = date_input.replace('-', '/')
 
     is_schema_v1 = datetime.strptime(date_input, '%Y-%m-%d') >= CUTOFF_DATE_V1
     if is_schema_v1:
@@ -79,12 +84,31 @@ if __name__ == "__main__":
     logger.log('Loading external table: gen_ref_whtlst')
     # init
     driver.init_spark_context(conf_parameters=conf_parameters)
+
+    all_payload_path_list = s3_utils.get_list_of_2c_subdir(
+        driver.matching_path.replace(date_path + '/', ''),
+        True
+    )
+
+    all_mp_df = payload_loader.load(driver.runner, all_payload_path_list,  return_output=True)\
+        .select(['hvid', 'personId']) \
+        .withColumn('tsi_patient_id', FN.upper(FN.col('personId')))\
+        .where(FN.col('hvid').isNotNull() & (FN.trim(FN.col('hvid')) != ''))\
+        .select(['hvid', 'tsi_patient_id'])\
+        .distinct()
+
     driver.load()
     external_table_loader.load_analytics_db_table(
         driver.runner.sqlContext, 'dw', 'gen_ref_whtlst', 'gen_ref_whtlst')
 
     driver.transform()
     driver.save_to_disk()
+
+    logger.log('Writing race crosswalk')
+    xwalk_race_loc = '/staging/emr/2017-08-23/crosswalk_for_race/part_hvm_vdr_feed_id={}/part_file_date={}/'.format(
+        provider_partition_name, date_input)
+    all_mp_df.repartition(3).write.parquet(xwalk_race_loc, compression='gzip', mode='overwrite')
+
     driver.stop_spark()
     driver.log_run()
     driver.copy_to_output_path()
