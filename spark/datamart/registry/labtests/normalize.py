@@ -10,7 +10,7 @@ import spark.common.utility.logger as logger
 import spark.datamart.registry.registry_util as reg_util
 import spark.helpers.hdfs_utils as hdfs_utils
 
-mom_masterset_tbl = '_mom_masterset'
+masterset_tbl = '_mom_masterset'
 xwalk_loc = 's3://salusv/reference/labcorp_abbr_xwalk/created_date=2022-03-09/'
 tmp_loc = '/tmp/lab/'
 
