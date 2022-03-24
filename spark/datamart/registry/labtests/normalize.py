@@ -10,7 +10,7 @@ import spark.common.utility.logger as logger
 import spark.datamart.registry.registry_util as reg_util
 import spark.helpers.hdfs_utils as hdfs_utils
 
-_mom_masterset = '_mom_masterset'
+mom_masterset_tbl = '_mom_masterset'
 xwalk_loc = 's3://salusv/reference/labcorp_abbr_xwalk/created_date=2022-03-09/'
 tmp_loc = '/tmp/lab/'
 
@@ -69,13 +69,13 @@ if __name__ == "__main__":
         .write.parquet(tmp_loc + ref_table + '/', compression='gzip', mode='overwrite')
     driver.spark.read.parquet(tmp_loc + ref_table + '/').createOrReplaceTempView(ref_table)
 
-    logger.log('    -load _mom_masterset table {}'.format(_mom_masterset))
+    logger.log('    -load _mom_masterset table {}'.format(masterset_tbl))
     masterset_df = reg_util.get_mom_masterset(driver.spark, provider_name)
-    logger.log('        -{} table count {}'.format(_mom_masterset, masterset_df.count()))
+    logger.log('        -{} table count {}'.format(masterset_tbl, masterset_df.count()))
     masterset_df\
         .distinct().repartition(2)\
-        .write.parquet(tmp_loc + _mom_masterset + '/', compression='gzip', mode='overwrite')
-    driver.spark.read.parquet(tmp_loc + _mom_masterset + '/').createOrReplaceTempView(_mom_masterset)
+        .write.parquet(tmp_loc + masterset_tbl + '/', compression='gzip', mode='overwrite')
+    driver.spark.read.parquet(tmp_loc + masterset_tbl + '/').createOrReplaceTempView(masterset_tbl)
 
     driver.load()
     driver.transform()
