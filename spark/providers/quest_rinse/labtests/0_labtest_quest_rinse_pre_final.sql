@@ -1,6 +1,6 @@
 SELECT
-    CONCAT(rslt.accn_id, '_',COALESCE(rslt.dos_id,''))                                       AS claim_id,
-    pay.hvid                                                                                 AS hvid,
+   CONCAT(rslt.accn_id, '_',COALESCE(rslt.dos_id,''))                                       AS claim_id,
+   pay.hvid                                                                                 AS hvid,
     CAST(CURRENT_DATE() AS STRING)                                                          AS created,
 	'09'                                                                                    AS model_version,
     SPLIT(rslt.input_file_name, '/')[SIZE(SPLIT(rslt.input_file_name, '/')) - 1]            AS data_set,
@@ -11,7 +11,7 @@ SELECT
         	CASE
         	    WHEN SUBSTR(UPPER(txn.gender), 1, 1) IN ('F', 'M', 'U') THEN SUBSTR(UPPER(txn.gender), 1, 1)
         	    WHEN SUBSTR(UPPER(pay.gender), 1, 1) IN ('F', 'M', 'U') THEN SUBSTR(UPPER(pay.gender), 1, 1)
-        	    ELSE NULL
+        	    WHEN pay.gender IS NOT NULL OR  txn.gender IS NOT NULL  THEN 'U'
         	END
 	    )                                                                                   AS patient_gender,
 	/* patient_age (Notes for me - if the age is null this target field will be NULL)*/
@@ -34,18 +34,19 @@ SELECT
     VALIDATE_STATE_CODE(UPPER(COALESCE(txn.pat_state, pay.state)))                           AS patient_state         ,
     CASE
         WHEN CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_service, 1, 10), '%Y-%m-%d') AS DATE) < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-          OR CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_service, 1, 10), '%Y-%m-%d') AS DATE) > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
+          OR CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_service, 1, 10), '%Y-%m-%d') AS DATE) > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
         ELSE CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_service, 1, 10), '%Y-%m-%d') AS DATE)
     END                                                                                      AS date_service          ,
     CASE
         WHEN CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_collection, 1, 10), '%Y-%m-%d') AS DATE) < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-          OR CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_collection, 1, 10), '%Y-%m-%d') AS DATE) > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
+          OR CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_collection, 1, 10), '%Y-%m-%d') AS DATE) > CAST('{VDR_FILE_DT}'                 AS DATE) THEN NULL
         ELSE CAST(EXTRACT_DATE(SUBSTR(rslt.date_of_collection, 1, 10), '%Y-%m-%d') AS DATE)
     END                                                                                      AS date_specimen          ,
 
     CASE
         WHEN CAST(EXTRACT_DATE(SUBSTR(COALESCE(rslt.date_final_report, rslt.date_reported), 1, 10), '%Y-%m-%d') AS DATE) < CAST('{EARLIEST_SERVICE_DATE}' AS DATE)
-          OR CAST(EXTRACT_DATE(SUBSTR(COALESCE(rslt.date_final_report, rslt.date_reported), 1, 10), '%Y-%m-%d') AS DATE) > CAST('{VDR_FILE_DT}' AS DATE) THEN NULL
+          OR CAST(EXTRACT_DATE(SUBSTR(COALESCE(rslt.date_final_report, rslt.date_reported), 1, 10), '%Y-%m-%d') AS DATE) > CAST('{VDR_FILE_DT} AS DATE)'  AS DATE)
+        THEN NULL
         ELSE CAST(EXTRACT_DATE(SUBSTR(COALESCE(rslt.date_final_report, rslt.date_reported), 1, 10), '%Y-%m-%d') AS DATE)
     END                                                                                      AS date_report           ,
     CASE
@@ -70,7 +71,8 @@ SELECT
      rslt.result_name                                                                         AS result_name           ,
      rslt.units                                                                               AS result_unit_of_measure,
      rslt.result_type                                                                         AS result_desc           ,
-     COALESCE(comm.res_comm_text, histcomm.res_comm_text)		                              AS result_comments       ,
+	 COALESCE(comm_hist.res_comm_text, comm.res_comm_text)                                    AS result_comments       ,
+
      CASE
         WHEN rslt.ref_range_alpha IS NOT NULL                                                                     THEN rslt.ref_range_alpha
         WHEN rslt.ref_range_alpha IS NULL AND rslt.ref_range_low IS NOT NULL AND rslt.ref_range_high IS NOT NULL  THEN CONCAT(rslt.ref_range_low,' - ', rslt.ref_range_high)
@@ -168,9 +170,9 @@ SELECT
     VALIDATE_STATE_CODE(UPPER(rslt.acct_state))                                                 AS ordering_state        ,
     rslt.acct_zip                                                                               AS ordering_zip          ,
     CASE
-        WHEN COALESCE(rslt.canceled_accn_ind,'') = 'C' THEN 'CANCELED'
-        WHEN COALESCE(rslt.amended_report_ind,'') = 'C' THEN 'AMENDED'
-        WHEN COALESCE(rslt.idw_report_change_status,'') = 'Y' THEN 'YES'
+        WHEN COALESCE(rslt.canceled_accn_ind,'') = 'C'        THEN 'CANCELED'
+        WHEN COALESCE(rslt.amended_report_ind,'') = 'C'       THEN 'AMENDED'
+        WHEN COALESCE(rslt.idw_report_change_status,'') = 'Y' THEN 'AMENDED'
         ELSE NULL
     END                                                                                         AS logical_delete_reason ,
    CONCAT
@@ -202,27 +204,28 @@ SELECT
                    )
     END                                                                                        AS part_best_date
 
-
 FROM order_result rslt
-    LEFT OUTER JOIN diagnosis         diag ON rslt.unique_accession_id = diag.unique_accession_id
+LEFT OUTER JOIN diagnosis         diag ON rslt.unique_accession_id = diag.unique_accession_id
 LEFT OUTER JOIN transactions       txn  ON rslt.unique_accession_id = txn.unique_accession_id
 LEFT OUTER JOIN matching_payload  pay  ON txn.hvjoinkey            = pay.hvJoinKey
-LEFT OUTER JOIN result_comments comm ON rslt.dos_id = comm.dos_id
-                          AND rslt.dos_yyyymm          = comm.dos_yyyymm
-                          AND rslt.lab_code            = comm.lab_code
-                          AND rslt.accn_id             = comm.accn_id
-                          AND rslt.unique_accession_id = comm.unique_accession_id
-                          AND rslt.ord_seq             = comm.ord_seq
-                          AND rslt.res_seq             = comm.res_seq
-LEFT OUTER JOIN result_comments_hist histcomm ON rslt.dos_id = histcomm.dos_id
-                          AND rslt.dos_yyyymm          = histcomm.dos_yyyymm
-                          AND rslt.lab_code            = histcomm.lab_code
-                          AND rslt.accn_id             = histcomm.accn_id
-                          AND rslt.unique_accession_id = histcomm.unique_accession_id
-                          AND rslt.ord_seq             = histcomm.ord_seq
-                          AND rslt.res_seq             = histcomm.res_seq
-                          AND '{VDR_FILE_DT}' <= '2021-06-19'
-
+--------------- history
+    LEFT OUTER JOIN result_comments_hist comm_hist ON rslt.dos_id = comm_hist.dos_id
+                              AND rslt.dos_yyyymm          = comm_hist.dos_yyyymm
+                              AND rslt.lab_code            = comm_hist.lab_code
+                              AND rslt.accn_id             = comm_hist.accn_id
+                              AND rslt.unique_accession_id = comm_hist.unique_accession_id
+                              AND rslt.ord_seq             = comm_hist.ord_seq
+                              AND rslt.res_seq             = comm_hist.res_seq
+                              AND '{VDR_FILE_DT}' <= '2021-06-19'
+--------------- current
+    LEFT OUTER JOIN result_comments comm ON rslt.dos_id = comm.dos_id
+                              AND rslt.dos_yyyymm          = comm.dos_yyyymm
+                              AND rslt.lab_code            = comm.lab_code
+                              AND rslt.accn_id             = comm.accn_id
+                              AND rslt.unique_accession_id = comm.unique_accession_id
+                              AND rslt.ord_seq             = comm.ord_seq
+                              AND rslt.res_seq             = comm.res_seq
+---------------
 WHERE
  LOWER(COALESCE(rslt.unique_accession_id, '')) <> 'unique_accession_id'
 AND
@@ -239,4 +242,5 @@ AND
   )
 AND COALESCE(rslt.reportable_results_ind,'') <> 'N'
 AND COALESCE(rslt.confidential_order_ind,'') <> 'Y'
---LIMIT 10
+AND COALESCE(rslt.daard_client_flag, '') <> 'Y'
+AND COALESCE(rslt.lab_code,'') NOT IN ('BFW', 'DLO', 'ERE', 'EXM', 'HNH', 'DAP', 'EPA')  -- 2022 0324: Added by RL: Jira #DA-1909
