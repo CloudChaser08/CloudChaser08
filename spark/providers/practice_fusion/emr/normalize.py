@@ -822,7 +822,7 @@ def run(date_input, model=None, test=False, end_to_end_test=False,
                 END 
                 """
 
-                top = 4
+                top = 3
                 max_chunk = 100
                 chunks = [num for num in range(max_chunk) if num % top == 0]
                 for i in chunks:
