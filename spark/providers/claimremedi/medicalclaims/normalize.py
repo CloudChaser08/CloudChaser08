@@ -9,16 +9,13 @@ import spark.providers.claimremedi.medicalclaims.transactional_schemas as source
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
 import spark.common.utility.logger as logger
-import spark.helpers.postprocessor as postprocessor
-from dateutil.relativedelta import relativedelta
-import spark.helpers.file_utils as file_utils
 
 if __name__ == "__main__":
 
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'claimremedi'
     output_table_names_to_schemas = {
-        'claimremedi_13_norm_final': medicalclaims_schemas['schema_v1'],
+        'claimremedi_norm_final': medicalclaims_schemas['schema_v10'],
     }
     provider_partition_name = provider_name
 
@@ -45,15 +42,12 @@ if __name__ == "__main__":
         use_ref_gen_values=True,
         unload_partition_count=3,
         load_date_explode=True,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     conf_parameters = {
-        'spark.default.parallelism': 600,
-        'spark.sql.shuffle.partitions': 600,
         'spark.executor.memoryOverhead': 1024,
-        'spark.driver.memoryOverhead': 1024,
-        'spark.sql.autoBroadcastJoinThreshold': 10485760
+        'spark.driver.memoryOverhead': 1024
     }
 
     driver.run(conf_parameters=conf_parameters)
