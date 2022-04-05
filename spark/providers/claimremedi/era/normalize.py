@@ -9,8 +9,8 @@ if __name__ == "__main__":
     # ------------------------ Provider specific configuration -----------------------
     provider_name = 'claimremedi'
     output_table_names_to_schemas = {
-        'claimremedi_era_detail_final': detail_schemas['schema_v7'],
-        'claimremedi_era_summary_final': summary_schemas['schema_v7']
+        'claimremedi_835_detail_final': detail_schemas['schema_v7'],
+        'claimremedi_835_summary_final': summary_schemas['schema_v7']
     }
     provider_partition_name = '265'
 
@@ -37,17 +37,12 @@ if __name__ == "__main__":
         unload_partition_count=1,
         vdr_feed_id=265,
         use_ref_gen_values=True,
-        output_to_transform_path=True
+        output_to_transform_path=False
     )
 
     conf_parameters = {
-        'spark.default.parallelism': 4000,
-        'spark.sql.shuffle.partitions': 4000,
         'spark.executor.memoryOverhead': 1024,
-        'spark.driver.memoryOverhead': 1024,
-        'spark.driver.extraJavaOptions': '-XX:+UseG1GC',
-        'spark.executor.extraJavaOptions': '-XX:+UseG1GC',
-        'spark.sql.autoBroadcastJoinThreshold': 52428800
+        'spark.driver.memoryOverhead': 1024
     }
 
     driver.init_spark_context(conf_parameters=conf_parameters)

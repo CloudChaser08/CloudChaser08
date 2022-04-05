@@ -5,7 +5,7 @@ TABLE_CONF = {
         'csv',
         separator='|',
         columns=[
-            'mystery_column_1',
+            'mystery_column',
             'ignore_1',
             'ignore_2',
             'ignore_3',
