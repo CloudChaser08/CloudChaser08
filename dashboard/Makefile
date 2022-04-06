@@ -16,3 +16,9 @@ test: install-deps
 
 install-deps:
 	cd src && npm install && cd ..
+
+teardown-prod:
+	aws lambda delete-function --function-name provider-status-dash
+
+teardown-dev:
+	aws lambda delete-function --function-name provider-status-dash-dev
