@@ -227,10 +227,12 @@ class QuestRinseCensusDriver(CensusDriver):
             self._runner.run_spark_script('0_labtest_quest_rinse_result_gold_alpha.sql',
                                           source_file_path=scripts_directory,
                                           return_output=True
-                                          ).select(*GOLD_CLMNS).distinct().withColumnRenamed(
-                'gen_ref_cd', 'new_cd').withColumnRenamed('gen_ref_desc', 'new_desc')
+                                          ).select(*GOLD_CLMNS)\
+                                            .withColumn("new_cd",FN.upper(FN.col('gen_ref_cd')))\
+                                            .withColumn("new_desc",FN.upper(FN.col('gen_ref_desc')))\
+                                            .select('new_cd','new_desc').distinct()
 
-        delta_df = self._spark.table('order_result').select('result_value').distinct() \
+        delta_df = self._spark.table('order_result').select('result_value') \
             .withColumn('gen_ref_cd', FN.upper(FN.col('result_value'))).select('gen_ref_cd') \
             .where(FN.col('gen_ref_cd').isNotNull() & (FN.trim(FN.col('gen_ref_cd')) != '')) \
             .distinct()
@@ -243,7 +245,7 @@ class QuestRinseCensusDriver(CensusDriver):
         UDF_CLMNS = ['gen_ref_cd', 'udf_operator', 'udf_numeric', 'udf_alpha', 'udf_passthru']
         # Process 'result' column with UDF and Coalesce passthru's as ALPHA
         out_result_value_df = result_value_df \
-            .withColumn('udf_result', parse_value(FN.col('gen_ref_cd'))).cache() \
+            .withColumn('udf_result', parse_value(FN.col('result_value'))).cache() \
             .withColumn('udf_operator', FN.when(FN.col('udf_result')[0] != "", FN.col('udf_result')[0]).otherwise(None)) \
             .withColumn('udf_numeric', FN.when(FN.col('udf_result')[1] != "", FN.col('udf_result')[1]).otherwise(None)) \
             .withColumn('udf_alpha', FN.when(FN.col('udf_result')[2] != "", FN.col('udf_result')[2]).otherwise(None)) \
