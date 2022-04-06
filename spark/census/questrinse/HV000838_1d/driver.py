@@ -125,7 +125,11 @@ class QuestRinseCensusDriver(CensusDriver):
         cleaned_ref_questrinse_qtim_df.createOrReplaceTempView("ref_questrinse_qtim")
 
         # self._spark.read.parquet('/tmp/qr/questrinse_cmdm/').createOrReplaceTempView('ref_questrinse_cmdm')
-        self._spark.read.parquet('s3://salusv/reference/parquet/ref_cmdm_quest/file_date=2022-02-20/') \
+        self._spark.read.parquet('s3://salusv/reference/parquet/ref_cmdm_quest/file_date=2022-03-20/') \
+            
+        CMDM_df = self._spark.read.parquet("s3://salusv/reference/parquet/ref_cmdm_quest/")
+        max_file_date = CMDM_df.agg({"file_date": "max"}).collect()[0][0]
+        CMDM_df.filter(CMDM_df["file_date"] == max_file_date)\
             .distinct().cache().createOrReplaceTempView('ref_questrinse_cmdm')
 
         self._spark.read.parquet('s3://salusv/reference/parquet/ref_physicians_quest/file_date=2022-02-20/') \
