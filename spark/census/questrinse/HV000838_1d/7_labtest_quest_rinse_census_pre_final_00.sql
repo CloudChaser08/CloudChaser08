@@ -67,8 +67,8 @@ LEFT OUTER JOIN result_value_lkp rvlkp ON  UPPER(TRIM(rvlkp.gen_ref_cd)) = UPPER
 LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim_all  qtim ON  rslt.lab_code              = qtim.compendium_code
                      AND  rslt.idw_Local_order_code  = qtim.unit_code
                      AND  rslt.local_result_code     = qtim.analyte_code
---------------------QTIM2                     
-LEFT OUTER JOIN qtim qtim2 ON  rslt.lab_code             IN ('AMD','AMP','SJC') 
+---------------------QTIM join for AMD, AMP and SJC labs
+LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim_all qtim2 ON  rslt.lab_code             IN ('AMD','AMP','SJC') 
                            AND rslt.lab_code              = qtim2.compendium_code 
                            AND rslt.derived_profile_code  = qtim2.unit_code
                            AND rslt.local_result_code     = qtim2.analyte_code
