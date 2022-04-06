@@ -12,17 +12,39 @@ SELECT
     rvlkp.udf_numeric AS HV_result_value_numeric,
     rvlkp.udf_alpha AS HV_result_value_alpha,
     rvlkp.udf_passthru AS HV_result_value,
-   -------QTIM
-   CASE
-        WHEN UPPER(qtim.profile_ind) ='Y' THEN qtim.lab_reprt_titles_concat
-    ELSE NULL
-    END                                                     AS profile_name_qtim,
-    qtim.lab_reprt_titles_concat                           AS order_name_qtim,
-    qtim.specimen_type_desc                                AS specimen_type_desc_qtim,
-    COALESCE(qtim.methodology_dos, qtim.methodology_lis)  AS methodology_qtim,
-    qtim.analyte_name                                      AS result_name_qtim,
-    qtim.unit_of_measure                                   AS unit_of_measure_qtim,
-    qtim.loinc_number                                      AS loinc_number_qtim,
+    -------QTIM with new join QTM2 
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL AND UPPER(qtim.profile_ind) ='Y'               THEN qtim.lab_reprt_titles_concat
+
+      WHEN qtim.compendium_code IS NOT NULL AND coalesce(UPPER(qtim.profile_ind),'') <>'Y' THEN NULL
+      WHEN UPPER(qtim2.profile_ind) ='Y'                                                   THEN qtim2.lab_reprt_titles_concat
+      ELSE NULL 
+   END                                                                                               AS profile_name_qtim,
+
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN qtim.lab_reprt_titles_concat  
+      ELSE qtim2.lab_reprt_titles_concat  
+   END                                                                                               AS order_name_qtim,
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN qtim.specimen_type_desc       
+      ELSE qtim2.specimen_type_desc      
+   END                                                                                               AS specimen_type_desc_qtim,
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN COALESCE(qtim.methodology_dos, qtim.methodology_lis) 
+      ELSE COALESCE(qtim2.methodology_dos, qtim2.methodology_lis) 
+   END                                                                                               AS methodology_qtim,
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN qtim.analyte_name             
+      ELSE qtim2.analyte_name 
+   END                                                                                               AS result_name_qtim,
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN qtim.unit_of_measure          
+      ELSE qtim2.unit_of_measure 
+   END                                                                                               AS unit_of_measure_qtim,
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN qtim.loinc_number             
+      ELSE qtim2.loinc_number    
+   END                                                                                               AS loinc_number_qtim, 
     ------------------ CMDM
     CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_full_nm               ELSE NULL END AS hv_provider_name_cmdm,
     CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty                ELSE NULL END AS hv_ind_spclty_tp_cmdm,
@@ -45,6 +67,11 @@ LEFT OUTER JOIN result_value_lkp rvlkp ON  UPPER(TRIM(rvlkp.gen_ref_cd)) = UPPER
 LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim_all  qtim ON  rslt.lab_code              = qtim.compendium_code
                      AND  rslt.idw_Local_order_code  = qtim.unit_code
                      AND  rslt.local_result_code     = qtim.analyte_code
+--------------------QTIM2                     
+LEFT OUTER JOIN qtim qtim2 ON  rslt.lab_code             IN ('AMD','AMP','SJC') 
+                           AND rslt.lab_code              = qtim2.compendium_code 
+                           AND rslt.derived_profile_code  = qtim2.unit_code
+                           AND rslt.local_result_code     = qtim2.analyte_code
 ------------------------GOLD ALPHA
 --LEFT OUTER JOIN labtest_quest_rinse_result_gold_alpha gold          ON UPPER(TRIM(gold.gen_ref_cd)) = UPPER(TRIM(rslt.result_value))
 -- ---------------------CMDM
