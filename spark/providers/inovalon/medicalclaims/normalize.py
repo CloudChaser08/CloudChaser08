@@ -8,6 +8,7 @@ import spark.providers.inovalon.medicalclaims.transactional_schemas_v1 as \
 import spark.providers.inovalon.medicalclaims.transactional_schemas_v2 as jan_feb_2020_schemas
 import spark.providers.inovalon.medicalclaims.transactional_schemas_v3 as mar_2020_schemas
 import spark.providers.inovalon.medicalclaims.transactional_schemas_v4 as full_hist_restate_schemas
+import spark.providers.inovalon.medicalclaims.transactional_schemas_v5 as future_schemas
 
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.medicalclaims import schemas as medicalclaims_schemas
@@ -57,6 +58,7 @@ if __name__ == "__main__":
     ref_claims_location = 's3://salusv/reference/inovalon/medicalclaims/claims/'
 
     # the vendor sent a different schema for the following dates
+    is_schema_v4 = date_input < '2022-03-01'
     is_schema_v2 = date_input in ['2020-03-03', '2020-03-04']
     is_schema_v3 = date_input == '2020-03-25'
     is_schema_v1 = \
@@ -73,9 +75,12 @@ if __name__ == "__main__":
     elif is_schema_v1:
         logger.log('Using the historic schema (v1)')
         source_table_schema = historic_source_table_schemas
-    else:
-        logger.log('Using the future restate schema (v4)')
+    elif is_schema_v4:
+        logger.log('Using the restate schema (v4)')
         source_table_schema = full_hist_restate_schemas
+    else:
+        logger.log('Using the future restate schema (v5)')
+        source_table_schema = future_schemas
 
     # non-historic runs on inovalon are stable if run in chunks. This routine chunks the data by
     # looking at the last 2 characters of claimuid in clams and claimcode
