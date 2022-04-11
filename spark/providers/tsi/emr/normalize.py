@@ -4,8 +4,9 @@ tsi emr normalize
 import os
 import argparse
 from datetime import datetime
-import spark.providers.tsi.emr.transactional_schemas as table_schemas
 import spark.providers.tsi.emr.transactional_schemas_v1 as table_schemas_v1
+import spark.providers.tsi.emr.transactional_schemas_v2 as table_schemas_v2
+import spark.providers.tsi.emr.transactional_schemas_v3 as table_schemas_v3
 from spark.common.marketplace_driver import MarketplaceDriver
 from spark.common.utility import logger
 from spark.common.emr.encounter import schemas as encounter_schemas
@@ -21,6 +22,7 @@ import spark.helpers.payload_loader as payload_loader
 import pyspark.sql.functions as FN
 
 CUTOFF_DATE_V1 = datetime.strptime('2022-02-14', '%Y-%m-%d')
+CUTOFF_DATE_V2 = datetime.strptime('2022-04-06', '%Y-%m-%d')
 
 HAS_DELIVERY_PATH = True
 
@@ -52,13 +54,18 @@ if __name__ == "__main__":
 
     date_path = date_input.replace('-', '/')
 
-    is_schema_v1 = datetime.strptime(date_input, '%Y-%m-%d') >= CUTOFF_DATE_V1
+    is_schema_v1 = datetime.strptime(date_input, '%Y-%m-%d') < CUTOFF_DATE_V1
+    is_schema_v2 = CUTOFF_DATE_V1 <= datetime.strptime(date_input, '%Y-%m-%d') < CUTOFF_DATE_V2
+
     if is_schema_v1:
-        logger.log('Current Load schema')
-        source_table_schemas = table_schemas_v1
-    else:
         logger.log('Historic Load schema')
-        source_table_schemas = table_schemas
+        source_table_schemas = table_schemas_v1
+    elif is_schema_v2:
+        logger.log('Historic Load schema v2')
+        source_table_schemas = table_schemas_v2
+    else:
+        logger.log('Current Load schema')
+        source_table_schemas = table_schemas_v3
 
     # Create and run driver
     driver = MarketplaceDriver(
