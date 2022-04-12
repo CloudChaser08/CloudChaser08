@@ -128,4 +128,4 @@ from ndc_temp7 where level1<>'HUMAN OTC DRUG';
 
 drop table if exists marketplace_ndc_new;
 create temporary view marketplace_ndc_new as
-select * from ndc_temp8;
+select distinct * from ndc_temp8;
