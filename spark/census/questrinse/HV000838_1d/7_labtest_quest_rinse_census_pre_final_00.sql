@@ -10,7 +10,7 @@ SELECT
     -------UDF Value
     CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_operator ELSE rvlkp.udf_operator END AS HV_result_value_operator,
     CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_numeric ELSE rvlkp.udf_numeric END AS HV_result_value_numeric,
-    CASE WHEN alpha_rvlkp.udf_alpha IS NOT NULL THEN alpha_rvlkp.udf_operator ELSE rvlkp.udf_alpha END AS HV_result_value_alpha,
+    CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_operator ELSE rvlkp.udf_alpha END AS HV_result_value_alpha,
     CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_passthru ELSE rvlkp.udf_passthru END AS HV_result_value,
     -------QTIM with new join QTM2
    CASE 
@@ -62,8 +62,8 @@ SELECT
     delta.acct_number	                                                                   AS client_acct_number
 FROM order_result rslt
 LEFT OUTER JOIN labtest_quest_rinse_census_diag_code diaglkp ON rslt.unique_accession_id = diaglkp.unique_accession_id
-LEFT OUTER JOIN ref_gold_alpha_lkp alpha_rvlkp ON UPPER(TRIM(alpha_rvlkp.gen_ref_cd)) = UPPER(TRIM(rslt.result_value))
-LEFT OUTER JOIN ref_result_value_lkp rvlkp ON TRIM(rvlkp.gen_ref_cd) = TRIM(rslt.result_value)
+LEFT OUTER JOIN ref_gold_alpha_lkp alpha_rvlkp ON UPPER(TRIM(rslt.result_value)) = UPPER(TRIM(alpha_rvlkp.gen_ref_cd))
+LEFT OUTER JOIN ref_result_value_lkp rvlkp ON TRIM(rslt.result_value)  = TRIM(rvlkp.gen_ref_cd)
 --------------------QTIM
 LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim_all  qtim ON  rslt.lab_code              = qtim.compendium_code
                      AND  rslt.idw_Local_order_code  = qtim.unit_code
