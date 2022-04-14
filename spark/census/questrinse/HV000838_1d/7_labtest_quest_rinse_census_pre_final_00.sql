@@ -8,21 +8,43 @@ SELECT
     CASE WHEN phy.phy_id IS NOT NULL THEN phy.phy_first_name  ELSE rslt.phy_first_name  END AS c_phy_first_name,
     CASE WHEN phy.phy_id IS NOT NULL THEN phy.phy_middle_name ELSE rslt.phy_middle_name END AS c_phy_middle_name,
     -------UDF Value
-    rvlkp.udf_operator AS HV_result_value_operator,
-    rvlkp.udf_numeric AS HV_result_value_numeric,
-    rvlkp.udf_alpha AS HV_result_value_alpha,
-    rvlkp.udf_passthru AS HV_result_value,
-   -------QTIM
-   CASE
-        WHEN UPPER(qtim.profile_ind) ='Y' THEN qtim.lab_reprt_titles_concat
-    ELSE NULL
-    END                                                     AS profile_name_qtim,
-    qtim.lab_reprt_titles_concat                           AS order_name_qtim,
-    qtim.specimen_type_desc                                AS specimen_type_desc_qtim,
-    COALESCE(qtim.methodology_dos, qtim.methodology_lis)  AS methodology_qtim,
-    qtim.analyte_name                                      AS result_name_qtim,
-    qtim.unit_of_measure                                   AS unit_of_measure_qtim,
-    qtim.loinc_number                                      AS loinc_number_qtim,
+    CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_operator ELSE rvlkp.udf_operator END AS HV_result_value_operator,
+    CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_numeric ELSE rvlkp.udf_numeric END AS HV_result_value_numeric,
+    CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_operator ELSE rvlkp.udf_alpha END AS HV_result_value_alpha,
+    CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_passthru ELSE rvlkp.udf_passthru END AS HV_result_value,
+    -------QTIM with new join QTM2
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL AND UPPER(qtim.profile_ind) ='Y'               THEN qtim.lab_reprt_titles_concat
+
+      WHEN qtim.compendium_code IS NOT NULL AND coalesce(UPPER(qtim.profile_ind),'') <>'Y' THEN NULL
+      WHEN UPPER(qtim2.profile_ind) ='Y'                                                   THEN qtim2.lab_reprt_titles_concat
+      ELSE NULL 
+   END                                                                                               AS profile_name_qtim,
+
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN qtim.lab_reprt_titles_concat  
+      ELSE qtim2.lab_reprt_titles_concat  
+   END                                                                                               AS order_name_qtim,
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN qtim.specimen_type_desc       
+      ELSE qtim2.specimen_type_desc      
+   END                                                                                               AS specimen_type_desc_qtim,
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN COALESCE(qtim.methodology_dos, qtim.methodology_lis) 
+      ELSE COALESCE(qtim2.methodology_dos, qtim2.methodology_lis) 
+   END                                                                                               AS methodology_qtim,
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN qtim.analyte_name             
+      ELSE qtim2.analyte_name 
+   END                                                                                               AS result_name_qtim,
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN qtim.unit_of_measure          
+      ELSE qtim2.unit_of_measure 
+   END                                                                                               AS unit_of_measure_qtim,
+   CASE 
+      WHEN qtim.compendium_code IS NOT NULL THEN qtim.loinc_number             
+      ELSE qtim2.loinc_number    
+   END                                                                                               AS loinc_number_qtim, 
     ------------------ CMDM
     CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_full_nm               ELSE NULL END AS hv_provider_name_cmdm,
     CASE WHEN  cmdm.ind_npi IS NOT NULL THEN cmdm.ind_spclty                ELSE NULL END AS hv_ind_spclty_tp_cmdm,
@@ -40,11 +62,17 @@ SELECT
     delta.acct_number	                                                                   AS client_acct_number
 FROM order_result rslt
 LEFT OUTER JOIN labtest_quest_rinse_census_diag_code diaglkp ON rslt.unique_accession_id = diaglkp.unique_accession_id
-LEFT OUTER JOIN result_value_lkp rvlkp ON  UPPER(TRIM(rvlkp.gen_ref_cd)) = UPPER(TRIM(rslt.result_value))
+LEFT OUTER JOIN ref_gold_alpha_lkp alpha_rvlkp ON UPPER(TRIM(rslt.result_value)) = UPPER(TRIM(alpha_rvlkp.gen_ref_cd))
+LEFT OUTER JOIN ref_result_value_lkp rvlkp ON TRIM(rslt.result_value)  = TRIM(rvlkp.gen_ref_cd)
 --------------------QTIM
 LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim_all  qtim ON  rslt.lab_code              = qtim.compendium_code
                      AND  rslt.idw_Local_order_code  = qtim.unit_code
                      AND  rslt.local_result_code     = qtim.analyte_code
+---------------------QTIM join for AMD, AMP and SJC labs
+LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim_all qtim2 ON  rslt.lab_code             IN ('AMD','AMP','SJC') 
+                           AND rslt.lab_code              = qtim2.compendium_code 
+                           AND rslt.derived_profile_code  = qtim2.unit_code
+                           AND rslt.local_result_code     = qtim2.analyte_code
 ------------------------GOLD ALPHA
 --LEFT OUTER JOIN labtest_quest_rinse_result_gold_alpha gold          ON UPPER(TRIM(gold.gen_ref_cd)) = UPPER(TRIM(rslt.result_value))
 -- ---------------------CMDM
