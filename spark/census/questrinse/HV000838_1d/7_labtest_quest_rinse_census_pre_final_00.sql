@@ -10,7 +10,7 @@ SELECT
     -------UDF Value
     CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_operator ELSE rvlkp.udf_operator END AS HV_result_value_operator,
     CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_numeric ELSE rvlkp.udf_numeric END AS HV_result_value_numeric,
-    CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_operator ELSE rvlkp.udf_alpha END AS HV_result_value_alpha,
+    CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_alpha ELSE rvlkp.udf_alpha END AS HV_result_value_alpha,
     CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_passthru ELSE rvlkp.udf_passthru END AS HV_result_value,
     -------QTIM with new join QTM2
    CASE 
