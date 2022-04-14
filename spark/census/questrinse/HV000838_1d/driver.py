@@ -20,7 +20,6 @@ from spark.runner import PACKAGE_PATH
 PARQUET_FILE_SIZE = 1024 * 1024 * 1024
 REFERENCE_OUTPUT_PATH = 's3://salusv/reference/questrinse/{}/'
 REF_LOINC = "loinc_ref"
-REF_RESULT_VALUE = "result_value_ref"
 
 # QDIP config.
 QDIP_LOAD = False
@@ -36,12 +35,13 @@ QDIP_COLUMNS = [
     'alpha_normal_flag', 'ref_range_low', 'ref_range_high',
     'ref_range_alpha', 'date_final_report', 'HV_result_value_operator',
     'HV_result_value_numeric', 'HV_result_value_alpha', 'HV_result_value',
-    'lab_code', 'daard_client_flag', 'hv_abnormal_indicator', 'hv_act_spclty_desc_cmdm'
+    'lab_code', 'daard_client_flag', 'hv_abnormal_ind', 'hv_act_spclty_desc_cmdm'
 ]
 
 REF_HDFS_OUTPT_PATH = '/reference/'
 REF_LOINC_DELTA = "loinc_delta"
-REF_RSLT_VAL_DELTA = "result_value_lkp"
+REF_RESULT_VALUE = "ref_result_value_lkp"
+REF_GOLD_ALPHA = "ref_gold_alpha_lkp"
 
 QDIP_LOCAL_STAGING = '/qdip_staging/'
 POC_1B1 = True
@@ -232,12 +232,12 @@ class QuestRinseCensusDriver(CensusDriver):
                                           source_file_path=scripts_directory,
                                           return_output=True
                                           ).select(*GOLD_CLMNS)\
-                                            .withColumn("new_cd",FN.upper(FN.col('gen_ref_cd')))\
-                                            .withColumn("new_desc",FN.upper(FN.col('gen_ref_desc')))\
-                                            .select('new_cd','new_desc').distinct()
+                                            .withColumn("new_cd", FN.upper(FN.col('gen_ref_cd')))\
+                                            .withColumn("new_desc", FN.upper(FN.col('gen_ref_desc')))\
+                                            .select('new_cd', 'new_desc').distinct()
 
         delta_df = self._spark.table('order_result').select('result_value') \
-            .withColumn('gen_ref_cd', FN.upper(FN.col('result_value'))).select('gen_ref_cd') \
+            .withColumn('gen_ref_cd', FN.col('result_value')).select('gen_ref_cd') \
             .where(FN.col('gen_ref_cd').isNotNull() & (FN.trim(FN.col('gen_ref_cd')) != '')) \
             .distinct()
 
@@ -262,14 +262,23 @@ class QuestRinseCensusDriver(CensusDriver):
             .withColumnRenamed('new_desc', 'udf_alpha') \
             .withColumn('udf_passthru', FN.lit(None).cast('string')).select(*UDF_CLMNS)
 
-        expand_gold_df.unionAll(out_result_value_df) \
+        expand_gold_df\
             .where(FN.col('gen_ref_cd').isNotNull() & (FN.trim(FN.col('gen_ref_cd')) != '')) \
             .distinct() \
-            .repartition(1).write.parquet(REF_HDFS_OUTPT_PATH + REF_RSLT_VAL_DELTA + '/', compression='gzip',
+            .repartition(1).write.parquet(REF_HDFS_OUTPT_PATH + REF_GOLD_ALPHA + '/', compression='gzip',
                                           mode='overwrite')
 
-        self._spark.read.parquet(REF_HDFS_OUTPT_PATH + REF_RSLT_VAL_DELTA + '/') \
-            .createOrReplaceTempView(REF_RSLT_VAL_DELTA)
+        out_result_value_df\
+            .where(FN.col('gen_ref_cd').isNotNull() & (FN.trim(FN.col('gen_ref_cd')) != '')) \
+            .distinct() \
+            .repartition(1).write.parquet(REF_HDFS_OUTPT_PATH + REF_RESULT_VALUE + '/', compression='gzip',
+                                          mode='overwrite')
+
+        self._spark.read.parquet(REF_HDFS_OUTPT_PATH + REF_GOLD_ALPHA + '/') \
+            .createOrReplaceTempView(REF_GOLD_ALPHA)
+
+        self._spark.read.parquet(REF_HDFS_OUTPT_PATH + REF_RESULT_VALUE + '/') \
+            .createOrReplaceTempView(REF_RESULT_VALUE)
 
     def save(self, dataframe, batch_date, batch_id, chunk_idx=None, header=True):
         logger.log('Saving data to the local file system')
@@ -393,12 +402,13 @@ class QuestRinseCensusDriver(CensusDriver):
                 normalized_records_unloader.distcp(
                     REFERENCE_OUTPUT_PATH.format(REF_LOINC), REF_HDFS_OUTPT_PATH + REF_LOINC_DELTA)
 
-        if hdfs_utils.list_parquet_files(REF_HDFS_OUTPT_PATH + REF_RSLT_VAL_DELTA)[0].strip():
-            logger.log("Copying reference files to: " + REFERENCE_OUTPUT_PATH.format(REF_RESULT_VALUE))
-            normalized_records_unloader.distcp(
-                REFERENCE_OUTPUT_PATH.format(
-                    REF_RESULT_VALUE) + 'batch_id={}/batch_date={}/'.format(batch_date, batch_id)
-                , REF_HDFS_OUTPT_PATH + REF_RSLT_VAL_DELTA)
+        for ref_tbl in [REF_RESULT_VALUE, REF_GOLD_ALPHA]:
+            if hdfs_utils.list_parquet_files(REF_HDFS_OUTPT_PATH + ref_tbl)[0].strip():
+                logger.log("Copying reference files to: " + REFERENCE_OUTPUT_PATH.format(ref_tbl))
+                normalized_records_unloader.distcp(
+                    REFERENCE_OUTPUT_PATH.format(
+                        ref_tbl) + 'batch_id={}/batch_date={}/'.format(batch_date, batch_id)
+                    , REF_HDFS_OUTPT_PATH + ref_tbl)
 
         logger.log('Deleting ' + REF_HDFS_OUTPT_PATH)
         hdfs_utils.clean_up_output_hdfs(REF_HDFS_OUTPT_PATH)

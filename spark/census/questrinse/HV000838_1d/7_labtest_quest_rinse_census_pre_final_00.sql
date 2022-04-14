@@ -8,11 +8,11 @@ SELECT
     CASE WHEN phy.phy_id IS NOT NULL THEN phy.phy_first_name  ELSE rslt.phy_first_name  END AS c_phy_first_name,
     CASE WHEN phy.phy_id IS NOT NULL THEN phy.phy_middle_name ELSE rslt.phy_middle_name END AS c_phy_middle_name,
     -------UDF Value
-    rvlkp.udf_operator AS HV_result_value_operator,
-    rvlkp.udf_numeric AS HV_result_value_numeric,
-    rvlkp.udf_alpha AS HV_result_value_alpha,
-    rvlkp.udf_passthru AS HV_result_value,
-    -------QTIM with new join QTM2 
+    CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_operator ELSE rvlkp.udf_operator END AS HV_result_value_operator,
+    CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_numeric ELSE rvlkp.udf_numeric END AS HV_result_value_numeric,
+    CASE WHEN alpha_rvlkp.udf_alpha IS NOT NULL THEN alpha_rvlkp.udf_operator ELSE rvlkp.udf_alpha END AS HV_result_value_alpha,
+    CASE WHEN alpha_rvlkp.gen_ref_cd IS NOT NULL THEN alpha_rvlkp.udf_passthru ELSE rvlkp.udf_passthru END AS HV_result_value,
+    -------QTIM with new join QTM2
    CASE 
       WHEN qtim.compendium_code IS NOT NULL AND UPPER(qtim.profile_ind) ='Y'               THEN qtim.lab_reprt_titles_concat
 
@@ -62,7 +62,8 @@ SELECT
     delta.acct_number	                                                                   AS client_acct_number
 FROM order_result rslt
 LEFT OUTER JOIN labtest_quest_rinse_census_diag_code diaglkp ON rslt.unique_accession_id = diaglkp.unique_accession_id
-LEFT OUTER JOIN result_value_lkp rvlkp ON  UPPER(TRIM(rvlkp.gen_ref_cd)) = UPPER(TRIM(rslt.result_value))
+LEFT OUTER JOIN ref_gold_alpha_lkp alpha_rvlkp ON UPPER(TRIM(alpha_rvlkp.gen_ref_cd)) = UPPER(TRIM(rslt.result_value))
+LEFT OUTER JOIN ref_result_value_lkp rvlkp ON TRIM(rvlkp.gen_ref_cd) = TRIM(rslt.result_value)
 --------------------QTIM
 LEFT OUTER JOIN labtest_quest_rinse_ref_questrinse_qtim_all  qtim ON  rslt.lab_code              = qtim.compendium_code
                      AND  rslt.idw_Local_order_code  = qtim.unit_code
