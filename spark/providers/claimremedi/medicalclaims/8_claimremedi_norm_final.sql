@@ -2,17 +2,17 @@ SELECT MONOTONICALLY_INCREASING_ID() AS record_id, * FROM
 
 (
     ------------------------------------------------------------------------------------------------
-	--  UNION exploded tables for I type
+	--  UNION exploded tables for I type 
     ------------------------------------------------------------------------------------------------
-SELECT
+SELECT 
 *
 FROM claimremedi_norm_02
 
 UNION ALL
     ------------------------------------------------------------------------------------------------
-	--  UNION exploded tables for P type
+	--  UNION exploded tables for P type	
     ------------------------------------------------------------------------------------------------
-SELECT
+SELECT 
 *
 FROM claimremedi_norm_03
 

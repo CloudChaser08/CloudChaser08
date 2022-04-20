@@ -1,11 +1,9 @@
-    ------------------------------------------------------------------------------------------------
-	--  data that need to have the dates exploded for "I"claim type
-    ------------------------------------------------------------------------------------------------
-SELECT
+SELECT 
     claim_id,
     hvid,
     created,
     model_version,
+    data_set,
     data_feed,
     data_vendor,
     patient_gender,
@@ -18,7 +16,7 @@ SELECT
     DATE_ADD (clm.date_service,dtexplode.i)   as date_service,
     --service_to,
     DATE_ADD (clm.date_service,dtexplode.i)   as date_service_end,
-
+    
     inst_date_admitted,
     inst_date_discharged,
     inst_admit_type_std_id,
@@ -81,18 +79,19 @@ SELECT
     prov_facility_city,
     prov_facility_state,
     prov_facility_zip,
-    part_provider,
+    part_provider, 
 
-    CASE
-        WHEN DATE_ADD (clm.date_service,dtexplode.i)  < '{AVAILABLE_START_DATE}'
-          OR DATE_ADD (clm.date_service,dtexplode.i)  > '{VDR_FILE_DT}' THEN '0_PREDATES_HVM_HISTORY'
+    CASE 
+        WHEN DATE_ADD (clm.date_service,dtexplode.i)  < CAST('{AVAILABLE_START_DATE}' AS DATE)
+          OR DATE_ADD (clm.date_service,dtexplode.i)  > CAST('{VDR_FILE_DT}' AS DATE) THEN '0_PREDATES_HVM_HISTORY'
         ELSE CONCAT
                 (
                  SUBSTR(CAST(DATE_ADD (clm.date_service,dtexplode.i)  AS STRING), 1, 7), '-01'
                 )
     END                                                                         AS part_best_date
+
 FROM claimremedi_norm_01 clm
-lateral view
+lateral view 
 posexplode(split(space(datediff(clm.date_service_end,clm.date_service)),' ')) dtexplode as i,x
     WHERE
      COALESCE(clm.claim_type, 'X') = 'P'

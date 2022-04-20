@@ -1,11 +1,9 @@
-    ------------------------------------------------------------------------------------------------
-	--  data that doesn't need to have the dates exploded  only populate the start and end date for "I"
-    ------------------------------------------------------------------------------------------------
-SELECT
+SELECT 
     claim_id,
     hvid,
     created,
     model_version,
+    data_set,
     data_feed,
     data_vendor,
     patient_gender,
@@ -15,23 +13,23 @@ SELECT
     claim_type,
     date_received,
     ------------------------------------------------------------------------------------------------
-	--  if date_service is NULL, set it to date_service_end. If NULL just swap with date_service_end
+	--  if date_service is NULL, set it to date_service_end. If NULL just swap with date_service_end		
     ------------------------------------------------------------------------------------------------
-	CASE
-	    WHEN COALESCE(claim_type, 'X') = 'P'
-	        THEN COALESCE(date_service, date_service_end)
-        ELSE date_service
+	CASE					
+	    WHEN COALESCE(claim_type, 'X') = 'P'					
+	        THEN COALESCE(date_service, date_service_end)					
+        ELSE date_service						
 	END                                            AS date_service,
     ------------------------------------------------------------------------------------------------
-	--  if date_service_end is NULL, set it to date_service. If NULL just swap with date_service
+	--  if date_service_end is NULL, set it to date_service. If NULL just swap with date_service		
     ------------------------------------------------------------------------------------------------
-    	CASE
-	    WHEN COALESCE(claim_type, 'X') = 'P'
-	        THEN COALESCE(date_service_end, date_service)
-        ELSE date_service_end
+    	CASE					
+	    WHEN COALESCE(claim_type, 'X') = 'P'					
+	        THEN COALESCE(date_service_end, date_service)					
+        ELSE date_service_end						
 	END                                            AS date_service_end,
-   ----------------------------------------------------------------------------------
-
+   ----------------------------------------------------------------------------------	
+    
     inst_date_admitted,
     inst_date_discharged,
     inst_admit_type_std_id,
@@ -95,10 +93,29 @@ SELECT
     prov_facility_state,
     prov_facility_zip,
     part_provider,
-    CONCAT(SUBSTR(COALESCE(date_service, date_service_end), 1, 7), '-01')           AS part_best_date
-FROM claimremedi_norm_01
+--    CONCAT(SUBSTR(COALESCE(date_service, date_service_end), 1, 7), '-01')           AS part_best_date
+	CASE
+	    WHEN 0 = LENGTH(COALESCE
+	                            (
+	                                CAP_DATE
+                                        (
+                                            CAST(EXTRACT_DATE(CONCAT(SUBSTR(COALESCE(date_service, date_service_end), 1, 7), '-01'), '%Y-%m-%d') AS DATE),
+                                            CAST(COALESCE('{AVAILABLE_START_DATE}', '{EARLIEST_SERVICE_DATE}') AS DATE),
+                                            CAST('{VDR_FILE_DT}' AS DATE)
+                                        ),
+                                    ''
+                                ))
+	        THEN '0_PREDATES_HVM_HISTORY'
+	    ELSE CONCAT
+	            (
+                    CONCAT(SUBSTR(COALESCE(date_service, date_service_end), 1, 7), '-01')
+                )
+	END                                                                                     AS part_best_date
 
- WHERE COALESCE(claim_type, 'X') <> 'P'
+
+
+FROM claimremedi_norm_01
+WHERE COALESCE(claim_type, 'X') <> 'P'
     OR date_service IS NULL
     OR date_service_end IS NULL
     OR DATEDIFF (COALESCE(date_service_end, CAST('1900-01-01' AS DATE)),COALESCE(date_service, CAST('1900-01-01' AS DATE))) = 0

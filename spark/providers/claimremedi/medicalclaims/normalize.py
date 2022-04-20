@@ -42,7 +42,7 @@ if __name__ == "__main__":
         use_ref_gen_values=True,
         unload_partition_count=3,
         load_date_explode=True,
-        output_to_transform_path=False
+        output_to_transform_path=True
     )
 
     conf_parameters = {
